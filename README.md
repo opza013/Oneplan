@@ -1,17 +1,18 @@
-# OnePlan Render — Windows Performance Build
+# OnePlan — Render/GitHub Build
 
-Upload these files to the root of the GitHub repository.
+Build: `detail-plan-v1`
 
-## Fixes
-- Precomputed weekly store workload index.
-- Store Capacity table paginated at 50 rows per page.
-- Debounced global search.
-- Removed duplicate startup render.
-- Added diagnostic URLs:
-  - `?fresh=1` ignores existing browser data without deleting it.
-  - `?reset=1` clears the OnePlan browser cache and loads base data.
+## New in this build
 
-## Render settings
-- Root Directory: blank
-- Publish Directory: `.`
-- After committing, use **Clear build cache & deploy**.
+- Added **Detail Plan** menu under Plan Control.
+- Project selector with Previous/Next navigation.
+- Plan overview, status, approval, progress, owner, scope and workload.
+- Full milestone detail including planned/actual dates and current status.
+- Applied-store capacity detail with pagination (30 stores/page).
+- Audit history and role-based Edit / Approve / Reject / Cancel actions.
+- Project Plan > **Detail** now opens the dedicated Detail Plan page.
+- Retains the Windows performance fixes and existing localStorage data model.
+
+## Deploy
+
+Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. In Render use **Manual Deploy → Clear build cache & deploy**.

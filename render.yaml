@@ -2,6 +2,6 @@ services:
   - type: web
     name: oneplan-cloud-starter
     runtime: static
-    buildCommand: echo "OnePlan Windows performance build ready"
+    buildCommand: echo "OnePlan Detail Plan build ready"
     staticPublishPath: .
     autoDeployTrigger: commit

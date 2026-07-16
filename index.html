@@ -328,6 +328,33 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .pager .pg-btns button{min-width:32px}
 .pager .pg-btns button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
 
+
+/* ---------- Detail Plan ---------- */
+.detail-selector{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.detail-selector .select-wrap{flex:1;min-width:280px}
+.detail-selector label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.detail-selector select{width:100%;border:1px solid var(--line);background:var(--bg-2);border-radius:10px;padding:9px 11px;font-size:12.5px;font-weight:600;outline:none}
+.detail-selector select:focus{border-color:var(--primary-2);background:#fff;box-shadow:0 0 0 3px #0095da22}
+.detail-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.detail-kpi{border:1px solid var(--line-2);border-radius:12px;background:var(--bg-2);padding:12px 13px;min-width:0}
+.detail-kpi .dk-label{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.35px}
+.detail-kpi .dk-value{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-kpi .dk-sub{font-size:10.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr);gap:14px;margin-top:14px;align-items:start}
+.detail-stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.detail-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.detail-field{border:1px solid var(--line-2);border-radius:10px;padding:10px 11px;background:#fff;min-width:0}
+.detail-field label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.35px;margin-bottom:4px}
+.detail-field div{font-size:12.5px;font-weight:600;overflow-wrap:anywhere}
+.detail-ms-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.detail-actions{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+.detail-progress{height:9px;border-radius:20px;background:#e8eef5;overflow:hidden;margin-top:8px}
+.detail-progress i{display:block;height:100%;border-radius:20px}
+.detail-store-note{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.detail-history{max-height:420px;overflow:auto;padding-right:4px}
+@media(max-width:1180px){.detail-main{grid-template-columns:1fr}.detail-kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.detail-kpis{grid-template-columns:1fr 1fr}.detail-meta{grid-template-columns:1fr}.detail-selector .select-wrap{min-width:100%}.detail-actions{margin-left:0}.detail-kpi .dk-value{font-size:15px}}
+
 /* responsive */
 @media(max-width:1280px){ .kpi-grid{grid-template-columns:repeat(3,1fr)} }
 @media(max-width:1024px){
@@ -346,7 +373,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
   .resp-cards tbody td:before{content:attr(data-l);display:block;font-size:9.5px;color:var(--muted);font-weight:700;text-transform:uppercase}
 }
 </style>
-  <meta name="oneplan-build" content="windows-performance-v1">
+  <meta name="oneplan-build" content="detail-plan-v1">
 </head>
 <body>
 <div class="app">
@@ -388,6 +415,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
       <div class="page active" id="dashboard"></div>
       <div class="page" id="gantt"></div>
       <div class="page" id="plans"></div>
+      <div class="page" id="detailplan"></div>
       <div class="page" id="approval"></div>
       <div class="page" id="planload"></div>
       <div class="page" id="storecapacity"></div>
@@ -761,6 +789,7 @@ let viewMode=localStorage.getItem("onePlanV2View")||"week";
 let ganttZoom=Number(localStorage.getItem("onePlanV2Zoom"))||1;     // timeline zoom multiplier
 let trendSpan=Number(localStorage.getItem("onePlanV2Trend"))||10;   // capacity-trend visible weeks
 let plansPage=1, plansSort={col:"code",dir:1}, storeCapacityPage=1, storeCapacityPageSize=50;
+let detailPlanId=localStorage.getItem("onePlanV2DetailPlanId")||"", detailStorePage=1, detailStorePageSize=30;
 
 function hasPeriod(){ return F.month!=="All"||F.week!=="All"||!!F.date; }
 function periodWindow(){ // returns {start,end} of active period filter or null
@@ -875,6 +904,7 @@ const NAV=[
   ["dashboard","⌂","Dashboard","Plan Control"],
   ["gantt","▦","Gantt Chart","Plan Control"],
   ["plans","▤","Project Plan","Plan Control"],
+  ["detailplan","☷","Detail Plan","Plan Control"],
   ["approval","✓","Approval","Plan Control"],
   ["planload","◴","Plan Load","Execution"],
   ["storecapacity","▥","Store Capacity","Execution"],
@@ -1174,7 +1204,7 @@ function renderPlans(){
         <td data-l="Status">${pill(st)}${isOverdue(p)?' <span class="tag" style="color:var(--red);border-color:#f3c4c4">overdue</span>':""}</td>
         <td data-l="Approval">${apvTag(p.approval)}</td>
         <td data-l="Action"><div style="display:flex;gap:5px;flex-wrap:wrap">
-          <button class="btn sm" onclick="openDetail('${p.id}')">View</button>
+          <button class="btn sm" onclick="openDetailPage('${p.id}')">Detail</button>
           ${can("edit")?`<button class="btn sm" onclick="openPlanModal('${p.id}')">Edit</button>`:""}
           ${can("cancel")&&p.statusOverride!=="Cancelled"?`<button class="btn sm danger" onclick="cancelPlan('${p.id}')">Cancel</button>`:""}
         </div></td></tr>`;
@@ -1204,6 +1234,128 @@ function storeCapacityPager(pages,total){
   return `<div class="pager"><span class="small">Showing ${(storeCapacityPage-1)*storeCapacityPageSize+1}–${Math.min(storeCapacityPage*storeCapacityPageSize,total)} of ${total} · Page ${storeCapacityPage} of ${pages}</span><div class="pg-btns">
     <button class="btn sm" onclick="gotoStoreCapacityPage(${Math.max(1,storeCapacityPage-1)})" ${storeCapacityPage===1?"disabled":""}>‹</button>${buttons.join("")}
     <button class="btn sm" onclick="gotoStoreCapacityPage(${Math.min(pages,storeCapacityPage+1)})" ${storeCapacityPage===pages?"disabled":""}>›</button></div></div>`;
+}
+
+
+/* ---------- 16. DETAIL PLAN ---------- */
+function openDetailPage(id){
+  detailPlanId=id||""; detailStorePage=1;
+  if(detailPlanId)localStorage.setItem("onePlanV2DetailPlanId",detailPlanId);
+  navigate("detailplan");
+}
+function selectDetailPlan(id){
+  detailPlanId=id; detailStorePage=1;
+  localStorage.setItem("onePlanV2DetailPlanId",detailPlanId);
+  renderPage("detailplan");
+}
+function detailPlanMove(delta){
+  const list=sortByLiveWeek(filteredProjects());
+  if(!list.length)return;
+  let i=list.findIndex(p=>p.id===detailPlanId); if(i<0)i=0;
+  i=Math.max(0,Math.min(list.length-1,i+delta)); selectDetailPlan(list[i].id);
+}
+function gotoDetailStorePage(page){
+  detailStorePage=Math.max(1,Number(page)||1); renderPage("detailplan");
+}
+function detailStorePager(pages,total){
+  let btns="";
+  for(let i=1;i<=pages;i++){
+    if(i===1||i===pages||Math.abs(i-detailStorePage)<=2) btns+=`<button class="btn sm ${i===detailStorePage?"on":""}" onclick="gotoDetailStorePage(${i})">${i}</button>`;
+    else if(Math.abs(i-detailStorePage)===3) btns+=`<span style="padding:0 4px">…</span>`;
+  }
+  return `<div class="pager"><span class="small">Showing ${(detailStorePage-1)*detailStorePageSize+1}–${Math.min(detailStorePage*detailStorePageSize,total)} of ${total}</span><div class="pg-btns"><button class="btn sm" onclick="gotoDetailStorePage(${Math.max(1,detailStorePage-1)})" ${detailStorePage===1?"disabled":""}>‹</button>${btns}<button class="btn sm" onclick="gotoDetailStorePage(${Math.min(pages,detailStorePage+1)})" ${detailStorePage===pages?"disabled":""}>›</button></div></div>`;
+}
+function renderDetailPlan(){
+  const list=sortByLiveWeek(filteredProjects());
+  if(!list.length){
+    detailPlanId="";
+    return `${toolbar({view:false})}<div class="card"><div class="empty">No project matches the current filters.</div></div>`;
+  }
+  if(!detailPlanId||!list.some(x=>x.id===detailPlanId)) detailPlanId=list[0].id;
+  localStorage.setItem("onePlanV2DetailPlanId",detailPlanId);
+  const p=list.find(x=>x.id===detailPlanId), idx=list.findIndex(x=>x.id===p.id);
+  const st=projState(p), pct=projPercent(p), imp=projectCapacityImpact(p);
+  const impMs=(p.milestones||[]).find(m=>m.key==="IMP");
+  const totalMins=(Number(p.minutesPerStore)||0)*(p.storeIds||[]).length;
+  const completed=(p.milestones||[]).filter(m=>msState(m)==="Completed").length;
+  const projectStores=(p.storeIds||[]).map(id=>stores.find(s=>s.id===id)).filter(Boolean).sort((a,b)=>String(a.no).localeCompare(String(b.no)));
+  const pages=Math.max(1,Math.ceil(projectStores.length/detailStorePageSize));
+  detailStorePage=Math.min(detailStorePage,pages);
+  const storeSlice=projectStores.slice((detailStorePage-1)*detailStorePageSize,detailStorePage*detailStorePageSize);
+  const impDate=impMs?.plannedStart?parseDate(impMs.plannedStart):null;
+  const impWk=impDate?isoWeek(impDate):null, impYr=impDate?isoWeekYear(impDate):null;
+  const options=list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.code)} · ${esc(x.name)}</option>`).join("");
+  const milestoneRows=(p.milestones||[]).map(m=>{
+    const mst=msState(m), master=MSMAP[m.key]||{};
+    const actual=(m.actualStart||m.actualEnd)?`${m.actualStart||"—"} → ${m.actualEnd||"—"}`:"—";
+    return `<tr><td><span class="detail-ms-dot" style="background:${milestoneColor(m.key)}"></span><b>${esc(m.key)}</b><br><span class="small">${esc(master.full||"")}</span></td><td>${esc(master.dep||"—")}</td><td class="small">${esc(m.plannedStart||"—")} → ${esc(m.plannedEnd||"—")}</td><td class="small">${actual}</td><td>${pill(mst==="InProgress"?"OnTrack":mst)}${mst==="InProgress"?' <span class="small">In progress</span>':""}</td><td>${esc(m.owner||p.owner||"—")}</td></tr>`;
+  }).join("");
+  const storeRows=storeSlice.map(s=>{
+    const load=impWk?storeWeekLoad(s.id,impWk,impYr):{planned:0,projects:[]};
+    const util=s.capacity?Math.round(load.planned/s.capacity*100):0;
+    return `<tr><td><b class="mono">${esc(s.no)}</b></td><td>${esc(s.name)}</td><td>${esc(s.format)}</td><td>${esc(s.zone||"—")}</td><td class="num">${Number(s.capacity||0).toLocaleString()}</td><td class="num"><b>${Number(p.minutesPerStore||0).toLocaleString()}</b></td><td class="num">${Number(load.planned||0).toLocaleString()}</td><td><div class="util"><div class="util-bar"><i style="width:${Math.min(100,util)}%;background:${util>SETTINGS.capacityBlock?'var(--red)':util>=SETTINGS.capacityWarn?'var(--amber)':'var(--green)'}"></i></div><span class="small mono">${util}%</span></div></td></tr>`;
+  }).join("");
+  const history=(p.history||[]).slice().reverse().map(h=>`<li><span class="dot" style="background:var(--primary)"></span><div><b>${esc(h.action)}</b>${h.note?' · '+esc(h.note):''}<div class="meta">${esc(h.by)} (${esc(h.role)}) · ${esc(String(h.ts||"").replace("T"," "))}</div></div></li>`).join("")||'<li class="small">No history.</li>';
+  const capClass=imp.max>SETTINGS.capacityBlock?"block":imp.max>=SETTINGS.capacityWarn?"warn":"ok";
+  return `${toolbar({view:false})}
+  <div class="card">
+    <div class="section-title">Project Detail <span class="small">${idx+1} of ${list.length} filtered project(s)</span>
+      <div class="detail-actions">
+        <button class="btn sm" onclick="detailPlanMove(-1)" ${idx===0?"disabled":""}>‹ Previous</button>
+        <button class="btn sm" onclick="detailPlanMove(1)" ${idx===list.length-1?"disabled":""}>Next ›</button>
+        <button class="btn sm" onclick="openDetail('${p.id}')">Quick View</button>
+        ${can("edit")?`<button class="btn sm primary" onclick="openPlanModal('${p.id}')">Edit Plan</button>`:""}
+      </div>
+    </div>
+    <div class="detail-selector"><div class="select-wrap"><label>Select project</label><select onchange="selectDetailPlan(this.value)">${options}</select></div></div>
+    <div class="detail-kpis">
+      <div class="detail-kpi"><div class="dk-label">Status & Progress</div><div class="dk-value">${statusText(st)} · ${pct}%</div><div class="detail-progress"><i style="width:${pct}%;background:${statusColor(st)}"></i></div></div>
+      <div class="detail-kpi"><div class="dk-label">Approval</div><div class="dk-value" style="font-family:var(--sans)">${apvTag(p.approval)}</div><div class="dk-sub">${p.overrideReason?'Override: '+esc(p.overrideReason):'Current workflow status'}</div></div>
+      <div class="detail-kpi"><div class="dk-label">Live / IMP Week</div><div class="dk-value">${impMs?.plannedStart?liveWeekLabel(p):"—"}</div><div class="dk-sub">${esc(impMs?.plannedStart||"No IMP date")}</div></div>
+      <div class="detail-kpi"><div class="dk-label">Applied Stores</div><div class="dk-value">${projectStores.length.toLocaleString()}</div><div class="dk-sub">${(totalMins/60).toFixed(1)} total workload hrs.</div></div>
+    </div>
+  </div>
+  <div class="detail-main">
+    <div class="detail-stack">
+      <div class="card"><div class="section-title">Plan Overview
+        <div class="detail-actions">${can("approve")&&["Pending Review","Need Revision"].includes(p.approval)?`<button class="btn sm success" onclick="approvePlan('${p.id}')">Approve</button><button class="btn sm danger" onclick="rejectPlan('${p.id}')">Reject</button>`:""}${can("cancel")&&p.statusOverride!=="Cancelled"?`<button class="btn sm danger" onclick="cancelPlan('${p.id}')">Cancel Plan</button>`:""}</div>
+      </div>
+        <div class="detail-meta">
+          <div class="detail-field"><label>Project Code</label><div class="mono">${esc(p.code)}</div></div>
+          <div class="detail-field"><label>Project Name</label><div>${esc(p.name)}</div></div>
+          <div class="detail-field"><label>Owner</label><div>${esc(p.owner)}</div></div>
+          <div class="detail-field"><label>Type</label><div>${esc(p.type)}</div></div>
+          <div class="detail-field"><label>Division / Department</label><div>${esc(p.division)} / ${esc(p.department)}</div></div>
+          <div class="detail-field"><label>Format</label><div>${esc(p.format)}</div></div>
+          <div class="detail-field"><label>Plan Period</label><div>${esc(p.start||"—")} → ${esc(p.end||"—")}</div></div>
+          <div class="detail-field"><label>Minutes / Store</label><div>${Number(p.minutesPerStore||0).toLocaleString()} min.</div></div>
+          <div class="detail-field"><label>Milestone Completion</label><div>${completed} / ${(p.milestones||[]).length}</div></div>
+        </div>
+        <div class="cap-preview ${capClass}">Peak store capacity is <b>${imp.max}%</b> in <b>${imp.week}</b>. ${imp.overloaded.length?`${imp.overloaded.length} store(s) exceed the ${SETTINGS.capacityBlock}% block threshold.`:'No store exceeds the block threshold.'}</div>
+      </div>
+      <div class="card"><div class="section-title">Milestone Detail <span class="small">Planned, actual and current status</span></div>
+        <div class="tbl-wrap"><table class="resp-cards"><thead><tr><th>Milestone</th><th>Dependency</th><th>Planned</th><th>Actual</th><th>Status</th><th>Owner</th></tr></thead><tbody>${milestoneRows||'<tr><td colspan="6" class="empty">No milestone data.</td></tr>'}</tbody></table></div>
+      </div>
+      <div class="card"><div class="section-title">Applied Store Detail <span class="small">Capacity at ${imp.week}</span></div>
+        <div class="detail-store-note"><span class="small">Project load is compared with total planned workload in the IMP week.</span><span class="small">${projectStores.length.toLocaleString()} store(s)</span></div>
+        <div class="tbl-wrap"><table class="resp-cards"><thead><tr><th>Store No.</th><th>Store Name</th><th>Format</th><th>Zone</th><th class="num">Capacity</th><th class="num">Project Min.</th><th class="num">Week Load</th><th>Utilization</th></tr></thead><tbody>${storeRows||'<tr><td colspan="8" class="empty">No applied stores.</td></tr>'}</tbody></table></div>
+        ${pages>1?detailStorePager(pages,projectStores.length):""}
+      </div>
+    </div>
+    <div class="detail-stack">
+      <div class="card"><div class="section-title">Plan Control Summary</div>
+        <div class="tbl-wrap"><table><tbody>
+          <tr><td>Project status</td><td>${pill(st)}</td></tr>
+          <tr><td>Approval</td><td>${apvTag(p.approval)}</td></tr>
+          <tr><td>Live week</td><td><b class="mono">${impMs?.plannedStart?liveWeekLabel(p):"—"}</b></td></tr>
+          <tr><td>Peak capacity</td><td><b class="mono">${imp.max}%</b></td></tr>
+          <tr><td>Overloaded stores</td><td><b class="mono">${imp.overloaded.length}</b></td></tr>
+          <tr><td>Total workload</td><td><b class="mono">${totalMins.toLocaleString()} min.</b></td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card"><div class="section-title">History / Audit <span class="small">Latest first</span></div><ul class="hist detail-history">${history}</ul></div>
+    </div>
+  </div>`;
 }
 
 /* ---------- 16. APPROVAL ---------- */
@@ -2284,7 +2436,7 @@ function renderSettingsWithSharePoint(){ return renderSettingsBase() + spRenderS
 renderSettings = renderSettingsWithSharePoint;
 
 /* ---------- 27. RENDER DISPATCH ---------- */
-const RENDER={dashboard:renderDashboard,gantt:renderGantt,plans:renderPlans,approval:renderApproval,
+const RENDER={dashboard:renderDashboard,gantt:renderGantt,plans:renderPlans,detailplan:renderDetailPlan,approval:renderApproval,
   planload:renderPlanLoad,storecapacity:renderStoreCapacity,calendar:renderCalendar,reports:renderReports,master:renderMaster,settings:renderSettings};
 function renderPage(page){ const fn=RENDER[page]; if(fn)document.getElementById(page).innerHTML=fn(); }
 function activePage(){ return document.querySelector(".page.active").id; }
