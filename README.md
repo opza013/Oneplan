@@ -1,18 +1,13 @@
-# OnePlan — Render/GitHub Build
+# OnePlan — Detail Plan Gantt + Next Steps
 
-Build: `detail-plan-v1`
-
-## New in this build
-
-- Added **Detail Plan** menu under Plan Control.
-- Project selector with Previous/Next navigation.
-- Plan overview, status, approval, progress, owner, scope and workload.
-- Full milestone detail including planned/actual dates and current status.
-- Applied-store capacity detail with pagination (30 stores/page).
-- Audit history and role-based Edit / Approve / Reject / Cancel actions.
-- Project Plan > **Detail** now opens the dedicated Detail Plan page.
-- Retains the Windows performance fixes and existing localStorage data model.
+## Added
+- Dedicated **Detail Plan** menu.
+- Project-level Gantt chart directly below the project filter.
+- Click a project name in the main Gantt chart to open that project in Detail Plan.
+- Activity Next Step, Due Date, and Next Step Status for every milestone.
+- Per-activity Save and Save All.
+- Next-step data is retained when the main plan is edited.
+- Backward-compatible repair for existing browser/SharePoint data.
 
 ## Deploy
-
-Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. In Render use **Manual Deploy → Clear build cache & deploy**.
+Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render can auto-deploy the commit. After deployment, use `Ctrl + Shift + R` on Windows.
