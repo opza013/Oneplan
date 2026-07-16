@@ -1,13 +1,17 @@
-# OnePlan — Detail Plan Gantt + Next Steps
+# OnePlan — Detail Plan Next Step Stack
+
+This build extends the Detail Plan module with stacked next steps per activity.
 
 ## Added
-- Dedicated **Detail Plan** menu.
-- Project-level Gantt chart directly below the project filter.
-- Click a project name in the main Gantt chart to open that project in Detail Plan.
-- Activity Next Step, Due Date, and Next Step Status for every milestone.
-- Per-activity Save and Save All.
-- Next-step data is retained when the main plan is edited.
-- Backward-compatible repair for existing browser/SharePoint data.
+- Multiple next steps under each activity/milestone
+- Add, inline edit/save, and delete each next step
+- Due date and status per next step
+- Overdue indicator
+- Next-step count and nearest open action in the project Gantt
+- Audit history for add/update/delete actions
+- Automatic migration from the previous single-next-step format
 
-## Deploy
-Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render can auto-deploy the commit. After deployment, use `Ctrl + Shift + R` on Windows.
+## Deploy on Render
+Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render can then auto-deploy the latest commit.
+
+After deployment on Windows, use `Ctrl + Shift + R` once to load the new build. Existing browser data is retained and migrated automatically.
