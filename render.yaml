@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: oneplan-cloud-starter
+    runtime: static
+    buildCommand: echo "OnePlan static build completed"
+    staticPublishPath: ./public
+    autoDeployTrigger: commit
+    previews:
+      generation: manual
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
