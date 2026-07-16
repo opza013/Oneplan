@@ -2,11 +2,13 @@ services:
   - type: web
     name: oneplan-cloud-starter
     runtime: static
-    buildCommand: echo "OnePlan static build completed"
-    staticPublishPath: ./public
+    buildCommand: echo "OnePlan static site ready"
+    staticPublishPath: .
     autoDeployTrigger: commit
-    previews:
-      generation: manual
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     headers:
       - path: /*
         name: X-Content-Type-Options
