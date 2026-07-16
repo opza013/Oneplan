@@ -346,6 +346,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
   .resp-cards tbody td:before{content:attr(data-l);display:block;font-size:9.5px;color:var(--muted);font-weight:700;text-transform:uppercase}
 }
 </style>
+  <meta name="oneplan-build" content="windows-performance-v1">
 </head>
 <body>
 <div class="app">
@@ -449,6 +450,12 @@ function fmtShort(date){ return date.toLocaleDateString("en-GB",{day:"2-digit",m
 
 /* ---------- 2. SETTINGS / state ---------- */
 const LS="onePlanV3StoreMaster_StoragePathSetting";
+const ONEPLAN_QUERY = new URLSearchParams(window.location.search);
+const ONEPLAN_FRESH_BOOT = ONEPLAN_QUERY.get("fresh")==="1";
+const ONEPLAN_RESET_BOOT = ONEPLAN_QUERY.get("reset")==="1";
+if(ONEPLAN_RESET_BOOT){
+  try{ localStorage.removeItem(LS); }catch(e){}
+}
 let SETTINGS = {
   simulatedToday: null,      // null => real system date
   planYear: new Date().getFullYear(),
@@ -594,7 +601,7 @@ function seedProjects(stores){
 /* ---------- 5. PERSISTENCE ---------- */
 let stores=[], projects=[];
 function loadState(){
-  const raw=localStorage.getItem(LS);
+  const raw=ONEPLAN_FRESH_BOOT ? null : localStorage.getItem(LS);
   if(raw){
     try{
       const o=JSON.parse(raw);
@@ -603,15 +610,26 @@ function loadState(){
       rebuildMSMap();
       stores=Array.isArray(o.stores)?o.stores:[];
       projects=Array.isArray(o.projects)?o.projects:[];
-      if(Array.isArray(stores)&&stores.length&&Array.isArray(projects)) return;
-    }catch(e){}
+      if(Array.isArray(stores)&&stores.length&&Array.isArray(projects)){
+        invalidateLoadIndex();
+        return;
+      }
+    }catch(e){ console.warn("Local OnePlan cache could not be loaded.",e); }
   }
   MILESTONES=DEFAULT_MILESTONES.map(m=>({...m}));
   rebuildMSMap();
   rebuildSeed();
 }
-function rebuildSeed(){ rebuildMSMap(); stores=seedStores(); projects=seedProjects(stores); }
-function saveState(){ localStorage.setItem(LS, JSON.stringify({settings:SETTINGS,milestones:MILESTONES,stores,projects})); }
+function rebuildSeed(){ rebuildMSMap(); stores=seedStores(); projects=seedProjects(stores); invalidateLoadIndex(); }
+function saveState(){
+  invalidateLoadIndex();
+  try{
+    localStorage.setItem(LS, JSON.stringify({settings:SETTINGS,milestones:MILESTONES,stores,projects}));
+  }catch(e){
+    console.error("OnePlan local save failed.",e);
+    alert("Unable to save in this browser. The local cache may be full. Export your data, then clear the OnePlan site data.");
+  }
+}
 
 /* ---------- 6. DERIVED STATUS ENGINE (the missing logic) ---------- */
 // milestone derived state from dates vs real today (unless explicitly Completed)
@@ -639,22 +657,41 @@ function isOverdue(p){ return p.statusOverride!=="Cancelled" && p.milestones.som
 /* ---------- 7. CAPACITY ENGINE (derived from plans, not hardcoded) ---------- */
 // load a store receives in a given ISO week = sum minutesPerStore of projects whose
 // IMP milestone overlaps that week AND that apply to the store.
-function storeWeekLoad(storeId, wkNum, year){
-  const {start,end}=weekRange(wkNum,year);
-  let planned=0, booked=0, actual=0, plist=[];
+let LOAD_INDEX=null;
+function invalidateLoadIndex(){ LOAD_INDEX=null; }
+function loadIndexKey(wkNum,year){ return `${year}-WK${String(wkNum).padStart(2,"0")}`; }
+function buildLoadIndex(){
+  if(LOAD_INDEX) return LOAD_INDEX;
+  const index=new Map();
   projects.forEach(p=>{
     if(p.statusOverride==="Cancelled") return;
-    if(!p.storeIds.includes(storeId)) return;
-    const imp=p.milestones.find(m=>m.key==="IMP"); if(!imp) return;
-    const s=parseDate(imp.plannedStart), e=parseDate(imp.plannedEnd);
-    if(rangeOverlaps(s,e,start,end)){
-      planned+=p.minutesPerStore;
-      if(p.approval==="Approved") booked+=p.minutesPerStore;
-      if(imp.status==="Completed") actual+=p.minutesPerStore;
-      plist.push(p);
+    const imp=(p.milestones||[]).find(m=>m.key==="IMP");
+    if(!imp||!imp.plannedStart||!imp.plannedEnd) return;
+    let cursor=mondayOfWeek(parseDate(imp.plannedStart));
+    const last=mondayOfWeek(parseDate(imp.plannedEnd));
+    const storeIds=Array.isArray(p.storeIds)?p.storeIds:[];
+    while(cursor<=last){
+      const key=loadIndexKey(isoWeek(cursor),isoWeekYear(cursor));
+      let weekMap=index.get(key);
+      if(!weekMap){ weekMap=new Map(); index.set(key,weekMap); }
+      storeIds.forEach(storeId=>{
+        let row=weekMap.get(storeId);
+        if(!row){ row={planned:0,booked:0,actual:0,projects:[]}; weekMap.set(storeId,row); }
+        const mins=Number(p.minutesPerStore)||0;
+        row.planned+=mins;
+        if(p.approval==="Approved") row.booked+=mins;
+        if(imp.status==="Completed") row.actual+=mins;
+        row.projects.push(p);
+      });
+      cursor=addDays(cursor,7);
     }
   });
-  return {planned,booked,actual,projects:plist};
+  LOAD_INDEX=index;
+  return index;
+}
+function storeWeekLoad(storeId, wkNum, year){
+  const weekMap=buildLoadIndex().get(loadIndexKey(wkNum,year));
+  return weekMap?.get(storeId) || {planned:0,booked:0,actual:0,projects:[]};
 }
 function storeStatusFromUtil(u){ if(u>SETTINGS.capacityBlock) return "Over"; if(u>=SETTINGS.capacityWarn) return "Watch"; return "Available"; }
 // utilization of a store for a focus week
@@ -714,7 +751,7 @@ const PERM={
   review:r=>["Admin","Approver","Reviewer"].includes(r)
 };
 function can(action){ return PERM[action]?PERM[action](role):false; }
-function setRole(r){ role=r; document.getElementById("roleAvatar").innerText=r[0]; document.getElementById("newPlanBtn").style.display=can("create")?"":"none"; renderAll(); }
+function setRole(r,skipRender=false){ role=r; document.getElementById("roleAvatar").innerText=r[0]; document.getElementById("newPlanBtn").style.display=can("create")?"":"none"; if(!skipRender)renderAll(); }
 
 /* ---------- 9. SHARED FILTER CONTEXT (syncs across modules) ---------- */
 let F={ division:"All", department:"All", type:"All", status:"All", owner:"All",
@@ -723,7 +760,7 @@ let F={ division:"All", department:"All", type:"All", status:"All", owner:"All",
 let viewMode=localStorage.getItem("onePlanV2View")||"week";
 let ganttZoom=Number(localStorage.getItem("onePlanV2Zoom"))||1;     // timeline zoom multiplier
 let trendSpan=Number(localStorage.getItem("onePlanV2Trend"))||10;   // capacity-trend visible weeks
-let plansPage=1, plansSort={col:"code",dir:1};
+let plansPage=1, plansSort={col:"code",dir:1}, storeCapacityPage=1, storeCapacityPageSize=50;
 
 function hasPeriod(){ return F.month!=="All"||F.week!=="All"||!!F.date; }
 function periodWindow(){ // returns {start,end} of active period filter or null
@@ -779,7 +816,7 @@ function activeFilterChips(){
   return chips;
 }
 function clearChip(key){ F[key]= key==="date"||key==="q"?"":"All"; if(key==="q")document.getElementById("globalSearch").value=""; renderAll(); }
-function resetFilters(){ F={division:"All",department:"All",type:"All",status:"All",owner:"All",milestone:"All",milestoneStatus:"All",month:"All",week:"All",date:"",format:"All",zone:"All",storeNo:"All",q:""}; document.getElementById("globalSearch").value=""; plansPage=1; renderAll(); }
+function resetFilters(){ F={division:"All",department:"All",type:"All",status:"All",owner:"All",milestone:"All",milestoneStatus:"All",month:"All",week:"All",date:"",format:"All",zone:"All",storeNo:"All",q:""}; document.getElementById("globalSearch").value=""; plansPage=1; storeCapacityPage=1; renderAll(); }
 
 /* ---------- 10. small helpers ---------- */
 function statusText(s){return {OnTrack:"On Track",AtRisk:"At Risk",Delayed:"Delayed",Completed:"Completed",Cancelled:"Cancelled"}[s]||s;}
@@ -1155,6 +1192,19 @@ function pager(pages){
 }
 function gotoPage(p){ plansPage=p; renderAll(); }
 function sortPlans(col){ if(plansSort.col===col)plansSort.dir*=-1; else{plansSort.col=col;plansSort.dir=1;} renderAll(); }
+function gotoStoreCapacityPage(p){ storeCapacityPage=Math.max(1,Number(p)||1); renderPage("storecapacity"); }
+function storeCapacityPager(pages,total){
+  if(!total) return "";
+  if(pages<=1) return `<div class="small" style="margin-top:10px">Showing ${total} store(s)</div>`;
+  const buttons=[];
+  for(let i=1;i<=pages;i++){
+    if(i===1||i===pages||Math.abs(i-storeCapacityPage)<=2) buttons.push(`<button class="btn sm ${i===storeCapacityPage?"on":""}" onclick="gotoStoreCapacityPage(${i})">${i}</button>`);
+    else if(Math.abs(i-storeCapacityPage)===3) buttons.push(`<span style="padding:0 4px">…</span>`);
+  }
+  return `<div class="pager"><span class="small">Showing ${(storeCapacityPage-1)*storeCapacityPageSize+1}–${Math.min(storeCapacityPage*storeCapacityPageSize,total)} of ${total} · Page ${storeCapacityPage} of ${pages}</span><div class="pg-btns">
+    <button class="btn sm" onclick="gotoStoreCapacityPage(${Math.max(1,storeCapacityPage-1)})" ${storeCapacityPage===1?"disabled":""}>‹</button>${buttons.join("")}
+    <button class="btn sm" onclick="gotoStoreCapacityPage(${Math.min(pages,storeCapacityPage+1)})" ${storeCapacityPage===pages?"disabled":""}>›</button></div></div>`;
+}
 
 /* ---------- 16. APPROVAL ---------- */
 function renderApproval(){
@@ -1195,10 +1245,15 @@ function renderStoreCapacity(){
   if(F.storeNo!=="All" && !stores.some(s=>s.no===F.storeNo && (F.format==="All"||s.format===F.format))) F.storeNo="All";
   const wk = F.week!=="All"?Number(F.week.replace("WK","")):isoWeek(today());
   const yr=SETTINGS.planYear;
-  let rows=stores.filter(s=>(F.format==="All"||s.format===F.format)&&(F.zone==="All"||s.zone===F.zone)&&(F.storeNo==="All"||s.no===F.storeNo)&&(!F.q||[s.no,s.name,s.zone,s.format].join(" ").toLowerCase().includes(F.q.toLowerCase())));
+  const q=(F.q||"").toLowerCase();
+  const rows=stores.filter(s=>(F.format==="All"||s.format===F.format)&&(F.zone==="All"||s.zone===F.zone)&&(F.storeNo==="All"||s.no===F.storeNo)&&(!q||[s.no,s.name,s.zone,s.format].join(" ").toLowerCase().includes(q)));
   const data=rows.map(s=>{const u=storeUtil(s,wk,yr);return {s,...u};}).filter(r=>F.status==="All"||r.status===F.status);
   const over=data.filter(r=>r.status==="Over").length, watch=data.filter(r=>r.status==="Watch").length, avail=data.filter(r=>r.status==="Available").length;
-  const avg=data.length?Math.round(data.reduce((a,r)=>a+r.util,0)/data.length):0;
+  const avg=data.length?Math.round(data.reduce((sum,r)=>sum+r.util,0)/data.length):0;
+  data.sort((x,y)=>y.util-x.util || String(x.s.no).localeCompare(String(y.s.no)));
+  const pages=Math.max(1,Math.ceil(data.length/storeCapacityPageSize));
+  storeCapacityPage=Math.min(storeCapacityPage,pages);
+  const pageData=data.slice((storeCapacityPage-1)*storeCapacityPageSize,storeCapacityPage*storeCapacityPageSize);
   return `
   <div class="hero"><div class="hero-card"><h2>Store Capacity</h2>
     <p>Workload is derived from project implementation dates × applied stores — change a plan and these numbers move. Focus week: <b>WK${String(wk).padStart(2,"0")} ${yr}</b>.</p>
@@ -1221,9 +1276,9 @@ function renderStoreCapacity(){
   ${renderTrend()}
 
   ${toolbar({project:false,store:true,view:false})}
-  <div class="card"><div class="section-title">Store Capacity Table <span class="small">WK${String(wk).padStart(2,"0")} ${yr}</span></div>
+  <div class="card"><div class="section-title">Store Capacity Table <span class="small">WK${String(wk).padStart(2,"0")} ${yr} · 50 rows/page</span></div>
     <div class="tbl-wrap"><table class="resp-cards"><thead><tr><th>Store</th><th>Format</th><th>Zone</th><th class="num">Capacity</th><th class="num">Planned</th><th class="num">Available</th><th>Utilization</th><th>Status</th><th class="num">Projects</th></tr></thead><tbody>
-    ${data.sort((a,b)=>b.util-a.util).map(r=>{
+    ${pageData.map(r=>{
       const color=r.status==="Over"?"var(--red)":r.status==="Watch"?"var(--amber)":"var(--green)";
       return `<tr>
         <td data-l="Store"><b>${r.s.no}</b> ${esc(r.s.name)}</td>
@@ -1237,6 +1292,7 @@ function renderStoreCapacity(){
       </tr>`;
     }).join("")||`<tr><td colspan="9" class="empty">No store matches filters.</td></tr>`}
     </tbody></table></div>
+    ${storeCapacityPager(pages,data.length)}
   </div>`;
 }
 function renderTrend(){
@@ -2244,14 +2300,26 @@ function updateBadges(){
 function renderAll(){ renderPage(activePage()); updateBadges(); }
 
 /* ---------- 28. WIRE-UP + INIT ---------- */
-document.getElementById("globalSearch").addEventListener("input",e=>{ F.q=e.target.value; plansPage=1; renderAll(); });
+let globalSearchTimer=null;
+document.getElementById("globalSearch").addEventListener("input",e=>{
+  const value=e.target.value;
+  clearTimeout(globalSearchTimer);
+  globalSearchTimer=setTimeout(()=>{ F.q=value; plansPage=1; storeCapacityPage=1; renderAll(); },180);
+});
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){closeModal("planModal");closeModal("genModal");} });
 [ "planModal","genModal" ].forEach(id=>document.getElementById(id).addEventListener("click",e=>{ if(e.target.id===id)closeModal(id); }));
 
 loadState();
 buildMenu();
-setRole("Admin");
+setRole("Admin",true);
 navigate("dashboard");
+updateBadges();
+if(ONEPLAN_FRESH_BOOT){
+  setTimeout(()=>alert("OnePlan opened in Fresh Boot mode. Existing browser data was ignored but not deleted. Remove ?fresh=1 from the URL to return to saved data."),100);
+}
+if(ONEPLAN_RESET_BOOT){
+  try{ history.replaceState(null,"",window.location.pathname); }catch(e){}
+}
 </script>
 </body>
 </html>

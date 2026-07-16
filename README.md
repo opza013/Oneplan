@@ -1,31 +1,17 @@
-# OnePlan Render — Fixed Root Deployment
+# OnePlan Render — Windows Performance Build
 
-This package removes the nested-folder ambiguity that can cause Render to deploy an empty publish directory.
+Upload these files to the root of the GitHub repository.
 
-## Required GitHub repository structure
+## Fixes
+- Precomputed weekly store workload index.
+- Store Capacity table paginated at 50 rows per page.
+- Debounced global search.
+- Removed duplicate startup render.
+- Added diagnostic URLs:
+  - `?fresh=1` ignores existing browser data without deleting it.
+  - `?reset=1` clears the OnePlan browser cache and loads base data.
 
-Upload these files directly to the repository root:
-
-```text
-index.html
-render.yaml
-README.md
-.gitignore
-```
-
-Do not upload the containing folder as an additional nested level.
-
-## Existing Render Static Site
-
-In **Settings > Build & Deploy** set:
-
+## Render settings
 - Root Directory: blank
-- Build Command: `echo "OnePlan static site ready"`
 - Publish Directory: `.`
-- Branch: `main`
-
-Then choose **Manual Deploy > Clear build cache & deploy**.
-
-## Blueprint deployment
-
-Create a Blueprint from this repository. Render will read `render.yaml` from the repository root.
+- After committing, use **Clear build cache & deploy**.
