@@ -175,6 +175,30 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .chip-f{display:inline-flex;align-items:center;gap:6px;background:var(--blue-bg);color:#244e9c;border:1px solid #cfe0fb;border-radius:20px;padding:4px 6px 4px 11px;font-size:11.5px;font-weight:600}
 .chip-f button{border:0;background:#ffffffaa;color:#244e9c;border-radius:50%;width:17px;height:17px;cursor:pointer;font-size:11px;line-height:1}
 
+/* Searchable multi-select filters */
+.multi-select{position:relative;min-width:150px}
+.multi-trigger{width:100%;min-width:150px;max-width:220px;height:31px;border:1px solid var(--line);background:var(--bg-2);border-radius:9px;padding:6px 9px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--text);cursor:pointer;text-align:left}
+.multi-trigger:hover{background:#fff;border-color:#b8c7d8}
+.multi-trigger:focus-visible{outline:none;border-color:var(--primary-2);box-shadow:0 0 0 3px #0095da22}
+.multi-trigger .multi-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.multi-trigger .multi-caret{font-size:10px;color:var(--muted);flex:none}
+.multi-menu{display:none;position:absolute;z-index:80;top:calc(100% + 5px);left:0;width:280px;max-width:min(88vw,360px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 36px rgba(15,34,54,.2);padding:9px}
+.multi-select.open .multi-menu{display:block}
+.multi-search{width:100%;height:32px!important;min-width:0!important;background:#fff!important;margin-bottom:7px}
+.multi-actions,.multi-footer{display:flex;align-items:center;gap:6px}
+.multi-actions{justify-content:space-between;border-bottom:1px solid var(--line-2);padding-bottom:7px;margin-bottom:5px}
+.multi-actions button{border:0;background:transparent;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;padding:3px 4px}
+.multi-options{max-height:240px;overflow:auto;padding:2px 0}
+.multi-option{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:7px;font-size:12px;cursor:pointer;line-height:1.2}
+.multi-option:hover{background:var(--blue-bg)}
+.multi-option input{width:15px;height:15px;min-width:15px;margin:0;accent-color:var(--primary-2)}
+.multi-option span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.multi-limit{padding:7px;color:var(--muted);font-size:10.5px;text-align:center;border-top:1px solid var(--line-2)}
+.multi-empty{padding:16px 8px;text-align:center;color:var(--muted);font-size:11.5px}
+.multi-footer{justify-content:flex-end;border-top:1px solid var(--line-2);padding-top:8px;margin-top:5px}
+.multi-footer .btn{min-width:58px}
+@media(max-width:720px){.multi-select,.multi-trigger{min-width:100%;max-width:none}.multi-menu{position:fixed;left:12px;right:12px;top:18%;width:auto;max-width:none}.multi-options{max-height:42vh}}
+
 /* ---------- Gantt ---------- */
 .gantt-shell{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
 .gantt-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
@@ -349,6 +373,8 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .project-link{border:0;background:transparent;padding:0;color:var(--text);font:inherit;font-weight:700;cursor:pointer;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .project-link:hover{color:var(--primary);text-decoration:underline}
 .detail-filter .fld.project-select{min-width:360px;flex:1}
+.detail-filter .detail-project-search{min-width:210px}
+.detail-filter .detail-project-search input{min-width:210px;background:#fff}
 .detail-summary{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin-top:14px}
 .detail-summary .mini{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .detail-summary .mini span{display:block;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
@@ -428,6 +454,13 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .nextstep-status{min-width:110px}
 .nextstep-actions{display:flex;gap:4px;align-items:center;padding:0;white-space:nowrap}
 .nextstep-actions .btn.sm{padding:4px 7px;font-size:10px;border-radius:6px;gap:3px;min-height:28px}
+.nextstep-save:disabled,.nextstep-save:disabled:hover{background:#e5e7eb!important;color:#94a3b8!important;border:1px solid #d1d5db!important;box-shadow:none!important;filter:none!important;opacity:1;cursor:default;transform:none}
+.nextstep-save:not(:disabled){background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;border:0;box-shadow:0 6px 16px #0067b144}
+.delete-confirm-body{display:flex;gap:13px;align-items:flex-start}
+.delete-confirm-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--red-bg);color:var(--red);font-size:20px;font-weight:800;flex:none}
+.delete-confirm-copy{min-width:0}
+.delete-confirm-copy p{margin:0 0 8px;font-size:12.5px;line-height:1.45}
+.delete-confirm-item{border:1px solid #f1caca;background:#fff8f8;border-radius:9px;padding:9px 10px;font-size:11.5px;line-height:1.4;overflow-wrap:anywhere}
 .nextstep-empty{border:1px dashed #cbd5e1;border-radius:6px;padding:7px 9px;text-align:left;color:var(--muted);background:#fbfdff;font-size:10px;line-height:1.3}
 .nextstep-summary{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .due-over{color:var(--red);font-weight:800}
@@ -808,7 +841,8 @@ function storeUtil(store, wkNum, year){
 // trend across weeks for a format: budget=capacity sum, booking=approved load, actual=completed load
 function capacityTrend(format, fromWk, toWk, year){
   const rows=[];
-  const fmtStores=stores.filter(s=> format==="All"||s.format===format);
+  const formats=Array.isArray(format)?format:(format==="All"||!format?[]:[format]);
+  const fmtStores=stores.filter(s=>!formats.length||formats.includes(s.format));
   for(let w=fromWk; w<=toWk; w++){
     let budget=0,booking=0,actual=0;
     fmtStores.forEach(s=>{ const l=storeWeekLoad(s.id,w,year); budget+=s.capacity; booking+=l.booked; actual+=l.actual; });
@@ -859,14 +893,28 @@ function can(action){ return PERM[action]?PERM[action](role):false; }
 function setRole(r,skipRender=false){ role=r; document.getElementById("roleAvatar").innerText=r[0]; document.getElementById("newPlanBtn").style.display=can("create")?"":"none"; if(!skipRender)renderAll(); }
 
 /* ---------- 9. SHARED FILTER CONTEXT (syncs across modules) ---------- */
-let F={ division:"All", department:"All", type:"All", status:"All", owner:"All",
-        milestone:"All", milestoneStatus:"All", month:"All", week:"All", date:"",
-        format:"All", zone:"All", storeNo:"All", q:"" };
+const MULTI_FILTER_FIELDS=new Set(["division","department","type","status","owner","milestone","milestoneStatus","format","zone","storeNo","capacityStatus"]);
+let F={ division:[], department:[], type:[], status:[], owner:[],
+        milestone:[], milestoneStatus:[], month:"All", week:"All", date:"",
+        format:[], zone:[], storeNo:[], capacityStatus:[], q:"" };
 let viewMode=localStorage.getItem("onePlanV2View")||"week";
 let ganttZoom=Number(localStorage.getItem("onePlanV2Zoom"))||1;     // timeline zoom multiplier
 let trendSpan=Number(localStorage.getItem("onePlanV2Trend"))||10;   // capacity-trend visible weeks
 let plansPage=1, plansSort={col:"code",dir:1}, storeCapacityPage=1, storeCapacityPageSize=50;
 
+function filterValues(field){
+  const v=F[field];
+  if(Array.isArray(v)) return [...new Set(v.filter(x=>x!==undefined&&x!==null&&String(x)!==""&&String(x)!=="All").map(String))];
+  return v===undefined||v===null||v===""||v==="All"?[]:[String(v)];
+}
+function filterIsAll(field){ return filterValues(field).length===0; }
+function filterHas(field,value){ const vals=filterValues(field); return !vals.length||vals.includes(String(value)); }
+function setFilterValues(field,values){ F[field]=[...new Set((values||[]).filter(Boolean).map(String))]; }
+function filterLabel(field,value){
+  if(field==="status") return statusText(value);
+  if(field==="milestoneStatus") return ({InProgress:"In Progress",AtRisk:"At Risk"}[value]||value);
+  return String(value);
+}
 function hasPeriod(){ return F.month!=="All"||F.week!=="All"||!!F.date; }
 function periodWindow(){ // returns {start,end} of active period filter or null
   const y=SETTINGS.planYear;
@@ -878,50 +926,63 @@ function periodWindow(){ // returns {start,end} of active period filter or null
 function projInPeriod(p){
   if(!hasPeriod()) return true;
   const win=periodWindow(); if(!win) return true;
-  const ranges = F.milestone!=="All"
-    ? p.milestones.filter(m=>m.key===F.milestone).map(m=>({s:parseDate(m.plannedStart),e:parseDate(m.plannedEnd)}))
+  const selectedMilestones=filterValues("milestone");
+  const ranges = selectedMilestones.length
+    ? p.milestones.filter(m=>selectedMilestones.includes(m.key)).map(m=>({s:parseDate(m.plannedStart),e:parseDate(m.plannedEnd)}))
     : p.milestones.map(m=>({s:parseDate(m.plannedStart),e:parseDate(m.plannedEnd)}));
   return ranges.some(r=>rangeOverlaps(r.s,r.e,win.start,win.end));
 }
 function msMatch(p){
-  if(F.milestone==="All"&&F.milestoneStatus==="All") return true;
-  if(F.milestone!=="All"){ const m=p.milestones.find(x=>x.key===F.milestone); if(!m) return false;
-    return F.milestoneStatus==="All"||msState(m)===F.milestoneStatus; }
-  return p.milestones.some(m=>msState(m)===F.milestoneStatus);
+  const keys=filterValues("milestone"), statuses=filterValues("milestoneStatus");
+  if(!keys.length&&!statuses.length) return true;
+  const candidates=keys.length?p.milestones.filter(m=>keys.includes(m.key)):p.milestones;
+  if(!candidates.length) return false;
+  return !statuses.length||candidates.some(m=>statuses.includes(msState(m)));
 }
 function matchProject(p){
   const st=projState(p);
-  return (F.division==="All"||p.division===F.division)&&
-    (F.department==="All"||p.department===F.department)&&
-    (F.type==="All"||p.type===F.type)&&
-    (F.status==="All"||st===F.status)&&
-    (F.owner==="All"||p.owner===F.owner)&&
-    (F.format==="All"||p.format===F.format)&&
+  return filterHas("division",p.division)&&
+    filterHas("department",p.department)&&
+    filterHas("type",p.type)&&
+    filterHas("status",st)&&
+    filterHas("owner",p.owner)&&
+    filterHas("format",p.format)&&
     msMatch(p)&&projInPeriod(p)&&
     (!F.q||[p.code,p.name,p.owner,p.division,p.department,p.type].join(" ").toLowerCase().includes(F.q.toLowerCase()));
 }
 function filteredProjects(){ return projects.filter(matchProject); }
 function activeFilterChips(){
   const chips=[];
-  const add=(label,key,val)=>chips.push({label,key,val});
-  if(F.division!=="All")add("Division: "+F.division,"division");
-  if(F.department!=="All")add("Dept: "+F.department,"department");
-  if(F.type!=="All")add("Type: "+F.type,"type");
-  if(F.status!=="All")add("Status: "+statusText(F.status),"status");
-  if(F.owner!=="All")add("Owner: "+F.owner,"owner");
-  if(F.format!=="All")add("Format: "+F.format,"format");
-  if(F.zone!=="All")add("Zone: "+F.zone,"zone");
-  if(F.storeNo!=="All")add("Store No: "+F.storeNo,"storeNo");
-  if(F.milestone!=="All")add("Milestone: "+F.milestone,"milestone");
-  if(F.milestoneStatus!=="All")add("MS Status: "+F.milestoneStatus,"milestoneStatus");
-  if(F.month!=="All")add("Month: "+monthName(F.month),"month");
-  if(F.week!=="All")add("Week: "+F.week,"week");
-  if(F.date)add("Date: "+F.date,"date");
-  if(F.q)add('Search: "'+F.q+'"',"q");
+  const addMulti=(prefix,key)=>filterValues(key).forEach(v=>chips.push({label:prefix+filterLabel(key,v),key,val:v}));
+  addMulti("Division: ","division");
+  addMulti("Dept: ","department");
+  addMulti("Type: ","type");
+  addMulti("Status: ","status");
+  addMulti("Owner: ","owner");
+  addMulti("Format: ","format");
+  addMulti("Zone: ","zone");
+  addMulti("Store No: ","storeNo");
+  addMulti("Milestone: ","milestone");
+  addMulti("MS Status: ","milestoneStatus");
+  addMulti("Capacity: ","capacityStatus");
+  if(F.month!=="All")chips.push({label:"Month: "+monthName(F.month),key:"month"});
+  if(F.week!=="All")chips.push({label:"Week: "+F.week,key:"week"});
+  if(F.date)chips.push({label:"Date: "+F.date,key:"date"});
+  if(F.q)chips.push({label:'Search: "'+F.q+'"',key:"q"});
   return chips;
 }
-function clearChip(key){ F[key]= key==="date"||key==="q"?"":"All"; if(key==="q")document.getElementById("globalSearch").value=""; renderAll(); }
-function resetFilters(){ F={division:"All",department:"All",type:"All",status:"All",owner:"All",milestone:"All",milestoneStatus:"All",month:"All",week:"All",date:"",format:"All",zone:"All",storeNo:"All",q:""}; document.getElementById("globalSearch").value=""; plansPage=1; storeCapacityPage=1; renderAll(); }
+function clearChip(key,encodedValue){
+  if(MULTI_FILTER_FIELDS.has(key)){
+    const value=encodedValue?decodeURIComponent(encodedValue):"";
+    setFilterValues(key,value?filterValues(key).filter(v=>v!==value):[]);
+  }else F[key]=key==="date"||key==="q"?"":"All";
+  if(key==="q")document.getElementById("globalSearch").value="";
+  plansPage=1; storeCapacityPage=1; renderAll();
+}
+function resetFilters(){
+  F={division:[],department:[],type:[],status:[],owner:[],milestone:[],milestoneStatus:[],month:"All",week:"All",date:"",format:[],zone:[],storeNo:[],capacityStatus:[],q:""};
+  document.getElementById("globalSearch").value=""; plansPage=1; storeCapacityPage=1; renderAll();
+}
 
 /* ---------- 10. small helpers ---------- */
 function statusText(s){return {OnTrack:"On Track",AtRisk:"At Risk",Delayed:"Delayed",Completed:"Completed",Cancelled:"Cancelled"}[s]||s;}
@@ -1011,23 +1072,96 @@ function navigate(page){
 }
 
 /* ---------- 12. FILTER TOOLBAR ---------- */
+const MULTI_FILTER_RENDER_LIMIT=180;
+let multiFilterCatalog={}, multiFilterDraft={};
+function normalizedFilterOptions(options){
+  const seen=new Set();
+  return (options||[]).map(o=>typeof o==="object"?{value:String(o.value),text:String(o.text)}:{value:String(o),text:String(o)})
+    .filter(o=>o.value!=="All"&&!seen.has(o.value)&&(seen.add(o.value),true));
+}
+function multiFilterSummary(field,options){
+  const vals=filterValues(field); if(!vals.length) return "All";
+  const map=Object.fromEntries(options.map(o=>[o.value,o.text]));
+  if(vals.length===1) return map[vals[0]]||filterLabel(field,vals[0]);
+  return `${vals.length} selected`;
+}
+function multiOptionsMarkup(field,query=""){
+  const options=multiFilterCatalog[field]||[];
+  const draft=new Set(multiFilterDraft[field]??filterValues(field));
+  const q=String(query||"").trim().toLowerCase();
+  const matches=options.filter(o=>!q||`${o.text} ${o.value}`.toLowerCase().includes(q));
+  const selected=options.filter(o=>draft.has(o.value)&&(!q||`${o.text} ${o.value}`.toLowerCase().includes(q)));
+  const selectedSet=new Set(selected.map(o=>o.value));
+  const list=[...selected,...matches.filter(o=>!selectedSet.has(o.value))].slice(0,MULTI_FILTER_RENDER_LIMIT);
+  if(!list.length) return `<div class="multi-empty">No matching option</div>`;
+  return list.map(o=>`<label class="multi-option" title="${esc(o.text)}"><input type="checkbox" value="${esc(o.value)}" ${draft.has(o.value)?"checked":""} onchange="toggleMultiDraft('${field}',this.value,this.checked)"><span>${esc(o.text)}</span></label>`).join("")+
+    (matches.length>MULTI_FILTER_RENDER_LIMIT?`<div class="multi-limit">Showing ${MULTI_FILTER_RENDER_LIMIT.toLocaleString()} of ${matches.length.toLocaleString()} matches. Refine your search.</div>`:"");
+}
+function multiFilterControl(label,field,options){
+  const normalized=normalizedFilterOptions(options); multiFilterCatalog[field]=normalized;
+  multiFilterDraft[field]=filterValues(field);
+  return `<div class="fld"><label>${label}</label><div class="multi-select" data-field="${field}" onclick="event.stopPropagation()">
+    <button type="button" class="multi-trigger" onclick="openMultiFilter(event,'${field}')" aria-haspopup="listbox" aria-expanded="false"><span class="multi-value">${esc(multiFilterSummary(field,normalized))}</span><span class="multi-caret">▼</span></button>
+    <div class="multi-menu" onclick="event.stopPropagation()">
+      <input class="multi-search" type="search" placeholder="Search ${esc(label)}..." oninput="filterMultiOptions('${field}',this.value)">
+      <div class="multi-actions"><button type="button" onclick="selectVisibleMulti('${field}')">Select search results</button><button type="button" onclick="clearMultiDraft('${field}')">Clear</button></div>
+      <div class="multi-options">${multiOptionsMarkup(field)}</div>
+      <div class="multi-footer"><button type="button" class="btn sm" onclick="cancelMultiFilter('${field}')">Cancel</button><button type="button" class="btn sm primary" onclick="applyMultiFilter('${field}')">Apply</button></div>
+    </div></div></div>`;
+}
+function closeMultiFilters(except=""){
+  document.querySelectorAll(".multi-select.open").forEach(el=>{if(el.dataset.field!==except){el.classList.remove("open");el.querySelector(".multi-trigger")?.setAttribute("aria-expanded","false");}});
+}
+function openMultiFilter(evt,field){
+  evt.preventDefault(); evt.stopPropagation();
+  const wrap=document.querySelector(`.multi-select[data-field="${field}"]`); if(!wrap)return;
+  const willOpen=!wrap.classList.contains("open"); closeMultiFilters(field);
+  if(willOpen){multiFilterDraft[field]=filterValues(field);wrap.classList.add("open");wrap.querySelector(".multi-trigger")?.setAttribute("aria-expanded","true");const q=wrap.querySelector(".multi-search");if(q){q.value="";renderMultiFilterOptions(field,"");setTimeout(()=>q.focus(),0);}}
+  else closeMultiFilters();
+}
+function renderMultiFilterOptions(field,query=""){
+  const wrap=document.querySelector(`.multi-select[data-field="${field}"]`); const box=wrap?.querySelector(".multi-options"); if(box)box.innerHTML=multiOptionsMarkup(field,query);
+}
+function filterMultiOptions(field,query){renderMultiFilterOptions(field,query);}
+function toggleMultiDraft(field,value,checked){
+  const set=new Set(multiFilterDraft[field]??filterValues(field)); checked?set.add(String(value)):set.delete(String(value)); multiFilterDraft[field]=[...set];
+}
+function selectVisibleMulti(field){
+  const wrap=document.querySelector(`.multi-select[data-field="${field}"]`); const q=wrap?.querySelector(".multi-search")?.value.trim().toLowerCase()||"";
+  const matches=(multiFilterCatalog[field]||[]).filter(o=>!q||`${o.text} ${o.value}`.toLowerCase().includes(q));
+  const set=new Set(multiFilterDraft[field]??filterValues(field)); matches.forEach(o=>set.add(o.value)); multiFilterDraft[field]=[...set]; renderMultiFilterOptions(field,q);
+}
+function clearMultiDraft(field){multiFilterDraft[field]=[];const wrap=document.querySelector(`.multi-select[data-field="${field}"]`);renderMultiFilterOptions(field,wrap?.querySelector(".multi-search")?.value||"");}
+function cancelMultiFilter(field){multiFilterDraft[field]=filterValues(field);closeMultiFilters();}
+function applyMultiFilter(field){
+  setFilterValues(field,multiFilterDraft[field]||[]);
+  if(field==="format"){
+    const valid=new Set(stores.filter(s=>filterHas("format",s.format)).map(s=>s.no));
+    setFilterValues("storeNo",filterValues("storeNo").filter(no=>valid.has(no)));
+  }
+  plansPage=1;storeCapacityPage=1;closeMultiFilters();renderAll();
+}
+document.addEventListener("click",()=>closeMultiFilters());
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMultiFilters();});
+
 function toolbar(opts={}){
-  const mk=(label,field,options)=>`<div class="fld"><label>${label}</label><select onchange="F.${field}=this.value;plansPage=1;renderAll()">${
+  const mk=(label,field,options)=>`<div class="fld"><label>${label}</label><select onchange="F.${field}=this.value;plansPage=1;storeCapacityPage=1;renderAll()">${
     options.map(o=>{const v=typeof o==="object"?o.value:o;const t=typeof o==="object"?o.text:o;return `<option value="${v}" ${F[field]===v?"selected":""}>${t}</option>`;}).join("")}</select></div>`;
   const months=[{value:"All",text:"All"},...Array.from({length:12},(_,i)=>({value:String(i+1),text:monthName(i+1)}))];
   const weeks=["All",...Array.from({length:isoWeeksInYear(SETTINGS.planYear)},(_,i)=>"WK"+String(i+1).padStart(2,"0"))];
   let html=`<div class="toolbar">`;
   if(opts.project!==false){
-    html+=mk("Division","division",uniq("division"))+mk("Department","department",uniq("department"))+
-      mk("Type","type",TYPES.length?["All",...TYPES]:uniq("type"))+
-      mk("Status","status",[{value:"All",text:"All"},{value:"OnTrack",text:"On Track"},{value:"AtRisk",text:"At Risk"},{value:"Delayed",text:"Delayed"},{value:"Completed",text:"Completed"},{value:"Cancelled",text:"Cancelled"}])+
-      mk("Owner","owner",uniq("owner"))+mk("Format","format",["All",...FORMATS])+
-      mk("Key Milestone","milestone",["All",...MILESTONES.map(m=>m.key)])+
-      mk("MS Status","milestoneStatus",[{value:"All",text:"All"},{value:"Upcoming",text:"Upcoming"},{value:"InProgress",text:"In Progress"},{value:"Completed",text:"Completed"},{value:"AtRisk",text:"At Risk"},{value:"Delayed",text:"Delayed"}]);
+    html+=multiFilterControl("Division","division",uniq("division"))+multiFilterControl("Department","department",uniq("department"))+
+      multiFilterControl("Type","type",TYPES.length?TYPES:uniq("type"))+
+      multiFilterControl("Status","status",[{value:"OnTrack",text:"On Track"},{value:"AtRisk",text:"At Risk"},{value:"Delayed",text:"Delayed"},{value:"Completed",text:"Completed"},{value:"Cancelled",text:"Cancelled"}])+
+      multiFilterControl("Owner","owner",uniq("owner"))+multiFilterControl("Format","format",FORMATS)+
+      multiFilterControl("Key Milestone","milestone",MILESTONES.map(m=>({value:m.key,text:`${m.key} — ${m.full}`})))+
+      multiFilterControl("MS Status","milestoneStatus",[{value:"Upcoming",text:"Upcoming"},{value:"InProgress",text:"In Progress"},{value:"Completed",text:"Completed"},{value:"AtRisk",text:"At Risk"},{value:"Delayed",text:"Delayed"}]);
   }
   if(opts.store){
-    const noList=["All",...stores.filter(s=>F.format==="All"||s.format===F.format).map(s=>s.no)];
-    html+=mk("Store Format","format",["All",...FORMATS])+mk("Store No.","storeNo",noList)+mk("Zone","zone",["All",...ZONES]);
+    const noList=stores.filter(s=>filterHas("format",s.format)).map(s=>({value:s.no,text:`${s.no} — ${s.name}`}));
+    html+=multiFilterControl("Store Format","format",FORMATS)+multiFilterControl("Store No.","storeNo",noList)+multiFilterControl("Zone","zone",ZONES)+
+      multiFilterControl("Capacity Status","capacityStatus",["Available","Watch","Over"]);
   }
   html+=mk("Month","month",months)+mk("Week","week",weeks)+
     `<div class="fld"><label>Date</label><input type="date" value="${F.date}" onchange="F.date=this.value;renderAll()"></div>`;
@@ -1043,7 +1177,7 @@ function toolbar(opts={}){
   }
   html+=`<button class="btn" onclick="resetFilters()">Reset</button></div>`;
   const chips=activeFilterChips();
-  if(chips.length) html+=`<div class="chips">`+chips.map(c=>`<span class="chip-f">${esc(c.label)}<button onclick="clearChip('${c.key}')">×</button></span>`).join("")+`<button class="btn sm" onclick="resetFilters()">Clear all</button></div>`;
+  if(chips.length) html+=`<div class="chips">`+chips.map(c=>`<span class="chip-f">${esc(c.label)}<button onclick="clearChip('${c.key}','${c.val!==undefined?encodeURIComponent(String(c.val)):""}')">×</button></span>`).join("")+`<button class="btn sm" onclick="resetFilters()">Clear all</button></div>`;
   return html;
 }
 function setView(m){ viewMode=m; localStorage.setItem("onePlanV2View",m); renderAll(); }
@@ -1108,8 +1242,8 @@ function renderGantt(){
   function barFor(p){
     const vis=p.milestones.filter(m=>{
       if(!m.plannedStart||!m.plannedEnd) return false;
-      const keyOk=F.milestone==="All"||m.key===F.milestone;
-      const stOk=F.milestoneStatus==="All"||msState(m)===F.milestoneStatus;
+      const keyOk=filterHas("milestone",m.key);
+      const stOk=filterHas("milestoneStatus",msState(m));
       const visibleOk=rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),visibleWindow.start,visibleWindow.end);
       const perOk=!hasPeriod()|| (()=>{const w=periodWindow();return rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),w.start,w.end);})();
       return keyOk&&stOk&&perOk&&visibleOk;
@@ -1129,7 +1263,7 @@ function renderGantt(){
       const r=Math.max(0,Math.min(rawR,totalW));
       const w=Math.max(20,r-l);
       const y=14+ (i%3)*13;
-      const cls=[`c-${m.key}`, st==="Completed"?"done":"", st==="Delayed"?"delay":st==="AtRisk"?"risk":"", F.milestone===m.key?"sel":""].join(" ");
+      const cls=[`c-${m.key}`, st==="Completed"?"done":"", st==="Delayed"?"delay":st==="AtRisk"?"risk":"", filterValues("milestone").includes(m.key)?"sel":""].join(" ");
       const ck=st==="Completed"?`<span class="ck">✓</span>`:"";
       return `<div class="ms ${cls}" style="left:${l}px;width:${w}px;top:${y}px" title="${m.key} · ${MSMAP[m.key]?.full||""}\n${m.plannedStart} → ${m.plannedEnd}\nStatus: ${statusText(st)}">${m.key}${ck}</div>`;
     }).join("");
@@ -1246,7 +1380,7 @@ function renderDashboard(){
   <div style="margin-top:16px">${renderGantt()}</div>`;
 }
 function kpiCard(label,num,icon,color,page,statusFilter){
-  const click=page?`onclick="${statusFilter?`F.status='${statusFilter}';`:""}navigate('${page}')"`:"";
+  const click=page?`onclick="${statusFilter?`F.status=['${statusFilter}'];`:""}navigate('${page}')"`:"";
   return `<div class="card kpi ${page?"click":""}" ${click}><div class="icon" style="background:${color}">${icon}</div>
     <div><div class="label">${label}</div><div class="num">${num}</div><div class="sub">live</div></div></div>`;
 }
@@ -1348,12 +1482,13 @@ function renderApproval(){
 
 /* ---------- 17. STORE CAPACITY (derived) ---------- */
 function renderStoreCapacity(){
-  if(F.storeNo!=="All" && !stores.some(s=>s.no===F.storeNo && (F.format==="All"||s.format===F.format))) F.storeNo="All";
+  const validStoreNos=new Set(stores.filter(s=>filterHas("format",s.format)).map(s=>s.no));
+  setFilterValues("storeNo",filterValues("storeNo").filter(no=>validStoreNos.has(no)));
   const wk = F.week!=="All"?Number(F.week.replace("WK","")):isoWeek(today());
   const yr=SETTINGS.planYear;
   const q=(F.q||"").toLowerCase();
-  const rows=stores.filter(s=>(F.format==="All"||s.format===F.format)&&(F.zone==="All"||s.zone===F.zone)&&(F.storeNo==="All"||s.no===F.storeNo)&&(!q||[s.no,s.name,s.zone,s.format].join(" ").toLowerCase().includes(q)));
-  const data=rows.map(s=>{const u=storeUtil(s,wk,yr);return {s,...u};}).filter(r=>F.status==="All"||r.status===F.status);
+  const rows=stores.filter(s=>filterHas("format",s.format)&&filterHas("zone",s.zone)&&filterHas("storeNo",s.no)&&(!q||[s.no,s.name,s.zone,s.format].join(" ").toLowerCase().includes(q)));
+  const data=rows.map(s=>{const u=storeUtil(s,wk,yr);return {s,...u};}).filter(r=>filterHas("capacityStatus",r.status));
   const over=data.filter(r=>r.status==="Over").length, watch=data.filter(r=>r.status==="Watch").length, avail=data.filter(r=>r.status==="Available").length;
   const avg=data.length?Math.round(data.reduce((sum,r)=>sum+r.util,0)/data.length):0;
   data.sort((x,y)=>y.util-x.util || String(x.s.no).localeCompare(String(y.s.no)));
@@ -1402,7 +1537,9 @@ function renderStoreCapacity(){
   </div>`;
 }
 function renderTrend(){
-  const fmt=F.format==="All"?"All":F.format;
+  const formats=filterValues("format");
+  const fmt=formats;
+  const fmtLabel=!formats.length?"All formats":formats.join(", ");
   const wkNow=isoWeek(today());
   const weeksInYr=isoWeeksInYear(SETTINGS.planYear);
   const from=Math.max(1,wkNow-Math.floor(trendSpan/2));
@@ -1422,7 +1559,7 @@ function renderTrend(){
   const latest=rows[rows.length-1];
   const util=latest.budget?Math.round(latest.booking/latest.budget*100):0;
   const variance=latest.budget-latest.booking;
-  return `<div class="card"><div class="section-title">Capacity Trend — Budget vs Booking vs Actual <span class="small">(${fmt}, minutes, derived)</span>
+  return `<div class="card"><div class="section-title">Capacity Trend — Budget vs Booking vs Actual <span class="small">(${fmtLabel}, minutes, derived)</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px"><span class="small">Zoom</span><div class="segmented">
       <button onclick="zoomTrend(2)" title="Show fewer weeks (zoom in)" ${trendSpan<=4?"disabled":""}>−</button>
       <button style="min-width:70px;cursor:default">${rows.length} wks</button>
@@ -1649,7 +1786,7 @@ function deleteMilestone(key){
 
 This action is allowed because no project timeline is using this milestone.`)) return;
   MILESTONES=MILESTONES.filter(x=>x.key!==key); rebuildMSMap();
-  if(F.milestone===key) F.milestone="All";
+  setFilterValues("milestone",filterValues("milestone").filter(v=>v!==key));
   saveState(); renderAll();
 }
 
@@ -1687,7 +1824,7 @@ function deleteStore(id){
   if(!confirm(`Delete store ${s.no} — ${s.name}?`+(used?`\n\nIt is applied to ${used} project(s); it will be removed from those plans (their capacity recalculates).`:""))) return;
   stores=stores.filter(x=>x.id!==id);
   projects.forEach(p=>{ p.storeIds=p.storeIds.filter(x=>x!==id); });
-  if(F.storeNo===s.no)F.storeNo="All";
+  setFilterValues("storeNo",filterValues("storeNo").filter(v=>v!==s.no));
   saveState(); renderAll();
 }
 function downloadStoreTemplate(){ download("store-master-template.csv","No,Name,Format,Zone,Capacity\n5001,HYPERMARKET_SEACON SQUARE,Hypermarket,Hyper_BKK/Vicinities,43\n2001,SUPERMARKET_SAMPLE,Supermarket,Super_BKK/Vicinities,43\n","text/csv"); }
@@ -2284,8 +2421,13 @@ function renderProjectGantt(p){
   }).join("");
   return `<div class="gantt-shell detail-gantt" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">Activity timeline · ${p.milestones.length} activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="goDetailGanttToday()">Today</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
 }
+function filterDetailProjectSelect(query){
+  const select=document.getElementById("detailProjectSelect"); if(!select)return;
+  const q=String(query||"").trim().toLowerCase();
+  Array.from(select.options).forEach(o=>{o.hidden=!!q&&!o.text.toLowerCase().includes(q)&&!o.selected;});
+}
 function detailToolbar(p,list){
-  return `<div class="toolbar detail-filter"><div class="fld project-select"><label>Project</label><select onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div><div class="fld"><label>Zoom</label><div class="segmented"><button onclick="zoomGantt(-0.2)" ${ganttZoom<=0.5?"disabled":""}>−</button><button onclick="zoomGantt(0)" style="min-width:54px">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div></div>`;
+  return `<div class="toolbar detail-filter"><div class="fld detail-project-search"><label>Search Project</label><input type="search" placeholder="Name / owner / week" oninput="filterDetailProjectSelect(this.value)"></div><div class="fld project-select"><label>Project</label><select id="detailProjectSelect" onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div><div class="fld"><label>Zoom</label><div class="segmented"><button onclick="zoomGantt(-0.2)" ${ganttZoom<=0.5?"disabled":""}>−</button><button onclick="zoomGantt(0)" style="min-width:54px">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div></div>`;
 }
 function getActivity(projectId,key){
   const p=projects.find(x=>x.id===projectId),m=p?.milestones?.find(x=>x.key===key);
@@ -2302,12 +2444,29 @@ function addActivityNextStep(projectId,key){
   saveState(); renderPage("detailplan");
   setTimeout(()=>document.getElementById(`ns-text-${projectId}-${key}-${id}`)?.focus(),30);
 }
+function updateNextStepSaveState(projectId,key,stepId){
+  const {m}=getActivity(projectId,key); if(!m)return;
+  const step=m.nextSteps.find(x=>x.id===stepId); if(!step)return;
+  const textEl=document.getElementById(`ns-text-${projectId}-${key}-${stepId}`);
+  const dueEl=document.getElementById(`ns-due-${projectId}-${key}-${stepId}`);
+  const statusEl=document.getElementById(`ns-status-${projectId}-${key}-${stepId}`);
+  const saveBtn=document.getElementById(`ns-save-${projectId}-${key}-${stepId}`);
+  if(!textEl||!dueEl||!statusEl||!saveBtn)return;
+  const text=textEl.value.trim(), dueDate=dueEl.value||"", status=statusEl.value||"Not Started";
+  const dirty=text!==(step.text||"").trim() || dueDate!==(step.dueDate||"") || status!==(step.status||"Not Started");
+  const enabled=Boolean(text)&&dirty;
+  saveBtn.disabled=!enabled;
+  saveBtn.title=enabled?"Save changes":"No new data or changes to save";
+  saveBtn.setAttribute("aria-disabled",String(!enabled));
+}
 function saveActivityNextStep(projectId,key,stepId){
   if(!can("edit")){ alert("Your role cannot edit activity next steps."); return; }
   const {p,m}=getActivity(projectId,key); if(!p||!m)return;
   const step=m.nextSteps.find(x=>x.id===stepId); if(!step)return;
+  const saveBtn=document.getElementById(`ns-save-${projectId}-${key}-${stepId}`);
+  if(saveBtn?.disabled)return;
   const text=document.getElementById(`ns-text-${projectId}-${key}-${stepId}`)?.value.trim()||"";
-  if(!text){ alert("Please enter the next step before saving."); document.getElementById(`ns-text-${projectId}-${key}-${stepId}`)?.focus(); return; }
+  if(!text){ document.getElementById(`ns-text-${projectId}-${key}-${stepId}`)?.focus(); return; }
   step.text=text;
   step.dueDate=document.getElementById(`ns-due-${projectId}-${key}-${stepId}`)?.value||"";
   step.status=document.getElementById(`ns-status-${projectId}-${key}-${stepId}`)?.value||"Not Started";
@@ -2316,15 +2475,28 @@ function saveActivityNextStep(projectId,key,stepId){
   logHist(p,"Updated next step",`${key}: ${step.text}${step.dueDate?` · due ${step.dueDate}`:""} · ${step.status}`);
   saveState(); renderPage("detailplan");
 }
+let pendingNextStepDelete=null;
 function deleteActivityNextStep(projectId,key,stepId){
   if(!can("edit")){ alert("Your role cannot delete activity next steps."); return; }
   const {p,m}=getActivity(projectId,key); if(!p||!m)return;
-  const idx=m.nextSteps.findIndex(x=>x.id===stepId); if(idx<0)return;
+  const step=m.nextSteps.find(x=>x.id===stepId); if(!step)return;
+  pendingNextStepDelete={projectId,key,stepId};
+  document.getElementById("genModalInner").innerHTML=`
+    <div class="modal-head"><h2>Confirm Delete Next Step</h2><button class="x" onclick="cancelDeleteActivityNextStep()">✕</button></div>
+    <div class="modal-body"><div class="delete-confirm-body"><div class="delete-confirm-icon">!</div><div class="delete-confirm-copy"><p>Delete this Next Step from <b>${esc(key)} — ${esc(MSMAP[key]?.full||key)}</b>?</p><div class="delete-confirm-item">${esc(step.text||"Blank next step")}${step.dueDate?`<div class="small" style="margin-top:4px">Due ${esc(step.dueDate)} · ${esc(step.status||"Not Started")}</div>`:""}</div><p class="small" style="margin-top:9px">This action cannot be undone.</p></div></div></div>
+    <div class="modal-foot"><button class="btn" onclick="cancelDeleteActivityNextStep()">Cancel</button><button class="btn danger" onclick="confirmDeleteActivityNextStep()">Delete Next Step</button></div>`;
+  document.getElementById("genModal").classList.add("active");
+}
+function cancelDeleteActivityNextStep(){ pendingNextStepDelete=null; closeModal("genModal"); }
+function confirmDeleteActivityNextStep(){
+  const pending=pendingNextStepDelete; pendingNextStepDelete=null;
+  if(!pending){ closeModal("genModal"); return; }
+  const {p,m}=getActivity(pending.projectId,pending.key); if(!p||!m){ closeModal("genModal"); return; }
+  const idx=m.nextSteps.findIndex(x=>x.id===pending.stepId); if(idx<0){ closeModal("genModal"); return; }
   const step=m.nextSteps[idx];
-  if(!confirm(`Delete this next step?\n\n${step.text||"Blank next step"}`))return;
   m.nextSteps.splice(idx,1); syncLegacyNextStepFields(m);
-  logHist(p,"Deleted next step",`${key}: ${step.text||"Blank next step"}`);
-  saveState(); renderPage("detailplan");
+  logHist(p,"Deleted next step",`${pending.key}: ${step.text||"Blank next step"}`);
+  saveState(); closeModal("genModal"); renderPage("detailplan");
 }
 function saveAllActivityNextSteps(projectId){
   if(!can("edit")){ alert("Your role cannot edit activity next steps."); return; }
@@ -2351,7 +2523,8 @@ function saveAllActivityNextSteps(projectId){
 }
 function renderNextStepItem(p,m,step,index,editable){
   const dueOver=step.dueDate&&parseDate(step.dueDate)<today()&&step.status!=="Completed";
-  return `<div class="nextstep-item"><div class="nextstep-index">${index+1}</div><div class="nextstep-field"><label for="ns-text-${p.id}-${m.key}-${step.id}">Next Step</label><input class="nextstep-input" id="ns-text-${p.id}-${m.key}-${step.id}" aria-label="Next Step ${index+1}" title="Next Step ${index+1}" value="${esc(step.text||"")}" placeholder="Enter next action / deliverable" ${editable?"":"disabled"}></div><div class="nextstep-field"><label for="ns-due-${p.id}-${m.key}-${step.id}">Due Date</label><input class="nextstep-input ${dueOver?"due-over":""}" id="ns-due-${p.id}-${m.key}-${step.id}" aria-label="Due Date" title="${dueOver?"Overdue":"Due Date"}" type="date" value="${step.dueDate||""}" ${editable?"":"disabled"}></div><div class="nextstep-field"><label for="ns-status-${p.id}-${m.key}-${step.id}">Status</label><select class="nextstep-input nextstep-status" id="ns-status-${p.id}-${m.key}-${step.id}" aria-label="Next Step Status" title="Next Step Status" ${editable?"":"disabled"}>${NEXT_STEP_STATUSES.map(x=>`<option ${step.status===x?"selected":""}>${x}</option>`).join("")}</select></div><div class="nextstep-actions">${editable?`<button class="btn sm primary" onclick="saveActivityNextStep('${p.id}','${m.key}','${step.id}')">Save</button><button class="btn sm danger" onclick="deleteActivityNextStep('${p.id}','${m.key}','${step.id}')">Delete</button>`:'<span class="small">View only</span>'}</div></div>`;
+  const changeHandler=`updateNextStepSaveState('${p.id}','${m.key}','${step.id}')`;
+  return `<div class="nextstep-item"><div class="nextstep-index">${index+1}</div><div class="nextstep-field"><label for="ns-text-${p.id}-${m.key}-${step.id}">Next Step</label><input class="nextstep-input" id="ns-text-${p.id}-${m.key}-${step.id}" aria-label="Next Step ${index+1}" title="Next Step ${index+1}" value="${esc(step.text||"")}" placeholder="Enter next action / deliverable" ${editable?`oninput="${changeHandler}"`:"disabled"}></div><div class="nextstep-field"><label for="ns-due-${p.id}-${m.key}-${step.id}">Due Date</label><input class="nextstep-input ${dueOver?"due-over":""}" id="ns-due-${p.id}-${m.key}-${step.id}" aria-label="Due Date" title="${dueOver?"Overdue":"Due Date"}" type="date" value="${step.dueDate||""}" ${editable?`onchange="${changeHandler}"`:"disabled"}></div><div class="nextstep-field"><label for="ns-status-${p.id}-${m.key}-${step.id}">Status</label><select class="nextstep-input nextstep-status" id="ns-status-${p.id}-${m.key}-${step.id}" aria-label="Next Step Status" title="Next Step Status" ${editable?`onchange="${changeHandler}"`:"disabled"}>${NEXT_STEP_STATUSES.map(x=>`<option ${step.status===x?"selected":""}>${x}</option>`).join("")}</select></div><div class="nextstep-actions">${editable?`<button class="btn sm primary nextstep-save" id="ns-save-${p.id}-${m.key}-${step.id}" title="No new data or changes to save" aria-disabled="true" disabled onclick="saveActivityNextStep('${p.id}','${m.key}','${step.id}')">Save</button><button class="btn sm danger nextstep-delete" title="Delete Next Step" onclick="deleteActivityNextStep('${p.id}','${m.key}','${step.id}')">Delete</button>`:'<span class="small">View only</span>'}</div></div>`;
 }
 function renderActivityNextStepCard(p,m,editable){
   normalizeMilestoneNextSteps(m);
