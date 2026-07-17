@@ -1,17 +1,14 @@
-# OnePlan — Comfortable Compact Detail Plan
+# OnePlan — Editable Milestone Schedule Popup
 
-This version keeps the Detail Plan milestone rows compact and content-driven, while restoring readable text and practical control sizes.
+This build extends the latest **ONE PLAN — RANGE OPERATION PLATFORM** version.
 
-## Adjustments
-
-- Larger milestone, owner, date, status, and button text
-- Next Step fields increased to 30 px height on desktop
-- Larger date/status fields and Save/Delete buttons
-- Improved focus outline for keyboard and mouse use
-- Milestone cards still have no fixed height
-- Each milestone expands only according to its stacked Next Steps
-- Mobile controls are slightly larger for touch input
+## Added
+- Planned Start and Planned End are editable inside the Key Milestone slide-in panel.
+- Date validation prevents Planned End from being earlier than Planned Start.
+- Saving refreshes the Project Gantt immediately.
+- The overall project start/end period is recalculated from all milestone dates.
+- Date changes are recorded in History / Audit.
+- View-only roles continue to see read-only dates.
 
 ## Deploy
-
-Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render can auto-deploy the commit.
+Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render will auto-deploy the commit.
