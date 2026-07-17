@@ -1,17 +1,19 @@
-# OnePlan — Detail Plan Next Step Stack
+# OnePlan — Compact Detail Plan
 
-This build extends the Detail Plan module with stacked next steps per activity.
+Render-ready static package for GitHub + Render.
 
-## Added
-- Multiple next steps under each activity/milestone
-- Add, inline edit/save, and delete each next step
-- Due date and status per next step
-- Overdue indicator
-- Next-step count and nearest open action in the project Gantt
-- Audit history for add/update/delete actions
-- Automatic migration from the previous single-next-step format
+## Update in this build
+- Reduced Key Milestone / Activity row height by approximately 50%.
+- Reduced fonts, paddings, buttons, fields, badges, and spacing in the Detail Plan activity section.
+- Each milestone card has no fixed height and expands only according to the number of stacked Next Steps.
+- Next Step fields are displayed in a compact single-line layout on desktop.
+- Due-date overdue indication remains visible without adding a full extra row.
+- Mobile layout remains responsive and stacks fields vertically when required.
 
-## Deploy on Render
-Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render can then auto-deploy the latest commit.
+## Deploy
+Upload these files to the GitHub repository root:
+- `index.html`
+- `render.yaml`
+- `README.md`
 
-After deployment on Windows, use `Ctrl + Shift + R` once to load the new build. Existing browser data is retained and migrated automatically.
+Render can auto-deploy from the connected branch. On Windows, refresh with `Ctrl + Shift + R` after deployment.
