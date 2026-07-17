@@ -1,18 +1,18 @@
-# OnePlan — Range Operation Platform
+# OnePlan — Brand Subtitle No-Wrap
 
-Render-ready static build.
+This build keeps the existing 248 px sidebar width and updates the app branding:
 
-## Brand header update
-- Sidebar width remains unchanged at 248 px.
-- Removed the square logo/badge from the app header.
-- Header now contains only **ONE PLAN** and **RANGE OPERATION PLATFORM**.
-- Increased the **ONE PLAN** font size and weight to emphasize the application name.
-- All previous Detail Plan, Gantt, milestone popup, editable milestone dates, and Next Step functions remain unchanged.
+- **ONE PLAN** remains the primary app name.
+- **RANGE OPERATION PLATFORM** is increased to 12 px.
+- Subtitle font weight is regular (400), not bold.
+- Subtitle is forced to stay on one line with no text wrapping.
+- All existing Detail Plan, Gantt, Milestone popup, editable dates, and Next Step features are retained.
 
-## Deploy
+## Render deployment
 Upload these files to the GitHub repository root:
+
 - `index.html`
 - `render.yaml`
 - `README.md`
 
-Render can auto-deploy after the commit. Use `Ctrl + Shift + R` once after deployment to refresh cached assets.
+Render will auto-deploy after the commit. Refresh Windows with `Ctrl + Shift + R` after deployment.
