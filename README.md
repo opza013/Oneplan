@@ -1,14 +1,18 @@
-# OnePlan — Editable Milestone Schedule Popup
+# OnePlan — Range Operation Platform
 
-This build extends the latest **ONE PLAN — RANGE OPERATION PLATFORM** version.
+Render-ready static build.
 
-## Added
-- Planned Start and Planned End are editable inside the Key Milestone slide-in panel.
-- Date validation prevents Planned End from being earlier than Planned Start.
-- Saving refreshes the Project Gantt immediately.
-- The overall project start/end period is recalculated from all milestone dates.
-- Date changes are recorded in History / Audit.
-- View-only roles continue to see read-only dates.
+## Brand header update
+- Sidebar width remains unchanged at 248 px.
+- Removed the square logo/badge from the app header.
+- Header now contains only **ONE PLAN** and **RANGE OPERATION PLATFORM**.
+- Increased the **ONE PLAN** font size and weight to emphasize the application name.
+- All previous Detail Plan, Gantt, milestone popup, editable milestone dates, and Next Step functions remain unchanged.
 
 ## Deploy
-Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render will auto-deploy the commit.
+Upload these files to the GitHub repository root:
+- `index.html`
+- `render.yaml`
+- `README.md`
+
+Render can auto-deploy after the commit. Use `Ctrl + Shift + R` once after deployment to refresh cached assets.

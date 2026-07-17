@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>One Plan — Planning Control Tower (v2)</title>
+<title>One Plan — Range Operation Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
@@ -46,11 +46,10 @@ button{font-family:inherit}
   background:linear-gradient(180deg,var(--nav) 0%,var(--nav-2) 48%,var(--nav-deep) 100%);
   box-shadow:6px 0 28px rgba(4,27,56,.22);position:relative;z-index:30;
 }
-.brand{height:70px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.10)}
-.brand .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#fff,#cfe7ff);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.25)}
-.brand .logo b{font-family:var(--display);color:var(--primary);font-size:20px;line-height:1}
-.brand-title b{font-family:var(--display);display:block;font-size:18px;letter-spacing:.6px}
-.brand-title span{font-size:10.5px;color:#9fd0fb;font-weight:600;letter-spacing:.5px}
+.brand{height:70px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.10)}
+.brand-title{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.brand-title b{font-family:var(--display);display:block;font-size:25px;line-height:1.02;letter-spacing:1px;color:#fff;font-weight:800;white-space:nowrap}
+.brand-title span{display:block;margin-top:4px;font-size:10px;line-height:1.05;color:#9fd0fb;font-weight:700;letter-spacing:.75px;white-space:nowrap}
 .menu-section{color:#7fb6ec;font-size:10px;font-weight:700;letter-spacing:1.1px;padding:16px 20px 6px;text-transform:uppercase}
 .menu{display:flex;flex-direction:column;padding:0 10px;gap:3px}
 .menu button{appearance:none;border:0;background:transparent;color:#dcecff;padding:10px 12px;border-radius:11px;font-weight:600;text-align:left;display:flex;gap:11px;align-items:center;cursor:pointer;font-size:13.5px;transition:.14s;position:relative}
@@ -452,13 +451,12 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
   .nextstep-actions{justify-content:flex-end}
 }
 </style>
-  <meta name="oneplan-build" content="detail-nextstep-comfortable-compact-v4">
+  <meta name="oneplan-build" content="brand-clean-oneplan-v5">
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="logo"><b>1</b></div>
       <div class="brand-title"><b>ONE PLAN</b><span>RANGE OPERATION PLATFORM</span></div>
     </div>
     <div class="menu-section">Plan Control</div>
