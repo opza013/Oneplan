@@ -1,19 +1,17 @@
-# OnePlan — Compact Detail Plan
+# OnePlan — Comfortable Compact Detail Plan
 
-Render-ready static package for GitHub + Render.
+This version keeps the Detail Plan milestone rows compact and content-driven, while restoring readable text and practical control sizes.
 
-## Update in this build
-- Reduced Key Milestone / Activity row height by approximately 50%.
-- Reduced fonts, paddings, buttons, fields, badges, and spacing in the Detail Plan activity section.
-- Each milestone card has no fixed height and expands only according to the number of stacked Next Steps.
-- Next Step fields are displayed in a compact single-line layout on desktop.
-- Due-date overdue indication remains visible without adding a full extra row.
-- Mobile layout remains responsive and stacks fields vertically when required.
+## Adjustments
+
+- Larger milestone, owner, date, status, and button text
+- Next Step fields increased to 30 px height on desktop
+- Larger date/status fields and Save/Delete buttons
+- Improved focus outline for keyboard and mouse use
+- Milestone cards still have no fixed height
+- Each milestone expands only according to its stacked Next Steps
+- Mobile controls are slightly larger for touch input
 
 ## Deploy
-Upload these files to the GitHub repository root:
-- `index.html`
-- `render.yaml`
-- `README.md`
 
-Render can auto-deploy from the connected branch. On Windows, refresh with `Ctrl + Shift + R` after deployment.
+Upload `index.html`, `render.yaml`, and `README.md` to the GitHub repository root. Render can auto-deploy the commit.
