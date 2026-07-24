@@ -1,7 +1,24 @@
 services:
   - type: web
-    name: oneplan-cloud-starter
-    runtime: static
-    buildCommand: echo "OnePlan Detail Gantt milestone panel build ready"
-    staticPublishPath: .
+    name: oneplan-range-operation-platform
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
     autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: STATE_FILE
+        value: /var/data/oneplan-state.json
+      - key: STATE_BACKUP_DIR
+        value: /var/data/backups
+      - key: MAX_STATE_BACKUPS
+        value: 20
+      - key: STATE_TOKEN
+        sync: false
+    disk:
+      name: oneplan-data
+      mountPath: /var/data
+      sizeGB: 1
