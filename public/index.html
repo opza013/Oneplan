@@ -275,6 +275,9 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .impl-wk{text-align:center;font-size:9px;color:var(--muted);font-weight:600;white-space:nowrap}
 .impl-wk.cur{color:var(--primary);font-weight:800}.impl-wk.prev{opacity:.62}
 .impl-nav{margin-top:3px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:9.5px}
+.impl-loading{height:184px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;background:linear-gradient(90deg,transparent,#f7fafc,transparent);border-radius:10px}
+.impl-loading:before{content:"";width:14px;height:14px;border:2px solid #cad7e4;border-top-color:var(--primary);border-radius:50%;margin-right:8px;animation:implSpin .8s linear infinite}
+@keyframes implSpin{to{transform:rotate(360deg)}}
 @media(max-width:1100px){.impl-cols,.impl-week-labels{gap:4px}.impl-stackbar{width:min(27px,82%)}.impl-legend{gap:6px 9px}.impl-legend span{font-size:9px}}
 .trend-svg{width:100%;height:auto;display:block}
 .trend-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
@@ -1601,38 +1604,63 @@ function renderGantt(){
 }
 
 function inclusiveOverlapDays(aStart,aEnd,bStart,bEnd){
-  const s=Math.max(parseDate(aStart).getTime(),bStart.getTime());
-  const e=Math.min(parseDate(aEnd).getTime(),bEnd.getTime());
+  const as=parseDate(aStart), ae=parseDate(aEnd);
+  if(!Number.isFinite(as.getTime())||!Number.isFinite(ae.getTime())) return 0;
+  const s=Math.max(as.getTime(),bStart.getTime());
+  const e=Math.min(ae.getTime(),bEnd.getTime());
   return e<s?0:Math.floor((e-s)/86400000)+1;
 }
-function teamLoadForWeek(wkNum,year){
-  const wr=weekRange(wkNum,year);
-  const raw=Object.fromEntries(TEAM_LOAD_CONFIG.map(t=>[t.key,0]));
-  const activities=Object.fromEntries(TEAM_LOAD_CONFIG.map(t=>[t.key,0]));
-  projects.filter(p=>p.statusOverride!=="Cancelled").forEach(p=>{
+
+let implementationLoadRenderToken=0;
+function buildImplementationLoadBars(){
+  const wk=isoWeek(today()), yr=isoWeekYear(today());
+  const currentMonday=weekRange(wk,yr).start;
+  const windowStart=addDays(currentMonday,-7);
+  const buckets=Array.from({length:8},(_,i)=>{
+    const start=addDays(windowStart,i*7), end=addDays(start,6);
+    const teams=Object.fromEntries(TEAM_LOAD_CONFIG.map(t=>[t.key,{raw:0,activities:0}]));
+    return {start,end,teams};
+  });
+  const windowEnd=buckets[buckets.length-1].end;
+
+  for(const p of projects){
+    if(p.statusOverride==="Cancelled") continue;
     const typeFactor=PROJECT_TEAM_LOAD_FACTOR[p.type]||1;
     const storeScale=1+Math.min(.65,Math.log10(Math.max(1,(p.storeIds||[]).length)+1)*.42);
-    (p.milestones||[]).forEach(m=>{
-      if(!m.plannedStart||!m.plannedEnd) return;
-      const days=inclusiveOverlapDays(m.plannedStart,m.plannedEnd,wr.start,wr.end);
-      if(!days) return;
+    for(const m of (p.milestones||[])){
+      if(!m.plannedStart||!m.plannedEnd) continue;
+      const ms=parseDate(m.plannedStart), me=parseDate(m.plannedEnd);
+      if(!Number.isFinite(ms.getTime())||!Number.isFinite(me.getTime())||me<windowStart||ms>windowEnd) continue;
+      const clippedStart=new Date(Math.max(ms.getTime(),windowStart.getTime()));
+      const clippedEnd=new Date(Math.min(me.getTime(),windowEnd.getTime()));
+      const first=Math.max(0,Math.floor((clippedStart-windowStart)/(7*86400000)));
+      const last=Math.min(7,Math.floor((clippedEnd-windowStart)/(7*86400000)));
       const split=MILESTONE_TEAM_SPLIT[m.key]||{RCPM:1};
-      Object.entries(split).forEach(([team,share])=>{
-        if(raw[team]===undefined) return;
-        raw[team]+=days*typeFactor*storeScale*share;
-        activities[team]+=1;
-      });
-    });
-  });
+      for(let i=first;i<=last;i++){
+        const days=inclusiveOverlapDays(m.plannedStart,m.plannedEnd,buckets[i].start,buckets[i].end);
+        if(!days) continue;
+        for(const [team,share] of Object.entries(split)){
+          const target=buckets[i].teams[team];
+          if(!target) continue;
+          target.raw+=days*typeFactor*storeScale*share;
+          target.activities+=1;
+        }
+      }
+    }
+  }
+
   const combinedCapacity=TEAM_LOAD_CONFIG.reduce((sum,t)=>sum+t.capacity,0);
-  const segments=TEAM_LOAD_CONFIG.map(t=>({
-    ...t,
-    raw:raw[t.key],
-    pct:combinedCapacity?raw[t.key]/combinedCapacity*100:0,
-    util:t.capacity?raw[t.key]/t.capacity*100:0,
-    activities:activities[t.key]
-  }));
-  return {segments,totalPct:segments.reduce((sum,x)=>sum+x.pct,0),combinedCapacity};
+  return buckets.map((b,i)=>{
+    const d=b.start, w=isoWeek(d);
+    const teams=TEAM_LOAD_CONFIG.map(t=>({
+      ...t,
+      raw:b.teams[t.key].raw,
+      pct:combinedCapacity?b.teams[t.key].raw/combinedCapacity*100:0,
+      util:t.capacity?b.teams[t.key].raw/t.capacity*100:0,
+      activities:b.teams[t.key].activities
+    }));
+    return {wk:"WK"+String(w).padStart(2,"0"),pct:teams.reduce((sum,x)=>sum+x.pct,0),teams,cur:i===1,prev:i===0};
+  });
 }
 function renderImplementationLoad(bars){
   const legend=TEAM_LOAD_CONFIG.map(t=>`<span><i style="background:${t.color}"></i>${t.label}</span>`).join("");
@@ -1649,6 +1677,24 @@ function renderImplementationLoad(bars){
   const labels=bars.map(b=>`<div class="impl-wk ${b.cur?"cur":b.prev?"prev":""}">${b.wk}${b.cur?" ●":""}</div>`).join("");
   return `<div class="impl-legend">${legend}</div><div class="impl-chart"><div class="impl-axis"><span class="a100">100%</span><span class="a75">75%</span><span class="a50">50%</span><span class="a25">25%</span><span class="a0">0%</span></div><div class="impl-plot"><div class="impl-cols">${columns}</div></div><div class="impl-week-labels">${labels}</div></div><div class="impl-nav"><span style="color:var(--muted-2)">◀ previous</span><span style="color:var(--primary);font-weight:700">● current week</span><span>next 6 →</span></div>`;
 }
+function scheduleImplementationLoadRender(){
+  const token=++implementationLoadRenderToken;
+  const run=()=>{
+    if(token!==implementationLoadRenderToken||activePage()!=="dashboard") return;
+    const host=document.getElementById("implementationLoadChart");
+    if(!host) return;
+    try{
+      const bars=buildImplementationLoadBars();
+      if(token!==implementationLoadRenderToken||!document.body.contains(host)) return;
+      host.innerHTML=renderImplementationLoad(bars);
+    }catch(err){
+      console.error("Implementation Load render failed",err);
+      host.innerHTML=`<div class="empty">Implementation Load could not be calculated. Other dashboard functions remain available.</div>`;
+    }
+  };
+  if("requestIdleCallback" in window) requestIdleCallback(run,{timeout:350});
+  else requestAnimationFrame(()=>setTimeout(run,0));
+}
 
 /* ---------- 14. DASHBOARD (all data-bound) ---------- */
 function renderDashboard(){
@@ -1664,13 +1710,6 @@ function renderDashboard(){
   const total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
   const segs=[["OnTrack","var(--green)"],["AtRisk","var(--amber)"],["Delayed","var(--red)"],["Completed","var(--blue)"],["Cancelled","var(--slate)"]];
   let acc=0; const stops=segs.map(([k,c])=>{const from=acc/total*360; acc+=counts[k]; const to=acc/total*360; return `${c} ${from}deg ${to}deg`;}).join(",");
-  // team workload: previous 1 week + current week + next 6 weeks (year-boundary safe)
-  const bars=[]; const baseMon=weekRange(wk,yr).start;
-  for(let i=-1;i<=6;i++){
-    const ws=addDays(baseMon,i*7), w2=isoWeek(ws), wy2=isoWeekYear(ws);
-    const teamLoad=teamLoadForWeek(w2,wy2);
-    bars.push({wk:"WK"+String(w2).padStart(2,"0"),pct:teamLoad.totalPct,teams:teamLoad.segments,cur:i===0,prev:i===-1});
-  }
   // action items derived
   const dueDD=projects.filter(p=>{const m=p.milestones.find(x=>x.key==="DD");return m&&msState(m)==="Delayed";}).length;
   const commWk=projects.filter(p=>{const m=p.milestones.find(x=>x.key==="COMM");return m&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),weekRange(wk,yr).start,weekRange(wk,yr).end);}).length;
@@ -1713,7 +1752,7 @@ function renderDashboard(){
       </div>
     </div>
     <div class="card"><div class="section-title">Implementation Load <span class="small">(planned team workload vs capacity · prev 1 + current + next 6 weeks)</span></div>
-      ${renderImplementationLoad(bars)}
+      <div id="implementationLoadChart"><div class="impl-loading">Calculating team workload…</div></div>
     </div>
     <div class="card"><div class="section-title">This Week — Action Items</div>
       <div class="tbl-wrap"><table><tbody>
@@ -2925,7 +2964,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDetailMilesto
 
 const RENDER={dashboard:renderDashboard,gantt:renderGantt,detailplan:renderDetailPlan,plans:renderPlans,approval:renderApproval,
   planload:renderPlanLoad,storecapacity:renderStoreCapacity,calendar:renderCalendar,reports:renderReports,master:renderMaster,settings:renderSettings};
-function renderPage(page){ const fn=RENDER[page]; if(fn)document.getElementById(page).innerHTML=fn(); }
+function renderPage(page){ const fn=RENDER[page]; if(fn)document.getElementById(page).innerHTML=fn(); if(page==="dashboard") scheduleImplementationLoadRender(); }
 function activePage(){ return document.querySelector(".page.active").id; }
 function updateBadges(){
   const wk=isoWeek(today()),yr=isoWeekYear(today());

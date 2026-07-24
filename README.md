@@ -62,3 +62,7 @@ Only the **Implementation Load** dashboard card was changed in this release.
 - Previous week, current week, and next six weeks remain unchanged.
 
 All cloud storage, sync, conflict protection, filters, Detail Plan, Gantt, Next Steps, and milestone popups remain unchanged.
+
+## Responsiveness fix — Implementation Load
+
+The team-stack chart now renders asynchronously after the dashboard shell is visible. Workload is calculated in one pass across the visible eight-week window rather than rescanning every project for each week. Invalid milestone dates are skipped safely, and a chart calculation error no longer blocks the rest of the dashboard.
