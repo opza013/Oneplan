@@ -222,7 +222,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .gbarwrap{position:relative;height:54px}
 .gsummary{position:absolute;height:5px;border-radius:4px;background:#cdd9e6;top:5px;opacity:.9}
 .gsummary i{position:absolute;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary-2),var(--primary));left:0}
-.ms{position:absolute;height:18px;border-radius:6px;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;white-space:nowrap;overflow:hidden;cursor:default;box-shadow:0 2px 5px rgba(15,34,54,.18);transition:.12s}
+.ms{position:absolute;height:18px;border-radius:6px;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;white-space:nowrap;overflow:hidden;cursor:pointer;box-shadow:0 2px 5px rgba(15,34,54,.18);transition:.12s;border:0;font-family:inherit}
 .ms:hover{transform:scaleY(1.18);z-index:9;box-shadow:0 4px 10px rgba(15,34,54,.3)}
 .ms.done{opacity:.62}
 .ms.delay{outline:2px solid #ffffff;box-shadow:0 0 0 2px var(--red)}
@@ -1566,7 +1566,7 @@ function renderGantt(){
       const y=14+ (i%3)*13;
       const cls=[`c-${m.key}`, st==="Completed"?"done":"", st==="Delayed"?"delay":st==="AtRisk"?"risk":"", filterValues("milestone").includes(m.key)?"sel":""].join(" ");
       const ck=st==="Completed"?`<span class="ck">✓</span>`:"";
-      return `<div class="ms ${cls}" style="left:${l}px;width:${w}px;top:${y}px" title="${m.key} · ${MSMAP[m.key]?.full||""}\n${m.plannedStart} → ${m.plannedEnd}\nStatus: ${statusText(st)}">${m.key}${ck}</div>`;
+      return `<button type="button" class="ms ${cls}" style="left:${l}px;width:${w}px;top:${y}px" title="View milestone details · ${m.key} · ${MSMAP[m.key]?.full||""}\n${m.plannedStart} → ${m.plannedEnd}\nStatus: ${statusText(st)}" onclick="openGanttMilestoneDetails('${p.id}','${m.key}')" aria-label="View ${m.key} milestone details">${m.key}${ck}</button>`;
     }).join("");
     const st=projState(p);
     return `<div class="grow"><div class="gcell-left">
@@ -1601,6 +1601,41 @@ function renderGantt(){
   <div class="card" style="margin-top:14px"><div class="section-title">Milestone Legend</div><div class="legend-row">
     ${MILESTONES.map(m=>`<div class="lg"><span class="sw" style="background:${milestoneColor(m.key)}"></span>${m.key} — ${m.full}</div>`).join("")}
   </div></div>`;
+}
+
+function openGanttMilestoneDetails(projectId,key){
+  const p=projects.find(x=>x.id===projectId);
+  const m=p?.milestones?.find(x=>x.key===key);
+  if(!p||!m)return;
+  normalizeMilestoneNextSteps(m);
+  const master=MSMAP[m.key]||{full:m.key,dep:null};
+  const state=msState(m);
+  const start=m.plannedStart?parseDate(m.plannedStart):null;
+  const end=m.plannedEnd?parseDate(m.plannedEnd):null;
+  const duration=start&&end?Math.max(1,Math.round((end-start)/86400000)+1):0;
+  const nextSteps=milestonePanelNextSteps(m);
+  const modal=document.getElementById("genModal");
+  const inner=document.getElementById("genModalInner");
+  inner.innerHTML=`
+    <div class="modal-head"><h2>${esc(m.key)} — ${esc(master.full||m.key)}</h2><button class="x" onclick="closeModal('genModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="banner info" style="margin-bottom:12px"><b>View only.</b>&nbsp; Milestone dates and Next Steps can be edited from Detail Plan only.</div>
+      <div class="milestone-panel-status"><span class="pill st-${state==="InProgress"?"OnTrack":state}">${statusText(state)}</span>${duration?`<span class="small">${duration} day${duration===1?"":"s"}</span>`:""}</div>
+      <div class="milestone-info-grid">
+        <div class="milestone-info"><span>Project</span><b>${esc(p.name)}</b></div>
+        <div class="milestone-info"><span>Project Owner</span><b>${esc(p.owner||"TBC")}</b></div>
+        <div class="milestone-info"><span>Activity Owner</span><b>${esc(m.owner||p.owner||"TBC")}</b></div>
+        <div class="milestone-info"><span>Dependency</span><b>${master.dep?`${esc(master.dep)} — ${esc(MSMAP[master.dep]?.full||master.dep)}`:"None"}</b></div>
+        <div class="milestone-info"><span>Planned Start</span><b>${m.plannedStart?fmtDisp(parseDate(m.plannedStart)):"—"}</b></div>
+        <div class="milestone-info"><span>Planned End</span><b>${m.plannedEnd?fmtDisp(parseDate(m.plannedEnd)):"—"}</b></div>
+        <div class="milestone-info"><span>Actual Start</span><b>${m.actualStart?fmtDisp(parseDate(m.actualStart)):"—"}</b></div>
+        <div class="milestone-info"><span>Actual End</span><b>${m.actualEnd?fmtDisp(parseDate(m.actualEnd)):"—"}</b></div>
+      </div>
+      <div class="milestone-panel-section">Next Steps <span class="nextstep-count">${m.nextSteps.length}</span></div>
+      ${nextSteps}
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('genModal')">Close</button><button class="btn primary" onclick="closeModal('genModal');openDetailPlan('${p.id}')">Open Detail Plan${can("edit")?" to Edit":""}</button></div>`;
+  modal.classList.add("active");
 }
 
 function inclusiveOverlapDays(aStart,aEnd,bStart,bEnd){
