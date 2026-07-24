@@ -1,8 +1,1 @@
-ONE PLAN — RANGE OPERATION PLATFORM
-Complete Rebuild Version: 4.1.0
-Build date: 2026-07-24
-
-Application file: public/index.html
-Runtime: Node.js Web Service
-Storage: Local cache + server JSON state + persistent disk backups
-Dashboard: Implementation Load team stack with asynchronous calculation
+4.1.1-open-first-free
