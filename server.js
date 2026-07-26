@@ -345,7 +345,7 @@ async function handler(req, res) {
     return sendJson(res, 200, {
       ok: true,
       service: "oneplan-range-operation-platform",
-      version: "5.2.0-storage-path",
+      version: "5.3.0-device-folder",
       indexFile: "index.html",
       storageMode: STORAGE.mode,
       time: new Date().toISOString()
@@ -353,7 +353,7 @@ async function handler(req, res) {
   }
 
   if (url.pathname === "/api/version" && req.method === "GET") {
-    return sendJson(res, 200, { version: "5.2.0-storage-path" });
+    return sendJson(res, 200, { version: "5.3.0-device-folder" });
   }
 
   if (url.pathname.startsWith("/api/")) {
@@ -469,7 +469,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`OnePlan v5.2.0-storage-path running on 0.0.0.0:${PORT}`);
+  console.log(`OnePlan v5.3.0-device-folder running on 0.0.0.0:${PORT}`);
   console.log(`Serving ${INDEX_FILE}`);
   console.log(`Storage mode: ${STORAGE.mode}`);
   console.log(`Storage directory: ${STORAGE.directory}`);

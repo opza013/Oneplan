@@ -551,7 +551,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
         <div class="crumb" id="pgCrumb">One Plan / Dashboard</div>
       </div>
       <div class="search"><input id="globalSearch" placeholder="Search project, store, owner, milestone…" /></div>
-      <button class="cloud-sync-pill" id="cloudSyncPill" data-state="local" onclick="navigate('settings')" title="Cloud storage status"><span class="cloud-dot"></span><span class="cloud-label" id="cloudSyncLabel">Local cache</span></button>
+      <button class="cloud-sync-pill" id="cloudSyncPill" data-state="local" onclick="navigate('settings')" title="Storage status"><span class="cloud-dot"></span><span class="cloud-label" id="cloudSyncLabel">Local cache</span></button>
       <div class="bell" title="Alerts" onclick="navigate('approval')">🔔<span class="badge" id="notiCount">0</span></div>
       <button class="btn primary" id="newPlanBtn" onclick="openPlanModal()">+ New Plan</button>
     </header>
@@ -621,7 +621,7 @@ function fmtDisp(date){ return date.toLocaleDateString("en-GB",{day:"2-digit",mo
 function fmtShort(date){ return date.toLocaleDateString("en-GB",{day:"2-digit",month:"short"}); }
 
 /* ---------- 2. SETTINGS / state ---------- */
-const LS="onePlanV3StoreMaster_StoragePathSetting";
+const LS="onePlanV3StoreMaster_LocalFolderSetting";
 const ONEPLAN_QUERY = new URLSearchParams(window.location.search);
 const ONEPLAN_FRESH_BOOT = ONEPLAN_QUERY.get("fresh")==="1";
 const ONEPLAN_RESET_BOOT = ONEPLAN_QUERY.get("reset")==="1";
@@ -633,8 +633,8 @@ let SETTINGS = {
   planYear: new Date().getFullYear(),
   capacityWarn: 80,          // %
   capacityBlock: 100,        // %
-  storageProvider: "server-json",
-  dataPath: "/api/state",
+  storageProvider: "device-folder",
+  dataPath: "device-folder",
   dataFileName: "oneplan-state.json",
   syncMode: "auto"
 };
@@ -890,9 +890,14 @@ function saveState(options){
   invalidateLoadIndex();
   const snapshot=cloudSnapshot();
   saveLocalCache(snapshot);
-  if(!(options&&options.localOnly) && !CLOUD_SYNC.applying){
-    CLOUD_SYNC.dirty=true;
-    cloudQueueSave();
+  if(!(options&&options.localOnly) && !CLOUD_SYNC.applying && !DEVICE_STORAGE.applying){
+    if(SETTINGS.storageProvider==="device-folder"){
+      DEVICE_STORAGE.dirty=true;
+      deviceQueueSave();
+    }else{
+      CLOUD_SYNC.dirty=true;
+      cloudQueueSave();
+    }
   }
   cloudUpdateStatus();
 }
@@ -901,11 +906,12 @@ function cloudSetStatus(state,label){
   const text=document.getElementById("cloudSyncLabel");
   if(pill) pill.dataset.state=state||"local";
   if(text) text.textContent=label||"Local cache";
-  if(pill) pill.title="Cloud storage: "+(label||state||"Local cache");
+  if(pill) pill.title="Storage: "+(label||state||"Local cache");
   const detail=document.getElementById("cloudStorageStatus");
   if(detail) detail.textContent=label||state||"Local cache";
 }
 function cloudUpdateStatus(){
+  if(SETTINGS.storageProvider==="device-folder"){ deviceUpdateStatus(); return; }
   if(!navigator.onLine){ cloudSetStatus("offline",CLOUD_SYNC.dirty?"Offline · pending":"Offline · cached"); return; }
   if(CLOUD_SYNC.conflict){ cloudSetStatus("conflict","Sync conflict"); return; }
   if(CLOUD_SYNC.error){ cloudSetStatus("error",CLOUD_SYNC.error); return; }
@@ -933,7 +939,7 @@ function cloudApplyState(state,meta){
   CLOUD_SYNC.applying=true;
   try{
     SETTINGS=Object.assign(SETTINGS,state.settings||{});
-    SETTINGS.storageProvider="server-json"; SETTINGS.dataPath="/api/state"; SETTINGS.dataFileName="oneplan-state.json"; SETTINGS.syncMode="auto";
+    SETTINGS.dataFileName=SETTINGS.dataFileName||"oneplan-state.json"; SETTINGS.syncMode="auto";
     MILESTONES=normalizeMilestones(state.milestones||MILESTONES); rebuildMSMap();
     stores=state.stores; projects=state.projects;
     onePlanRepairData();
@@ -1037,17 +1043,17 @@ function cloudClearToken(){
 }
 function cloudRestoreBeforePull(){
   let raw=""; try{raw=localStorage.getItem(CLOUD_BEFORE_PULL_KEY)||"";}catch(e){}
-  if(!raw){ alert("No before-pull local backup is available in this browser."); return; }
-  if(!confirm("Restore the local data captured before the most recent cloud pull? The restored data will be marked as pending sync.")) return;
+  if(!raw){ alert("No before-load local backup is available in this browser."); return; }
+  if(!confirm("Restore the local data captured before the most recent folder load? The restored data will be marked as pending save.")) return;
   try{
     const o=JSON.parse(raw); const err=cloudValidateState(o); if(err)throw new Error(err);
     CLOUD_SYNC.applying=true;
     SETTINGS=Object.assign(SETTINGS,o.settings||{}); MILESTONES=normalizeMilestones(o.milestones||MILESTONES); rebuildMSMap(); stores=o.stores;projects=o.projects;onePlanRepairData();
-    CLOUD_SYNC.applying=false; CLOUD_SYNC.dirty=true; saveLocalCache(cloudSnapshot()); renderAll(); cloudUpdateStatus();
+    CLOUD_SYNC.applying=false; DEVICE_STORAGE.dirty=true; saveLocalCache(cloudSnapshot()); deviceQueueSave(); renderAll(); cloudUpdateStatus();
   }catch(e){ CLOUD_SYNC.applying=false; alert("Restore failed: "+e.message); }
 }
 function cloudResetLocalCache(){
-  if(!confirm("Clear only this browser's OnePlan cache? Cloud data will not be deleted and will load again after refresh.")) return;
+  if(!confirm("Clear only this browser's OnePlan cache? The selected folder file will not be deleted.")) return;
   try{localStorage.removeItem(CLOUD_CACHE_KEY);localStorage.removeItem(CLOUD_BEFORE_PULL_KEY);}catch(e){}
   location.reload();
 }
@@ -1132,6 +1138,271 @@ async function cloudBoot(){
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)cloudCheckLatest();});
   window.addEventListener("focus",cloudCheckLatest);
   window.addEventListener("beforeunload",()=>{if(CLOUD_SYNC.dirty)saveLocalCache(cloudSnapshot());});
+}
+
+
+/* ---------- 5B. DEVICE FOLDER STORAGE (File System Access API) ---------- */
+const DEVICE_STORAGE_DB="oneplan-device-folder-v1";
+const DEVICE_STORAGE_STORE="handles";
+const DEVICE_STORAGE_KEY="primary-folder";
+const DEVICE_STORAGE={
+  handle:null,
+  folderName:"",
+  supported:("showDirectoryPicker" in window)&&("indexedDB" in window),
+  ready:false,
+  permission:"unknown",
+  revision:null,
+  savedAt:"",
+  loadedAt:"",
+  dirty:false,
+  saving:false,
+  applying:false,
+  conflict:false,
+  error:"",
+  timer:null,
+  pendingAfterSave:false,
+  fileName:"oneplan-state.json",
+  backupFolder:"backups",
+  maxBackups:20
+};
+function deviceOpenDb(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DEVICE_STORAGE_DB,1);
+    req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(DEVICE_STORAGE_STORE))req.result.createObjectStore(DEVICE_STORAGE_STORE); };
+    req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error||new Error("IndexedDB unavailable"));
+  });
+}
+async function deviceDbGet(){
+  if(!DEVICE_STORAGE.supported)return null;
+  const db=await deviceOpenDb();
+  try{return await new Promise((resolve,reject)=>{const tx=db.transaction(DEVICE_STORAGE_STORE,"readonly");const r=tx.objectStore(DEVICE_STORAGE_STORE).get(DEVICE_STORAGE_KEY);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error);});}
+  finally{db.close();}
+}
+async function deviceDbPut(handle){
+  const db=await deviceOpenDb();
+  try{await new Promise((resolve,reject)=>{const tx=db.transaction(DEVICE_STORAGE_STORE,"readwrite");tx.objectStore(DEVICE_STORAGE_STORE).put(handle,DEVICE_STORAGE_KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
+  finally{db.close();}
+}
+async function deviceDbDelete(){
+  if(!DEVICE_STORAGE.supported)return;
+  const db=await deviceOpenDb();
+  try{await new Promise((resolve,reject)=>{const tx=db.transaction(DEVICE_STORAGE_STORE,"readwrite");tx.objectStore(DEVICE_STORAGE_STORE).delete(DEVICE_STORAGE_KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
+  finally{db.close();}
+}
+async function devicePermission(handle,request=false){
+  if(!handle)return "denied";
+  const descriptor={mode:"readwrite"};
+  let state=await handle.queryPermission(descriptor);
+  if(state!=="granted"&&request)state=await handle.requestPermission(descriptor);
+  DEVICE_STORAGE.permission=state;
+  return state;
+}
+function deviceNormalizeRecord(raw){
+  if(!raw||typeof raw!=="object")throw new Error("The OnePlan file is empty or invalid.");
+  const state=raw.state||raw;
+  const err=cloudValidateState(state); if(err)throw new Error(err);
+  return {schemaVersion:Number(raw.schemaVersion||3),meta:raw.meta||{},state};
+}
+async function deviceReadRecord(){
+  if(!DEVICE_STORAGE.handle)return null;
+  try{
+    const fh=await DEVICE_STORAGE.handle.getFileHandle(DEVICE_STORAGE.fileName,{create:false});
+    const file=await fh.getFile();
+    const text=await file.text();
+    if(!text.trim())return null;
+    return deviceNormalizeRecord(JSON.parse(text));
+  }catch(e){
+    if(e&&e.name==="NotFoundError")return null;
+    throw e;
+  }
+}
+function deviceSafeStamp(){return new Date().toISOString().replace(/[:.]/g,"-");}
+async function deviceTrimBackups(dir){
+  const names=[];
+  for await(const [name,handle] of dir.entries())if(handle.kind==="file"&&name.endsWith(".json"))names.push(name);
+  names.sort().reverse();
+  await Promise.all(names.slice(DEVICE_STORAGE.maxBackups).map(name=>dir.removeEntry(name).catch(()=>{})));
+}
+async function deviceBackupRecord(record){
+  if(!record||!DEVICE_STORAGE.handle)return;
+  const dir=await DEVICE_STORAGE.handle.getDirectoryHandle(DEVICE_STORAGE.backupFolder,{create:true});
+  const rev=String(record.meta?.revision||0).padStart(6,"0");
+  const name=`oneplan-state-r${rev}-${deviceSafeStamp()}.json`;
+  const fh=await dir.getFileHandle(name,{create:true});
+  const writable=await fh.createWritable();
+  await writable.write(JSON.stringify(record,null,2));
+  await writable.close();
+  await deviceTrimBackups(dir);
+}
+async function deviceWriteRecord(record){
+  const existing=await deviceReadRecord();
+  if(existing)await deviceBackupRecord(existing);
+  const fh=await DEVICE_STORAGE.handle.getFileHandle(DEVICE_STORAGE.fileName,{create:true});
+  const writable=await fh.createWritable();
+  await writable.write(JSON.stringify(record,null,2));
+  await writable.close();
+}
+function deviceUpdateStatus(){
+  if(!DEVICE_STORAGE.supported){cloudSetStatus("error","Folder picker unsupported");return;}
+  if(DEVICE_STORAGE.conflict){cloudSetStatus("conflict","Folder conflict");return;}
+  if(DEVICE_STORAGE.error){cloudSetStatus("error",DEVICE_STORAGE.error);return;}
+  if(DEVICE_STORAGE.saving){cloudSetStatus("saving","Saving to folder…");return;}
+  if(!DEVICE_STORAGE.handle){cloudSetStatus("local",DEVICE_STORAGE.dirty?"Select folder · pending":"Select storage folder");return;}
+  if(DEVICE_STORAGE.permission!=="granted"){cloudSetStatus("offline","Reconnect folder");return;}
+  if(DEVICE_STORAGE.dirty){cloudSetStatus("local","Folder save pending");return;}
+  cloudSetStatus("synced","Folder synced");
+}
+function deviceQueueSave(delay=700){
+  if(!DEVICE_STORAGE.handle||DEVICE_STORAGE.permission!=="granted"||DEVICE_STORAGE.applying){deviceUpdateStatus();return;}
+  clearTimeout(DEVICE_STORAGE.timer);
+  DEVICE_STORAGE.timer=setTimeout(()=>devicePush(false),delay);
+  deviceUpdateStatus();
+}
+function deviceApplyState(state,meta={}){
+  const err=cloudValidateState(state); if(err)throw new Error(err);
+  try{localStorage.setItem(CLOUD_BEFORE_PULL_KEY,JSON.stringify(cloudSnapshot()));}catch(e){}
+  DEVICE_STORAGE.applying=true;
+  try{
+    SETTINGS=Object.assign(SETTINGS,state.settings||{});
+    SETTINGS.storageProvider="device-folder";
+    SETTINGS.dataPath="device-folder";
+    SETTINGS.dataFileName=DEVICE_STORAGE.fileName;
+    SETTINGS.syncMode="auto";
+    MILESTONES=normalizeMilestones(state.milestones||MILESTONES); rebuildMSMap();
+    stores=state.stores; projects=state.projects;
+    onePlanRepairData();
+    saveLocalCache(cloudSnapshot());
+    DEVICE_STORAGE.revision=meta.revision??DEVICE_STORAGE.revision??0;
+    DEVICE_STORAGE.savedAt=meta.savedAt||"";
+    DEVICE_STORAGE.loadedAt=new Date().toISOString();
+    DEVICE_STORAGE.dirty=false; DEVICE_STORAGE.conflict=false; DEVICE_STORAGE.error="";
+  }finally{DEVICE_STORAGE.applying=false;}
+  if(document.getElementById("menu1")?.children.length)renderAll();
+  deviceUpdateStatus();
+}
+async function devicePull(options={}){
+  const force=Boolean(options.force),startup=Boolean(options.startup);
+  if(!DEVICE_STORAGE.handle){DEVICE_STORAGE.error="Select a folder";deviceUpdateStatus();return false;}
+  const perm=await devicePermission(DEVICE_STORAGE.handle,Boolean(options.requestPermission));
+  if(perm!=="granted"){DEVICE_STORAGE.error="Folder permission required";deviceUpdateStatus();return false;}
+  if(DEVICE_STORAGE.dirty&&!startup&&!force&&!confirm("Unsaved browser changes will be replaced by the file in the selected folder. Continue?"))return false;
+  DEVICE_STORAGE.error="";cloudSetStatus("loading","Loading folder…");
+  try{
+    const record=await deviceReadRecord();
+    DEVICE_STORAGE.ready=true;
+    if(!record){
+      DEVICE_STORAGE.revision=0;
+      DEVICE_STORAGE.dirty=true;
+      return await devicePush(true);
+    }
+    deviceApplyState(record.state,record.meta||{});
+    return true;
+  }catch(e){
+    DEVICE_STORAGE.error="Folder load failed";
+    console.error(e);deviceUpdateStatus();return false;
+  }
+}
+async function devicePush(force=false){
+  clearTimeout(DEVICE_STORAGE.timer);
+  if(DEVICE_STORAGE.saving){DEVICE_STORAGE.pendingAfterSave=true;return false;}
+  if(!DEVICE_STORAGE.handle){DEVICE_STORAGE.dirty=true;DEVICE_STORAGE.error="Select a folder";deviceUpdateStatus();return false;}
+  const perm=await devicePermission(DEVICE_STORAGE.handle,false);
+  if(perm!=="granted"){DEVICE_STORAGE.dirty=true;DEVICE_STORAGE.error="Reconnect folder";deviceUpdateStatus();return false;}
+  DEVICE_STORAGE.saving=true;DEVICE_STORAGE.error="";deviceUpdateStatus();
+  try{
+    const existing=await deviceReadRecord();
+    const remoteRevision=Number(existing?.meta?.revision||0);
+    if(!force&&DEVICE_STORAGE.revision!=null&&remoteRevision!==Number(DEVICE_STORAGE.revision||0)){
+      DEVICE_STORAGE.conflict=true;DEVICE_STORAGE.dirty=true;deviceUpdateStatus();return false;
+    }
+    const now=new Date().toISOString();
+    const record={
+      schemaVersion:3,
+      meta:{revision:remoteRevision+1,savedAt:now,clientId:cloudClientId(),savedBy:(typeof role!=="undefined"?role:"OnePlan user"),folderName:DEVICE_STORAGE.folderName},
+      state:cloudSnapshot()
+    };
+    await deviceWriteRecord(record);
+    DEVICE_STORAGE.revision=record.meta.revision;
+    DEVICE_STORAGE.savedAt=now;
+    DEVICE_STORAGE.loadedAt=now;
+    DEVICE_STORAGE.dirty=false;DEVICE_STORAGE.conflict=false;DEVICE_STORAGE.error="";
+    return true;
+  }catch(e){
+    DEVICE_STORAGE.error=e.name==="NotAllowedError"?"Folder permission denied":"Folder save failed";
+    DEVICE_STORAGE.dirty=true;console.error(e);return false;
+  }finally{
+    DEVICE_STORAGE.saving=false;deviceUpdateStatus();
+    if(DEVICE_STORAGE.pendingAfterSave){DEVICE_STORAGE.pendingAfterSave=false;deviceQueueSave(200);}
+    if(document.querySelector(".page.active")?.id==="settings")renderPage("settings");
+  }
+}
+async function deviceChooseFolder(){
+  if(!DEVICE_STORAGE.supported){alert("This browser cannot select and write to a local folder. Use Microsoft Edge or Google Chrome on Windows.");return false;}
+  try{
+    const handle=await window.showDirectoryPicker({id:"oneplan-storage-folder",mode:"readwrite",startIn:"documents"});
+    DEVICE_STORAGE.handle=handle;DEVICE_STORAGE.folderName=handle.name||"Selected folder";
+    await deviceDbPut(handle);
+    const perm=await devicePermission(handle,true);
+    if(perm!=="granted")throw new Error("Read/write permission was not granted.");
+    DEVICE_STORAGE.ready=true;DEVICE_STORAGE.error="";DEVICE_STORAGE.conflict=false;
+    const existing=await deviceReadRecord();
+    if(existing){
+      const loadExisting=confirm(`The selected folder “${DEVICE_STORAGE.folderName}” already contains ${DEVICE_STORAGE.fileName}.\n\nOK = load the file from this folder\nCancel = keep the current app data and overwrite the folder file`);
+      if(loadExisting)deviceApplyState(existing.state,existing.meta||{});
+      else{DEVICE_STORAGE.revision=existing.meta?.revision??0;DEVICE_STORAGE.dirty=true;await devicePush(true);}
+    }else{DEVICE_STORAGE.revision=0;DEVICE_STORAGE.dirty=true;await devicePush(true);}
+    renderAll();navigate("settings");return true;
+  }catch(e){
+    if(e?.name!=="AbortError"){DEVICE_STORAGE.error=e.message||"Folder selection failed";alert("Folder was not connected: "+DEVICE_STORAGE.error);}
+    deviceUpdateStatus();return false;
+  }
+}
+async function deviceReconnectFolder(){
+  if(!DEVICE_STORAGE.handle)return deviceChooseFolder();
+  try{
+    const perm=await devicePermission(DEVICE_STORAGE.handle,true);
+    if(perm!=="granted")throw new Error("Permission was not granted.");
+    DEVICE_STORAGE.error="";DEVICE_STORAGE.ready=true;
+    await devicePull({force:true,requestPermission:false});
+    if(document.querySelector(".page.active")?.id==="settings")renderPage("settings");
+    return true;
+  }catch(e){DEVICE_STORAGE.error=e.message||"Reconnect failed";deviceUpdateStatus();return false;}
+}
+async function deviceDisconnectFolder(){
+  if(!confirm("Disconnect the selected device folder? OnePlan data in the folder will not be deleted."))return;
+  clearTimeout(DEVICE_STORAGE.timer);
+  await deviceDbDelete().catch(()=>{});
+  DEVICE_STORAGE.handle=null;DEVICE_STORAGE.folderName="";DEVICE_STORAGE.ready=false;DEVICE_STORAGE.permission="unknown";DEVICE_STORAGE.revision=null;DEVICE_STORAGE.savedAt="";DEVICE_STORAGE.error="";DEVICE_STORAGE.conflict=false;
+  deviceUpdateStatus();renderPage("settings");
+}
+async function deviceCreateBackup(){
+  if(!DEVICE_STORAGE.handle){alert("Select a storage folder first.");return;}
+  const perm=await devicePermission(DEVICE_STORAGE.handle,true);if(perm!=="granted"){alert("Folder permission is required.");return;}
+  const record={schemaVersion:3,meta:{revision:DEVICE_STORAGE.revision||0,savedAt:new Date().toISOString(),manualBackup:true},state:cloudSnapshot()};
+  await deviceBackupRecord(record);alert("A backup was created in the backups folder.");
+}
+function deviceImportAppData(input){
+  const file=input?.files?.[0];if(!file)return;
+  file.text().then(text=>{
+    const record=deviceNormalizeRecord(JSON.parse(text));
+    if(!confirm("Import this OnePlan backup into the current browser and save it to the selected folder?"))return;
+    deviceApplyState(record.state,{revision:DEVICE_STORAGE.revision||0});DEVICE_STORAGE.dirty=true;saveState();renderAll();
+  }).catch(e=>alert("Import failed: "+e.message)).finally(()=>{input.value="";});
+}
+async function deviceBoot(){
+  SETTINGS.storageProvider="device-folder";SETTINGS.dataPath="device-folder";SETTINGS.dataFileName="oneplan-state.json";SETTINGS.syncMode="auto";
+  cloudClientId();deviceUpdateStatus();
+  if(!DEVICE_STORAGE.supported){DEVICE_STORAGE.error="Folder picker unsupported";deviceUpdateStatus();return;}
+  try{
+    const handle=await deviceDbGet();
+    if(handle){
+      DEVICE_STORAGE.handle=handle;DEVICE_STORAGE.folderName=handle.name||"Selected folder";
+      const perm=await devicePermission(handle,false);
+      if(perm==="granted")await devicePull({startup:true,force:true});
+      else{DEVICE_STORAGE.error="Reconnect folder";deviceUpdateStatus();}
+    }else deviceUpdateStatus();
+  }catch(e){DEVICE_STORAGE.error="Folder connection unavailable";console.warn(e);deviceUpdateStatus();}
+  window.addEventListener("beforeunload",()=>{if(DEVICE_STORAGE.dirty)saveLocalCache(cloudSnapshot());});
 }
 
 
@@ -2327,16 +2598,10 @@ async function importStoresFile(input){
 
 function renderSettings(){
   const wkInfo=`${weekKeyOf(today())} · ${isoWeekYear(today())}`;
-  const rev=CLOUD_SYNC.revision==null?"Not loaded":String(CLOUD_SYNC.revision);
-  const last=CLOUD_SYNC.savedAt?new Date(CLOUD_SYNC.savedAt).toLocaleString():"Not saved yet";
-  const status=CLOUD_SYNC.conflict?"Conflict — pull or force save required":CLOUD_SYNC.error||(!navigator.onLine?"Offline — local cache active":CLOUD_SYNC.saving?"Saving to cloud…":CLOUD_SYNC.dirty?"Local changes pending":"Cloud synchronized");
-  const storage=SERVER_STORAGE.info||{};
-  const storageMode=storage.mode||"temporary";
-  const storagePath=storage.directory||"Loading storage information…";
-  const storageStateFile=storage.stateFile||"—";
-  const storageBackupDir=storage.backupDir||"—";
-  const storageHint=SERVER_STORAGE.error||storage.persistentHint||"Select a writable server directory for the shared OnePlan data.";
-  const storageDisabled=storage.locked?"disabled":"";
+  const folder=DEVICE_STORAGE.folderName||"No folder selected";
+  const rev=DEVICE_STORAGE.revision==null?"Not loaded":String(DEVICE_STORAGE.revision);
+  const last=DEVICE_STORAGE.savedAt?new Date(DEVICE_STORAGE.savedAt).toLocaleString():"Not saved yet";
+  const status=!DEVICE_STORAGE.supported?"Folder picker is not supported in this browser":DEVICE_STORAGE.conflict?"Conflict — load from folder or overwrite intentionally":DEVICE_STORAGE.error||(!DEVICE_STORAGE.handle?"Select a folder from this device":DEVICE_STORAGE.permission!=="granted"?"Reconnect the selected folder":DEVICE_STORAGE.saving?"Saving to folder…":DEVICE_STORAGE.dirty?"Changes waiting to save":"Folder synchronized");
   return `<div class="card" style="max-width:860px"><div class="section-title">Application Settings</div>
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="ff"><label>Planning Year</label><select onchange="changeYear(this.value)">${[SETTINGS.planYear-1,SETTINGS.planYear,SETTINGS.planYear+1].map(y=>`<option ${y===SETTINGS.planYear?"selected":""}>${y}</option>`).join("")}</select></div>
@@ -2348,66 +2613,47 @@ function renderSettings(){
     </div>
   </div>
 
-  <div class="card" style="max-width:860px;border-color:#bfdbfe"><div class="section-title">Cloud State Storage <span class="tag">AI Radar architecture</span></div>
-    <div class="banner info">OnePlan now saves immediately to a browser cache, then synchronizes the complete application state to the server JSON file. Revision checks prevent one device from silently overwriting a newer version from another device.</div>
+  <div class="card" style="max-width:860px;border-color:#bfdbfe"><div class="section-title">Device Folder Storage <span class="tag">Local path</span></div>
+    <div class="banner ${DEVICE_STORAGE.handle&&DEVICE_STORAGE.permission==="granted"?"info":"warn"}">Choose a folder through the Windows folder picker. OnePlan will save <b>${esc(DEVICE_STORAGE.fileName)}</b> in that folder and keep up to ${DEVICE_STORAGE.maxBackups} versions in a <b>${esc(DEVICE_STORAGE.backupFolder)}</b> subfolder.</div>
     <div class="cloud-state-grid">
       <div class="cloud-state-kpi"><span>Status</span><b id="cloudStorageStatus">${esc(status)}</b></div>
-      <div class="cloud-state-kpi"><span>Cloud revision</span><b>${esc(rev)}</b></div>
-      <div class="cloud-state-kpi"><span>Last cloud save</span><b title="${esc(last)}">${esc(last)}</b></div>
-      <div class="cloud-state-kpi"><span>Local pending</span><b>${CLOUD_SYNC.dirty?"Yes":"No"}</b></div>
+      <div class="cloud-state-kpi"><span>Selected folder</span><b title="${esc(folder)}">${esc(folder)}</b></div>
+      <div class="cloud-state-kpi"><span>File revision</span><b>${esc(rev)}</b></div>
+      <div class="cloud-state-kpi"><span>Last folder save</span><b title="${esc(last)}">${esc(last)}</b></div>
     </div>
-    <div class="cloud-token-row" style="margin-top:12px">
-      <div class="ff"><label>State Token <span class="small">(required only when STATE_TOKEN is configured on Render)</span></label><input id="cloudStateToken" type="password" value="${esc(cloudToken())}" autocomplete="off" placeholder="Enter the Render STATE_TOKEN"></div>
-      <div style="display:flex;gap:8px"><button class="btn" onclick="cloudSaveToken()">Save Token & Connect</button><button class="btn ghost" onclick="cloudClearToken()">Clear</button></div>
+    <div class="cloud-actions" style="margin-top:12px">
+      <button class="btn primary" onclick="deviceChooseFolder()">Choose Folder</button>
+      <button class="btn" ${DEVICE_STORAGE.handle?"":"disabled"} onclick="deviceReconnectFolder()">Reconnect Folder</button>
+      <button class="btn" ${DEVICE_STORAGE.handle?"":"disabled"} onclick="devicePull({force:false,requestPermission:true})">Load from Folder</button>
+      <button class="btn success" ${DEVICE_STORAGE.handle?"":"disabled"} onclick="devicePush(false)">Save Now</button>
+      <button class="btn danger" ${DEVICE_STORAGE.handle?"":"disabled"} onclick="if(confirm('Overwrite the selected folder file with the data currently open in this browser?'))devicePush(true)">Overwrite Folder File</button>
+      <button class="btn" ${DEVICE_STORAGE.handle?"":"disabled"} onclick="deviceCreateBackup()">Create Backup</button>
+      <button class="btn ghost" ${DEVICE_STORAGE.handle?"":"disabled"} onclick="deviceDisconnectFolder()">Disconnect</button>
     </div>
     <div class="cloud-actions">
-      <button class="btn primary" onclick="cloudPull({force:false})">Pull Cloud</button>
-      <button class="btn success" onclick="cloudPush(false)">Save Now</button>
-      <button class="btn danger" onclick="if(confirm('Force Save will overwrite the current server version with data from this browser. Continue?'))cloudPush(true)">Force Save</button>
-      <button class="btn" onclick="cloudDownloadServerBackup()">Download Cloud Backup</button>
-      <button class="btn" onclick="exportJSON()">Download Local Backup</button>
-      <label class="btn" style="cursor:pointer">Import Backup<input type="file" accept="application/json,.json" style="display:none" onchange="cloudImportAppData(this)"></label>
-    </div>
-    <div class="small" style="margin-top:10px">Endpoint: <code>/api/state</code> · Client: ${esc(cloudClientId())} · Changes are auto-saved after a short debounce. When offline, changes remain in the local cache and sync after reconnection.</div>
-  </div>
-
-  <div class="card" style="max-width:860px;border-color:#cbd5e1"><div class="section-title">Server Storage Path</div>
-    <div class="banner ${storageMode==="temporary"?"warn":"info"}">${esc(storageHint)}</div>
-    <div class="form-grid" style="grid-template-columns:1fr 1.6fr;align-items:end">
-      <div class="ff"><label>Storage location</label><select id="serverStorageMode" ${storageDisabled} onchange="cloudToggleCustomStoragePath()">
-        <option value="temporary" ${storageMode==="temporary"?"selected":""}>Temporary server storage</option>
-        <option value="app-data" ${storageMode==="app-data"?"selected":""}>Application data folder</option>
-        <option value="render-disk" ${storageMode==="render-disk"?"selected":""}>Render persistent disk (/var/data)</option>
-        <option value="custom" ${storageMode==="custom"?"selected":""}>Custom directory</option>
-        ${storageMode==="environment"?'<option value="environment" selected>Environment variables</option>':""}
-      </select></div>
-      <div class="ff"><label>Custom directory path</label><input id="serverStorageCustomPath" value="${esc(storageMode==="custom"?storage.directory:"")}" placeholder="Example: /var/data/oneplan or data/oneplan" ${storageMode==="custom"&&!storage.locked?"":"disabled"}></div>
-    </div>
-    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:13px"><input id="serverStorageMigrate" type="checkbox" checked ${storageDisabled}> Copy the current cloud data and revision history to the selected path</label>
-    <div class="cloud-actions">
-      <button class="btn primary" ${storageDisabled} onclick="cloudApplyStoragePath(false)">Test & Apply Path</button>
-      <button class="btn" onclick="cloudRefreshStorageInfo(true)">Refresh Path Status</button>
+      <button class="btn" onclick="exportJSON()">Download Backup</button>
+      <label class="btn" style="cursor:pointer">Import Backup<input type="file" accept="application/json,.json" style="display:none" onchange="deviceImportAppData(this)"></label>
     </div>
     <div class="tbl-wrap" style="margin-top:12px"><table><tbody>
-      <tr><td style="width:180px">Active directory</td><td><code style="white-space:normal;word-break:break-all">${esc(storagePath)}</code></td></tr>
-      <tr><td>State file</td><td><code style="white-space:normal;word-break:break-all">${esc(storageStateFile)}</code></td></tr>
-      <tr><td>Backup directory</td><td><code style="white-space:normal;word-break:break-all">${esc(storageBackupDir)}</code></td></tr>
-      <tr><td>Stored data</td><td>${storage.exists?`Revision ${esc(String(storage.revision||0))}${storage.savedAt?` · ${esc(new Date(storage.savedAt).toLocaleString())}`:""}`:"No state file in this path yet"}</td></tr>
+      <tr><td style="width:180px">Storage file</td><td><code>${esc(DEVICE_STORAGE.fileName)}</code></td></tr>
+      <tr><td>Backup folder</td><td><code>${esc(DEVICE_STORAGE.backupFolder)}/</code></td></tr>
+      <tr><td>Auto-save</td><td>${DEVICE_STORAGE.handle&&DEVICE_STORAGE.permission==="granted"?"Enabled — changes are saved after a short delay":"Local browser cache only until a folder is connected"}</td></tr>
+      <tr><td>Path visibility</td><td>The browser shows the native folder picker but exposes only the selected folder name to the web app, not the full Windows path.</td></tr>
     </tbody></table></div>
-    <div class="small" style="margin-top:10px">For Render, choose <b>Render persistent disk</b> only after attaching a disk mounted at <code>/var/data</code>. A custom path must be a writable directory on the server; it is not a folder on the user's Windows or iPad.</div>
+    <div class="small" style="margin-top:10px">Recommended on Windows: Microsoft Edge or Google Chrome over the Render HTTPS URL. Each device must select its own folder. Selecting a OneDrive-synchronized folder can copy the file between devices, but OnePlan still blocks revision conflicts rather than merging simultaneous edits.</div>
   </div>
 
   <div class="card" style="max-width:860px"><div class="section-title">Recovery & Maintenance</div>
     <div class="cloud-actions">
-      <button class="btn" onclick="cloudRestoreBeforePull()">Restore Before-Pull Cache</button>
+      <button class="btn" onclick="cloudRestoreBeforePull()">Restore Before-Load Cache</button>
       <button class="btn" onclick="cloudResetLocalCache()">Clear This Browser Cache</button>
       <button class="btn danger" onclick="resetData()">Reset Demo Data</button>
     </div>
     <div class="tbl-wrap" style="margin-top:12px"><table><tbody>
-      <tr><td>Primary shared state</td><td>Server JSON through <code>/api/state</code>, saved atomically with revision control.</td></tr>
-      <tr><td>Device resilience</td><td>Browser localStorage cache for fast startup and offline edits.</td></tr>
-      <tr><td>Server recovery</td><td>Automatic versioned backups before every overwrite; Render disk snapshots provide an additional infrastructure backup layer.</td></tr>
-      <tr><td>Conflict rule</td><td>Normal save is blocked when the server revision changed. Pull first, or use Force Save only for an intentional overwrite.</td></tr>
+      <tr><td>Primary state</td><td>JSON file in the folder selected from this device.</td></tr>
+      <tr><td>Fast startup</td><td>Browser localStorage cache; the selected folder file is loaded when permission is available.</td></tr>
+      <tr><td>Recovery</td><td>Automatic backup before every overwrite plus manual backup creation.</td></tr>
+      <tr><td>Conflict rule</td><td>Normal save is blocked when the folder file revision changed. Load first, or overwrite only when intentional.</td></tr>
     </tbody></table></div>
   </div>`;
 }
@@ -3020,7 +3266,7 @@ window.addEventListener("unhandledrejection", e=>onePlanShowBootError((e.reason&
 function onePlanRepairData(){
   let changed=false;
   try{
-    if(!SETTINGS || typeof SETTINGS!=="object"){ SETTINGS={simulatedToday:null,planYear:new Date().getFullYear(),capacityWarn:80,capacityBlock:100,storageProvider:"server-json",dataPath:"/api/state",dataFileName:"oneplan-state.json",syncMode:"auto"}; changed=true; }
+    if(!SETTINGS || typeof SETTINGS!=="object"){ SETTINGS={simulatedToday:null,planYear:new Date().getFullYear(),capacityWarn:80,capacityBlock:100,storageProvider:"device-folder",dataPath:"device-folder",dataFileName:"oneplan-state.json",syncMode:"auto"}; changed=true; }
     MILESTONES = normalizeMilestones(MILESTONES);
     rebuildMSMap();
     if(!Array.isArray(stores) || !stores.length){ stores=seedStores(); changed=true; }
@@ -3051,9 +3297,9 @@ function onePlanRepairData(){
 const onePlanBaseLoadState = loadState;
 loadState = function(){ onePlanBaseLoadState(); onePlanRepairData(); };
 
-// SharePoint file sync removed. Storage is now handled by the AI Radar-style server state API.
-SETTINGS.storageProvider="server-json";
-SETTINGS.dataPath="/api/state";
+// Storage is selected from the user's device through the browser folder picker.
+SETTINGS.storageProvider="device-folder";
+SETTINGS.dataPath="device-folder";
 SETTINGS.dataFileName="oneplan-state.json";
 SETTINGS.syncMode="auto";
 
@@ -3091,7 +3337,7 @@ async function onePlanStart(){
   setRole("Admin",true);
   navigate("dashboard");
   updateBadges();
-  await cloudBoot();
+  await deviceBoot();
 }
 onePlanStart();
 if(ONEPLAN_FRESH_BOOT){

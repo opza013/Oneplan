@@ -1,31 +1,13 @@
-# ONE PLAN — Storage Path Select v5.2
+# ONE PLAN — Device Folder Storage v5.3
 
-Direct-root Node Web Service package for GitHub and Render.
-Upload all files directly to the GitHub repository root.
+This build stores the OnePlan state in a folder selected from the user's computer through the browser folder picker.
 
-## Added in v5.2
+## Files created in the selected folder
+- `oneplan-state.json` — active application state
+- `backups/` — automatic and manual JSON backups (maximum 20)
 
-- Select the server storage directory from **Settings > Server Storage Path**.
-- Available modes: Temporary, Application data folder, Render persistent disk (`/var/data`), and Custom directory.
-- Write-permission test before switching.
-- Optional migration of the current state and revision to the new path.
-- Protection against accidentally overwriting an existing target state.
-- The Gantt milestone popup remains read-only; editing is available only in Detail Plan.
+## Browser requirement
+Use Microsoft Edge or Google Chrome on Windows through the Render HTTPS URL. The browser requires the user to choose the folder and grant read/write permission. The app can display the selected folder name, but browsers do not expose the full absolute Windows path.
 
-## Required root files
-
-- `index.html`
-- `server.js`
-- `package.json`
-- `package-lock.json`
-- `render.yaml`
-
-## Render
-
-Create a Node **Web Service**.
-
-- Build Command: `npm install --omit=dev`
-- Start Command: `npm start`
-- Health Check Path: `/api/health`
-
-For persistent storage, attach a Render disk mounted at `/var/data`, then select **Render persistent disk** inside OnePlan Settings. Without a disk, the Free service filesystem is temporary.
+## Deploy
+Upload all files to the GitHub repository root and deploy as a Render Node Web Service. The Render server only hosts the app; the primary OnePlan data file is written to the folder selected on each device.
