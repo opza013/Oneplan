@@ -1,1 +1,1 @@
-5.1.0-gantt-readonly-detail
+5.2.0-storage-path-select

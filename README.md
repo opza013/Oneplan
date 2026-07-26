@@ -1,31 +1,31 @@
-# ONE PLAN — Direct Root Render Package
+# ONE PLAN — Storage Path Select v5.2
 
-This package intentionally has no wrapper folder and no `public/` directory.
-Upload every file directly to the GitHub repository root.
+Direct-root Node Web Service package for GitHub and Render.
+Upload all files directly to the GitHub repository root.
 
-Required GitHub root files:
+## Added in v5.2
+
+- Select the server storage directory from **Settings > Server Storage Path**.
+- Available modes: Temporary, Application data folder, Render persistent disk (`/var/data`), and Custom directory.
+- Write-permission test before switching.
+- Optional migration of the current state and revision to the new path.
+- Protection against accidentally overwriting an existing target state.
+- The Gantt milestone popup remains read-only; editing is available only in Detail Plan.
+
+## Required root files
 
 - `index.html`
 - `server.js`
 - `package.json`
+- `package-lock.json`
 - `render.yaml`
 
-## Recommended Render setup
+## Render
 
-Create **New > Web Service** and connect the repository.
+Create a Node **Web Service**.
 
-- Runtime: Node
 - Build Command: `npm install --omit=dev`
 - Start Command: `npm start`
 - Health Check Path: `/api/health`
-- Instance: Free
 
-After deploy, test `/api/health` before opening `/`.
-
-
-## v5.1.0 — Gantt milestone read-only detail
-
-- Click any milestone box in the main Gantt Chart to open a read-only detail popup.
-- The popup shows project, owner, dependency, planned/actual dates, status and Next Steps.
-- Editing is intentionally disabled in the Gantt popup.
-- Use **Open Detail Plan to Edit** to change milestone dates or Next Steps.
+For persistent storage, attach a Render disk mounted at `/var/data`, then select **Render persistent disk** inside OnePlan Settings. Without a disk, the Free service filesystem is temporary.

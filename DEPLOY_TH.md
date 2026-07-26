@@ -1,17 +1,21 @@
-# วิธีติดตั้งแบบตัดปัญหา Path
+# วิธี Deploy OnePlan v5.2 และเลือก Storage Path
 
-1. ลบไฟล์ใน GitHub Repository เดิมทั้งหมด
-2. แตก ZIP นี้
-3. อัปโหลดไฟล์ทุกไฟล์ไปที่หน้าแรกของ Repository โดยตรง
-4. หน้า GitHub ต้องเห็น `index.html`, `server.js`, `package.json`, `render.yaml` ทันที
-5. ใน Render ให้สร้าง **New > Web Service** ไม่ใช่ Static Site
-6. ตั้งค่า:
-   - Runtime: Node
-   - Build Command: `npm install --omit=dev`
-   - Start Command: `npm start`
-   - Health Check Path: `/api/health`
-7. Deploy แล้วเปิด `https://<service>.onrender.com/api/health`
-8. ต้องเห็น `"version":"5.0.0-direct-root"`
-9. จากนั้นจึงเปิด URL หลัก
+1. อัปโหลดไฟล์ทั้งหมดใน ZIP ไปที่ GitHub Repository Root โดยตรง
+2. ใน Render ใช้ **Web Service / Node** ไม่ใช่ Static Site
+3. ตั้งค่า Build Command: `npm install --omit=dev`
+4. ตั้งค่า Start Command: `npm start`
+5. ตั้งค่า Health Check Path: `/api/health`
+6. หลัง Deploy เปิด `/api/health` ต้องเห็น `5.2.0-storage-path`
 
-ถ้า `/api/health` ไม่แสดง JSON ให้เปิดหน้า Logs ของ Render และดูบรรทัดแรกที่มีคำว่า `FATAL`, `npm ERR!` หรือ `Missing`.
+## การเลือก Path ใน App
+
+ไปที่ **Settings > Server Storage Path**
+
+- **Temporary server storage**: เปิดใช้ได้ทันที แต่ข้อมูลอาจหายเมื่อ Restart/Deploy
+- **Application data folder**: เก็บในโฟลเดอร์ `data` ของ App แต่บน Render โดยทั่วไปยังไม่ถาวร
+- **Render persistent disk**: ใช้ `/var/data` และต้อง Attach Disk ที่ Render ก่อน
+- **Custom directory**: ระบุ Directory ฝั่ง Server ที่มีสิทธิ์เขียน
+
+เปิดตัวเลือก **Copy the current cloud data...** เพื่อย้ายข้อมูลปัจจุบันไป Path ใหม่ ระบบจะทดสอบสิทธิ์เขียนก่อนเปลี่ยนจริง หากปลายทางมีข้อมูลอยู่แล้ว ระบบจะขอ Confirm ก่อนเขียนทับ
+
+หมายเหตุ: Path นี้เป็น Path บน Server ไม่ใช่โฟลเดอร์ในเครื่อง Windows/iPad ของผู้ใช้
