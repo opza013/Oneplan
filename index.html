@@ -776,8 +776,26 @@ tbody tr:hover{background:#f8fbff}
   .enterprise-dashboard-main>.card,.enterprise-dashboard-secondary>.card{min-height:0}
 }
 
+/* v5.4.3 row-level alignment fix
+   Neutralize the legacy adjacent-card margin inside dashboard grids. */
+.kpi-grid>.card,
+.enterprise-dashboard-main>.card,
+.enterprise-dashboard-secondary>.card{
+  margin-top:0!important;
+  align-self:stretch;
+}
+.kpi-grid,
+.enterprise-dashboard-main,
+.enterprise-dashboard-secondary{
+  align-items:stretch;
+}
+.enterprise-dashboard-main>.card,
+.enterprise-dashboard-secondary>.card{
+  justify-self:stretch;
+}
+
 </style>
-  <meta name="oneplan-build" content="v5.4.2-equal-height-workload">
+  <meta name="oneplan-build" content="v5.4.3-row-level-alignment">
 </head>
 <body>
 <div class="app">
@@ -839,7 +857,7 @@ tbody tr:hover{background:#f8fbff}
 <script>
 "use strict";
 /* =====================================================================
-   ONE PLAN v5.4.2 — equal-height dashboard and current-plus-next workload view.
+   ONE PLAN v5.4.3 — row-level dashboard alignment and current-plus-next workload view.
    Vanilla JS, single file, no build. Fixes: relational model, derived
    capacity, rule engine, derived status, real time/year, validation,
    RBAC, pagination, shared filters, real charts, calendar nav, exports.

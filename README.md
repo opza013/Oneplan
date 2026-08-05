@@ -1,11 +1,11 @@
-# ONE PLAN v5.4.2 — Equal-height Dashboard
+# ONE PLAN v5.4.3 — Row-level Dashboard Alignment
 
-This package preserves all v5.4.1 functions and applies two focused dashboard changes:
-
-1. Cards in the same dashboard row use equal heights. Main-row cards use one shared height; the three lower cards use another shared height. Long milestone lists scroll inside the card instead of increasing the row height.
-2. Workload **Current** displays the current week together with the following 6 weeks (7 weeks total). Previous and Next 6 Weeks remain available as separate views.
+## Changes
+- Fixed the legacy `.card + .card` margin that pushed the second and third cards down inside dashboard grids.
+- KPI cards, Workload / Project Status, and the three lower dashboard cards now share the same top and bottom level within each row.
+- Workload **Current** continues to show the current week plus the next 6 weeks (7 weeks total).
+- All v5.4.2 functions and storage behavior remain unchanged.
 
 ## Deploy
-Upload all files to the GitHub repository root, then use Render **Manual Deploy → Clear build cache & deploy**.
-
-Verify `/api/health` reports `5.4.2-equal-height-workload`.
+Upload all files to the GitHub repository root, then run **Clear build cache & deploy** in Render.
+Verify `/api/health` reports `5.4.3-row-level-alignment`.
