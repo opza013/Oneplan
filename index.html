@@ -706,8 +706,46 @@ tbody tr:hover{background:#f8fbff}
   .implementation-card{overflow:hidden}.impl-chart{height:210px}
 }
 
+
+/* v5.4.1 enterprise fixes */
+.context-chip{height:38px;padding:0 13px;font-size:15px;font-weight:500;white-space:nowrap}
+.context-chip b{font-size:15px;font-weight:700}
+.kpi-grid,.enterprise-dashboard-main,.enterprise-dashboard-secondary{align-items:stretch;grid-auto-rows:1fr}
+.kpi-grid>.card{height:100%;box-sizing:border-box}
+.enterprise-dashboard-main>.card,.enterprise-dashboard-secondary>.card{height:100%;box-sizing:border-box}
+.workload-title{align-items:center;gap:12px;min-height:38px}
+.workload-title>div:first-child{display:flex;align-items:baseline;gap:10px;min-width:0}
+.workload-title>div:first-child>b{font-size:14px}
+.workload-title .small{white-space:nowrap}
+.workload-period{margin-left:auto;flex-shrink:0}
+.workload-period button{min-width:74px}
+.gantt-shell{--gantt-scale:1}
+.gantt-shell .gbarwrap{height:calc(54px * var(--gantt-scale))}
+.gantt-shell .ms{height:calc(18px * var(--gantt-scale));font-size:calc(9px * var(--gantt-scale));border-radius:calc(6px * var(--gantt-scale));padding-left:calc(4px * var(--gantt-scale));padding-right:calc(4px * var(--gantt-scale))}
+.gantt-shell .gsummary{height:calc(5px * var(--gantt-scale));top:calc(5px * var(--gantt-scale))}
+.gantt-shell .gmonth{font-size:calc(11px * var(--gantt-scale));padding-top:calc(6px * var(--gantt-scale));padding-bottom:calc(6px * var(--gantt-scale))}
+.gantt-shell .gcol{font-size:calc(11px * var(--gantt-scale));padding-top:calc(5px * var(--gantt-scale));padding-bottom:calc(5px * var(--gantt-scale))}
+.gantt-shell .gcol .wd{font-size:calc(9.5px * var(--gantt-scale))}
+.gantt-shell .today-pin{border-left-width:max(1px,calc(2px * var(--gantt-scale)));height:calc(42px * var(--gantt-scale))}
+.today-focus-row{background:#eff8ff;box-shadow:inset 4px 0 0 var(--primary-2)}
+.today-active-tag{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;background:#dbeafe;color:#075985;font-size:8.5px;font-weight:800;vertical-align:middle;white-space:nowrap}
+.menu-visibility-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:12px}
+.menu-visibility-row{min-height:54px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff}
+.menu-visibility-name{display:flex;align-items:center;gap:9px;min-width:0}
+.menu-visibility-name b{display:block;font-size:12px;color:var(--ink)}
+.menu-visibility-name span{display:block;font-size:9.5px;color:var(--muted)}
+.menu-visibility-icon{width:28px;height:28px;border-radius:8px;background:#eef6ff;color:var(--primary);display:grid!important;place-items:center;font-size:13px!important;flex:0 0 auto}
+.switch{position:relative;width:40px;height:22px;flex:0 0 auto}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.switch span{position:absolute;inset:0;border-radius:999px;background:#cbd5e1;cursor:pointer;transition:.16s}
+.switch span:after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0003;transition:.16s}
+.switch input:checked+span{background:var(--primary-2)}
+.switch input:checked+span:after{transform:translateX(18px)}
+.switch input:disabled+span{opacity:.52;cursor:not-allowed}
+@media(max-width:900px){.menu-visibility-grid{grid-template-columns:1fr}.workload-title{align-items:flex-start;flex-direction:column}.workload-period{margin-left:0;width:100%}.workload-period button{flex:1;min-width:0}.context-chip{font-size:13px}.context-chip b{font-size:13px}}
+
 </style>
-  <meta name="oneplan-build" content="v5.4-enterprise-interface">
+  <meta name="oneplan-build" content="v5.4.1-enterprise-fixes">
 </head>
 <body>
 <div class="app">
@@ -769,7 +807,7 @@ tbody tr:hover{background:#f8fbff}
 <script>
 "use strict";
 /* =====================================================================
-   ONE PLAN v2 — engine rebuilt per the consulting review.
+   ONE PLAN v5.4.1 — enterprise interface fixes and controls.
    Vanilla JS, single file, no build. Fixes: relational model, derived
    capacity, rule engine, derived status, real time/year, validation,
    RBAC, pagination, shared filters, real charts, calendar nav, exports.
@@ -827,7 +865,11 @@ let SETTINGS = {
   storageProvider: "device-folder",
   dataPath: "device-folder",
   dataFileName: "oneplan-state.json",
-  syncMode: "auto"
+  syncMode: "auto",
+  menuVisibility: {
+    dashboard:true, gantt:true, detailplan:true, plans:true, approval:true,
+    planload:true, storecapacity:true, calendar:true, reports:true, master:true, settings:true
+  }
 };
 function today(){ return SETTINGS.simulatedToday ? parseDate(SETTINGS.simulatedToday) : startOfDay(new Date()); }
 
@@ -1735,6 +1777,9 @@ let F={ division:[], department:[], type:[], status:[], owner:[],
 let viewMode=localStorage.getItem("onePlanV2View")||"week";
 let ganttZoom=Number(localStorage.getItem("onePlanV2Zoom"))||1;     // timeline zoom multiplier
 let trendSpan=Number(localStorage.getItem("onePlanV2Trend"))||10;   // capacity-trend visible weeks
+let workloadPeriod=localStorage.getItem("onePlanWorkloadPeriod")||"next";
+if(!["previous","current","next"].includes(workloadPeriod)) workloadPeriod="next";
+let ganttTodayFocus=false;
 let plansPage=1, plansSort={col:"code",dir:1}, storeCapacityPage=1, storeCapacityPageSize=50;
 
 function filterValues(field){
@@ -1886,14 +1931,29 @@ const NAV=[
   ["settings","☰","Settings","System"]
 ];
 const CRUMB=Object.fromEntries(NAV.map(n=>[n[0],[n[2],"One Plan / "+n[2]]]));
+function normalizeMenuVisibility(){
+  const current=SETTINGS.menuVisibility&&typeof SETTINGS.menuVisibility==="object"?SETTINGS.menuVisibility:{};
+  SETTINGS.menuVisibility=Object.fromEntries(NAV.map(([page])=>[page,current[page]!==false]));
+  // Dashboard and Settings remain available so Admin can always recover the navigation.
+  SETTINGS.menuVisibility.dashboard=true;
+  SETTINGS.menuVisibility.settings=true;
+}
+function isMenuVisible(page){ normalizeMenuVisibility(); return SETTINGS.menuVisibility[page]!==false; }
 function buildMenu(){
+  normalizeMenuVisibility();
   const groups={ "Plan Control":"menu1","Execution":"menu2","System":"menu3" };
   Object.values(groups).forEach(id=>document.getElementById(id).innerHTML="");
   NAV.forEach(([page,ico,label,grp])=>{
+    if(!isMenuVisible(page)) return;
     const b=document.createElement("button"); b.dataset.page=page;
     b.innerHTML=`<span class="ico">${ico}</span><span>${label}</span><span class="pill" id="badge-${page}" style="display:none"></span>`;
     b.onclick=()=>navigate(page);
     document.getElementById(groups[grp]).appendChild(b);
+  });
+  Object.values(groups).forEach(id=>{
+    const nav=document.getElementById(id);
+    const section=nav?.previousElementSibling;
+    if(section) section.style.display=nav&&nav.children.length?"":"none";
   });
 }
 function navigate(page){
@@ -2015,8 +2075,27 @@ function toolbar(opts={}){
   if(chips.length) html+=`<div class="chips">`+chips.map(c=>`<span class="chip-f">${esc(c.label)}<button onclick="clearChip('${c.key}','${c.val!==undefined?encodeURIComponent(String(c.val)):""}')">×</button></span>`).join("")+`<button class="btn sm" onclick="resetFilters()">Clear all</button></div>`;
   return html;
 }
-function setView(m){ viewMode=m; localStorage.setItem("onePlanV2View",m); renderAll(); }
-function zoomGantt(d){ if(d===0){ ganttZoom=1; } else { ganttZoom=Math.max(0.5,Math.min(2.5,Math.round((ganttZoom+d)*10)/10)); } localStorage.setItem("onePlanV2Zoom",ganttZoom); renderAll(); }
+function setView(m){ viewMode=m; ganttTodayFocus=false; localStorage.setItem("onePlanV2View",m); renderAll(); }
+function zoomGantt(d){
+  const page=activePage();
+  const active=document.querySelector(".page.active");
+  const oldSc=active?.querySelector(".gantt-scroll");
+  const centerRatio=oldSc&&oldSc.scrollWidth?((oldSc.scrollLeft+oldSc.clientWidth/2)/oldSc.scrollWidth):0.5;
+  if(d===0){ ganttZoom=1; }
+  else { ganttZoom=Math.max(0.5,Math.min(2.5,Math.round((ganttZoom+d)*100)/100)); }
+  localStorage.setItem("onePlanV2Zoom",ganttZoom);
+  renderPage(page); updateBadges();
+  requestAnimationFrame(()=>{
+    const sc=document.querySelector(".page.active .gantt-scroll");
+    if(sc) sc.scrollLeft=Math.max(0,centerRatio*sc.scrollWidth-sc.clientWidth/2);
+  });
+}
+function setWorkloadPeriod(mode){
+  if(!["previous","current","next"].includes(mode)) return;
+  workloadPeriod=mode;
+  localStorage.setItem("onePlanWorkloadPeriod",mode);
+  if(activePage()==="dashboard"){ renderPage("dashboard"); updateBadges(); }
+}
 function scrollGanttToToday(){
   const active=document.querySelector(".page.active");
   const sc=active?active.querySelector(".gantt-scroll"):null;
@@ -2025,10 +2104,20 @@ function scrollGanttToToday(){
 }
 function goGanttToday(){
   F.month="All"; F.week="All"; F.date="";
-  renderAll();
-  setTimeout(scrollGanttToToday,80);
+  ganttTodayFocus=true;
+  renderPage("gantt"); updateBadges();
+  setTimeout(()=>{
+    scrollGanttToToday();
+    const sc=document.querySelector("#gantt .gantt-scroll");
+    if(sc) sc.scrollTop=0;
+  },80);
 }
-function zoomTrend(d){ trendSpan=Math.max(4,Math.min(26,trendSpan+d)); localStorage.setItem("onePlanV2Trend",trendSpan); renderAll(); }
+function zoomTrend(direction){
+  // +1 = zoom in (fewer weeks), -1 = zoom out (more weeks).
+  trendSpan=Math.max(4,Math.min(26,trendSpan-(Number(direction)||0)*2));
+  localStorage.setItem("onePlanV2Trend",trendSpan);
+  renderPage("storecapacity"); updateBadges();
+}
 
 /* ---------- 13. GANTT ---------- */
 function ganttRange(){
@@ -2067,10 +2156,20 @@ function renderGantt(){
   const {min,max}=ganttRange();
   const visibleWindow={start:min,end:max};
   const baseProjects=filteredProjects();
-  const all=sortByLiveWeek(viewMode==="day"
+  let all=sortByLiveWeek(viewMode==="day"
     ? baseProjects.filter(p=>(p.milestones||[]).some(m=>m.plannedStart&&m.plannedEnd&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),visibleWindow.start,visibleWindow.end)))
     : baseProjects);
+  const todayDate=today();
+  const activeToday=p=>(p.milestones||[]).some(m=>m.plannedStart&&m.plannedEnd&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),todayDate,todayDate));
+  const nextActivityDate=p=>{
+    const dates=(p.milestones||[]).filter(m=>m.plannedStart&&parseDate(m.plannedStart)>=todayDate).map(m=>parseDate(m.plannedStart).getTime());
+    return dates.length?Math.min(...dates):Number.POSITIVE_INFINITY;
+  };
+  if(ganttTodayFocus){
+    all=[...all].sort((a,b)=>Number(activeToday(b))-Number(activeToday(a)) || nextActivityDate(a)-nextActivityDate(b) || liveDate(a)-liveDate(b));
+  }
   const cols=ganttCols(min,max); const cw=colW(); const totalW=cols.length*cw;
+  const ganttScale=Math.max(.65,Math.min(1.25,ganttZoom));
   const todayX=Math.max(0,Math.min(totalW,offX(today(),min)));
   const monthSpans=[]; cols.forEach(c=>{const last=monthSpans[monthSpans.length-1]; if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
 
@@ -2097,14 +2196,15 @@ function renderGantt(){
       const l=Math.max(0,Math.min(rawL,totalW));
       const r=Math.max(0,Math.min(rawR,totalW));
       const w=Math.max(20,r-l);
-      const y=14+ (i%3)*13;
+      const y=Math.round(14*ganttScale + (i%3)*13*ganttScale);
       const cls=[`c-${m.key}`, st==="Completed"?"done":"", st==="Delayed"?"delay":st==="AtRisk"?"risk":"", filterValues("milestone").includes(m.key)?"sel":""].join(" ");
       const ck=st==="Completed"?`<span class="ck">✓</span>`:"";
       return `<div class="ms ${cls}" style="left:${l}px;width:${w}px;top:${y}px" title="${m.key} · ${MSMAP[m.key]?.full||""}\n${m.plannedStart} → ${m.plannedEnd}\nStatus: ${statusText(st)}">${m.key}${ck}</div>`;
     }).join("");
     const st=projState(p);
-    return `<div class="grow"><div class="gcell-left">
-        <button class="project-link pname" title="Open Detail Plan · ${esc(p.name)}" onclick="openDetailPlan('${p.id}')">${esc(p.name)}</button>
+    const todayActive=activeToday(p);
+    return `<div class="grow ${ganttTodayFocus&&todayActive?"today-focus-row":""}"><div class="gcell-left">
+        <button class="project-link pname" title="Open Detail Plan · ${esc(p.name)}" onclick="openDetailPlan('${p.id}')">${esc(p.name)}</button>${ganttTodayFocus&&todayActive?`<span class="today-active-tag">TODAY ACTIVE</span>`:""}
         <div class="powner">${liveWeekLabel(p)} · ${esc(p.owner)} · ${p.division}/${p.format}</div>
         ${pill(st)}
       </div><div class="gtl"><div class="gbarwrap">
@@ -2121,7 +2221,7 @@ function renderGantt(){
   </div></div>`;
 
   return `${toolbar({})}
-  <div class="gantt-shell">
+  <div class="gantt-shell" style="--gantt-scale:${ganttScale}">
     <div class="gantt-top">
       <div><h3>Key Milestone Timeline</h3>
         <div class="small">Today: ${fmtDisp(today())} · ${weekKeyOf(today())} ${isoWeekYear(today())} · Showing ${all.length} project(s) · Sorted by Live Week${viewMode==="day"&&!hasPeriod()?" · Day view focuses current Mon-Sun week":""}</div></div>
@@ -2146,11 +2246,16 @@ function inclusiveOverlapDays(aStart,aEnd,bStart,bEnd){
 }
 
 let implementationLoadRenderToken=0;
-function buildImplementationLoadBars(){
+function buildImplementationLoadBars(mode=workloadPeriod){
   const wk=isoWeek(today()), yr=isoWeekYear(today());
   const currentMonday=weekRange(wk,yr).start;
-  const windowStart=addDays(currentMonday,-7);
-  const buckets=Array.from({length:8},(_,i)=>{
+  const config={
+    previous:{start:addDays(currentMonday,-42),count:6,label:"Previous 6 weeks"},
+    current:{start:new Date(currentMonday),count:1,label:"Current week"},
+    next:{start:addDays(currentMonday,7),count:6,label:"Next 6 weeks"}
+  }[mode]||{start:addDays(currentMonday,7),count:6,label:"Next 6 weeks"};
+  const windowStart=config.start;
+  const buckets=Array.from({length:config.count},(_,i)=>{
     const start=addDays(windowStart,i*7), end=addDays(start,6);
     const teams=Object.fromEntries(TEAM_LOAD_CONFIG.map(t=>[t.key,{raw:0,activities:0}]));
     return {start,end,teams};
@@ -2168,7 +2273,7 @@ function buildImplementationLoadBars(){
       const clippedStart=new Date(Math.max(ms.getTime(),windowStart.getTime()));
       const clippedEnd=new Date(Math.min(me.getTime(),windowEnd.getTime()));
       const first=Math.max(0,Math.floor((clippedStart-windowStart)/(7*86400000)));
-      const last=Math.min(7,Math.floor((clippedEnd-windowStart)/(7*86400000)));
+      const last=Math.min(buckets.length-1,Math.floor((clippedEnd-windowStart)/(7*86400000)));
       const split=MILESTONE_TEAM_SPLIT[m.key]||{RCPM:1};
       for(let i=first;i<=last;i++){
         const days=inclusiveOverlapDays(m.plannedStart,m.plannedEnd,buckets[i].start,buckets[i].end);
@@ -2184,7 +2289,7 @@ function buildImplementationLoadBars(){
   }
 
   const combinedCapacity=TEAM_LOAD_CONFIG.reduce((sum,t)=>sum+t.capacity,0);
-  return buckets.map((b,i)=>{
+  return buckets.map(b=>{
     const d=b.start, w=isoWeek(d);
     const teams=TEAM_LOAD_CONFIG.map(t=>({
       ...t,
@@ -2193,7 +2298,8 @@ function buildImplementationLoadBars(){
       util:t.capacity?b.teams[t.key].raw/t.capacity*100:0,
       activities:b.teams[t.key].activities
     }));
-    return {wk:"WK"+String(w).padStart(2,"0"),pct:teams.reduce((sum,x)=>sum+x.pct,0),teams,cur:i===1,prev:i===0};
+    const isCurrent=rangeOverlaps(b.start,b.end,today(),today());
+    return {wk:"WK"+String(w).padStart(2,"0"),pct:teams.reduce((sum,x)=>sum+x.pct,0),teams,cur:isCurrent,prev:b.end<today(),mode};
   });
 }
 function renderImplementationLoad(bars){
@@ -2209,7 +2315,9 @@ function renderImplementationLoad(bars){
     return `<div class="impl-week ${b.cur?"cur":b.prev?"prev":""}"><div class="impl-bar-area"><div class="impl-stackbar ${b.pct>100?"over":""} ${b.cur?"current":""}" style="height:${shown}%"><span class="impl-total">${Math.round(b.pct)}%</span>${segs}</div></div></div>`;
   }).join("");
   const labels=bars.map(b=>`<div class="impl-wk ${b.cur?"cur":b.prev?"prev":""}">${b.wk}${b.cur?" ●":""}</div>`).join("");
-  return `<div class="impl-legend">${legend}</div><div class="impl-chart"><div class="impl-axis"><span class="a100">100%</span><span class="a75">75%</span><span class="a50">50%</span><span class="a25">25%</span><span class="a0">0%</span></div><div class="impl-plot"><div class="impl-cols">${columns}</div></div><div class="impl-week-labels">${labels}</div></div><div class="impl-nav"><span style="color:var(--muted-2)">◀ previous</span><span style="color:var(--primary);font-weight:700">● current week</span><span>next 6 →</span></div>`;
+  const modeLabel={previous:"Previous 6 weeks",current:"Current week",next:"Next 6 weeks"}[workloadPeriod]||"Next 6 weeks";
+  const colsStyle=`grid-template-columns:repeat(${Math.max(1,bars.length)},minmax(24px,1fr))`;
+  return `<div class="impl-legend">${legend}</div><div class="impl-chart"><div class="impl-axis"><span class="a100">100%</span><span class="a75">75%</span><span class="a50">50%</span><span class="a25">25%</span><span class="a0">0%</span></div><div class="impl-plot"><div class="impl-cols" style="${colsStyle}">${columns}</div></div><div class="impl-week-labels" style="${colsStyle}">${labels}</div></div><div class="impl-nav"><span>${esc(modeLabel)}</span><span style="color:var(--primary);font-weight:700">● ${bars.length} week${bars.length===1?"":"s"} displayed</span></div>`;
 }
 function renderTeamWorkloadList(bars){
   const current=bars.find(x=>x.cur)||bars[1]||bars[0];
@@ -2227,11 +2335,11 @@ function scheduleImplementationLoadRender(){
     const host=document.getElementById("implementationLoadChart");
     if(!host) return;
     try{
-      const bars=buildImplementationLoadBars();
+      const bars=buildImplementationLoadBars(workloadPeriod);
       if(token!==implementationLoadRenderToken||!document.body.contains(host)) return;
       host.innerHTML=renderImplementationLoad(bars);
       const teamHost=document.getElementById("teamWorkloadChart");
-      if(teamHost) teamHost.innerHTML=renderTeamWorkloadList(bars);
+      if(teamHost) teamHost.innerHTML=renderTeamWorkloadList(buildImplementationLoadBars("current"));
     }catch(err){
       console.error("Implementation Load render failed",err);
       host.innerHTML=`<div class="empty">Implementation Load could not be calculated. Other dashboard functions remain available.</div>`;
@@ -2288,7 +2396,11 @@ function renderDashboard(){
   </div>
 
   <div class="enterprise-dashboard-main">
-    <div class="card implementation-card"><div class="section-title">Implementation Load <span class="small">Planned team workload vs capacity · previous 1 + current + next 6 weeks</span></div>
+    <div class="card implementation-card"><div class="section-title workload-title"><div><b>Workload</b><span class="small">Planned team workload vs capacity</span></div><div class="segmented workload-period" aria-label="Workload period">
+      <button class="${workloadPeriod==="previous"?"active":""}" onclick="setWorkloadPeriod('previous')">Previous</button>
+      <button class="${workloadPeriod==="current"?"active":""}" onclick="setWorkloadPeriod('current')">Current</button>
+      <button class="${workloadPeriod==="next"?"active":""}" onclick="setWorkloadPeriod('next')">Next 6 Weeks</button>
+    </div></div>
       <div id="implementationLoadChart"><div class="impl-loading">Calculating team workload…</div></div>
     </div>
     <div class="card health-card"><div class="section-title">Project Status</div>
@@ -2304,9 +2416,7 @@ function renderDashboard(){
     <div class="card"><div class="section-title">Overdue Milestones</div><div class="dashboard-list">${listRows(overdueMs,"over")}</div><div class="dashboard-card-footer"><button onclick="navigate('plans')">View all overdue →</button></div></div>
     <div class="card"><div class="section-title">Upcoming Milestones <span class="small">Next 7 days</span></div><div class="dashboard-list">${listRows(upcomingMs,"upcoming")}</div><div class="dashboard-card-footer"><button onclick="navigate('calendar')">View calendar →</button></div></div>
     <div class="card"><div class="section-title">Workload by Team <span class="small">${weekKeyOf(today())}</span></div><div id="teamWorkloadChart"><div class="impl-loading" style="height:160px">Calculating team workload…</div></div><div class="dashboard-card-footer"><button onclick="navigate('planload')">View workload detail →</button></div></div>
-  </div>
-
-  <div style="margin-top:14px">${renderGantt()}</div>`;
+  </div>`;
 }
 function kpiCard(label,num,icon,color,page,statusFilter,sub="Live data"){
   const click=page?`onclick="${statusFilter?`F.status=['${statusFilter}'];`:""}navigate('${page}')"`:"";
@@ -2476,28 +2586,33 @@ function renderTrend(){
   const rows=capacityTrend(fmt,from,to,SETTINGS.planYear);
   if(!rows.length) return "";
   const w=920,h=300,pad={l:56,r:20,t:24,b:46};
+  const densityScale=Math.max(.58,Math.min(1.15,10/Math.max(1,rows.length)));
+  const axisFont=Math.max(7,Math.round(10*densityScale));
+  const xFont=Math.max(7,Math.round(11*densityScale));
+  const lineWidth=Math.max(1.4,3.2*densityScale);
+  const dotRadius=Math.max(1.8,3.8*densityScale);
   const pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
   const maxV=Math.max(100,...rows.flatMap(r=>[r.budget,r.booking,r.actual]));
   const maxR=Math.ceil(maxV/500)*500;
   const X=i=>pad.l+(rows.length===1?pw/2:i*(pw/(rows.length-1)));
   const Y=v=>pad.t+ph-(v/maxR)*ph;
   const line=k=>rows.map((r,i)=>`${X(i)},${Y(r[k])}`).join(" ");
-  const dots=(k,c)=>rows.map((r,i)=>`<circle cx="${X(i)}" cy="${Y(r[k])}" r="4" fill="${c}"/>`).join("");
-  const xl=rows.map((r,i)=>`<text x="${X(i)}" y="${h-16}" text-anchor="middle" font-size="11" font-weight="700" fill="#5f7184">${r.wk}</text>`).join("");
-  const yt=[0,.25,.5,.75,1].map(t=>{const v=Math.round(maxR*t),y=Y(v);return `<line x1="${pad.l}" x2="${w-pad.r}" y1="${y}" y2="${y}" stroke="#e7eef6"/><text x="${pad.l-9}" y="${y+4}" text-anchor="end" font-size="10" fill="#8696a8">${v}</text>`;}).join("");
+  const dots=(k,c)=>rows.map((r,i)=>`<circle cx="${X(i)}" cy="${Y(r[k])}" r="${dotRadius.toFixed(2)}" fill="${c}"/>`).join("");
+  const xl=rows.map((r,i)=>`<text x="${X(i)}" y="${h-16}" text-anchor="middle" font-size="${xFont}" font-weight="700" fill="#5f7184">${r.wk}</text>`).join("");
+  const yt=[0,.25,.5,.75,1].map(t=>{const v=Math.round(maxR*t),y=Y(v);return `<line x1="${pad.l}" x2="${w-pad.r}" y1="${y}" y2="${y}" stroke="#e7eef6" stroke-width="${Math.max(.5,densityScale).toFixed(2)}"/><text x="${pad.l-9}" y="${y+4}" text-anchor="end" font-size="${axisFont}" fill="#8696a8">${v}</text>`;}).join("");
   const latest=rows[rows.length-1];
   const util=latest.budget?Math.round(latest.booking/latest.budget*100):0;
   const variance=latest.budget-latest.booking;
   return `<div class="card"><div class="section-title">Capacity Trend — Budget vs Booking vs Actual <span class="small">(${fmtLabel}, minutes, derived)</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px"><span class="small">Zoom</span><div class="segmented">
-      <button onclick="zoomTrend(2)" title="Show fewer weeks (zoom in)" ${trendSpan<=4?"disabled":""}>−</button>
-      <button style="min-width:70px;cursor:default">${rows.length} wks</button>
-      <button onclick="zoomTrend(-2)" title="Show more weeks (zoom out)" ${trendSpan>=26?"disabled":""}>+</button></div></div></div>
+      <button onclick="zoomTrend(-1)" title="Zoom out — show more weeks" ${trendSpan>=26?"disabled":""}>−</button>
+      <button onclick="trendSpan=10;localStorage.setItem('onePlanV2Trend',trendSpan);renderPage('storecapacity')" style="min-width:82px" title="Reset zoom">${rows.length} wks</button>
+      <button onclick="zoomTrend(1)" title="Zoom in — show fewer weeks" ${trendSpan<=4?"disabled":""}>+</button></div></div></div>
     <svg class="trend-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Capacity trend">
-      <text x="${pad.l}" y="15" font-size="11" font-weight="700" fill="#5f7184">Minutes</text>${yt}${xl}
-      <polyline points="${line("budget")}" fill="none" stroke="#1d64d8" stroke-width="3.5" stroke-linejoin="round"/>
-      <polyline points="${line("booking")}" fill="none" stroke="#e8930c" stroke-width="3.5" stroke-linejoin="round"/>
-      <polyline points="${line("actual")}" fill="none" stroke="#16a76a" stroke-width="3.5" stroke-linejoin="round"/>
+      <text x="${pad.l}" y="15" font-size="${xFont}" font-weight="700" fill="#5f7184">Minutes</text>${yt}${xl}
+      <polyline points="${line("budget")}" fill="none" stroke="#1d64d8" stroke-width="${lineWidth.toFixed(2)}" stroke-linejoin="round"/>
+      <polyline points="${line("booking")}" fill="none" stroke="#e8930c" stroke-width="${lineWidth.toFixed(2)}" stroke-linejoin="round"/>
+      <polyline points="${line("actual")}" fill="none" stroke="#16a76a" stroke-width="${lineWidth.toFixed(2)}" stroke-linejoin="round"/>
       ${dots("budget","#1d64d8")}${dots("booking","#e8930c")}${dots("actual","#16a76a")}
     </svg>
     <div class="trend-legend"><span><i class="legend-line" style="background:#1d64d8"></i>Budget (capacity)</span><span><i class="legend-line" style="background:#e8930c"></i>Booking (approved)</span><span><i class="legend-line" style="background:#16a76a"></i>Actual (completed)</span></div>
@@ -2802,6 +2917,33 @@ async function importStoresFile(input){
 }
 
 
+function renderMenuVisibilitySettings(){
+  normalizeMenuVisibility();
+  const locked=new Set(["dashboard","settings"]);
+  const rows=NAV.map(([page,ico,label,group])=>{
+    const visible=isMenuVisible(page);
+    const lock=locked.has(page);
+    return `<div class="menu-visibility-row"><div class="menu-visibility-name"><span class="menu-visibility-icon">${ico}</span><div><b>${esc(label)}</b><span>${esc(group)}${lock?" · required":""}</span></div></div><label class="switch"><input type="checkbox" ${visible?"checked":""} ${role!=="Admin"||lock?"disabled":""} onchange="setMenuVisibility('${page}',this.checked)"><span></span></label></div>`;
+  }).join("");
+  return `<div class="card" style="max-width:860px"><div class="section-title">Main Menu Visibility <span class="tag">Admin control</span></div>
+    <div class="banner ${role==="Admin"?"info":"warn"}">${role==="Admin"?"Turn optional sidebar menus on or off. Dashboard and Settings remain visible so navigation can always be recovered.":`You are acting as <b>${esc(role)}</b>. Menu visibility is read-only; only Admin can change it.`}</div>
+    ${role==="Admin"?`<div class="cloud-actions" style="margin:12px 0"><button class="btn" onclick="setAllOptionalMenus(true)">Show all menus</button><button class="btn ghost" onclick="setAllOptionalMenus(false)">Hide optional menus</button></div>`:""}
+    <div class="menu-visibility-grid">${rows}</div>
+  </div>`;
+}
+function setMenuVisibility(page,visible){
+  if(role!=="Admin"||["dashboard","settings"].includes(page)) return;
+  normalizeMenuVisibility();
+  SETTINGS.menuVisibility[page]=Boolean(visible);
+  saveState(); buildMenu(); navigate("settings"); updateBadges();
+}
+function setAllOptionalMenus(visible){
+  if(role!=="Admin") return;
+  normalizeMenuVisibility();
+  NAV.forEach(([page])=>{ if(!["dashboard","settings"].includes(page)) SETTINGS.menuVisibility[page]=Boolean(visible); });
+  saveState(); buildMenu(); navigate("settings"); updateBadges();
+}
+
 function renderSettings(){
   const wkInfo=`${weekKeyOf(today())} · ${isoWeekYear(today())}`;
   const folder=DEVICE_STORAGE.folderName||"No folder selected";
@@ -2818,6 +2960,8 @@ function renderSettings(){
       <div class="ff"><label>Capacity Block %</label><input type="number" value="${SETTINGS.capacityBlock}" onchange="SETTINGS.capacityBlock=Number(this.value);saveState();renderAll()"></div>
     </div>
   </div>
+
+  ${renderMenuVisibilitySettings()}
 
   <div class="card" style="max-width:860px;border-color:#bfdbfe"><div class="section-title">Device Folder Storage <span class="tag">Local path</span></div>
     <div class="banner ${DEVICE_STORAGE.handle&&DEVICE_STORAGE.permission==="granted"?"info":"warn"}">Choose a folder through the Windows folder picker. OnePlan will save <b>${esc(DEVICE_STORAGE.fileName)}</b> in that folder and keep up to ${DEVICE_STORAGE.maxBackups} versions in a <b>${esc(DEVICE_STORAGE.backupFolder)}</b> subfolder.</div>
@@ -3539,6 +3683,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){closeModal("planMo
 
 async function onePlanStart(){
   loadState();
+  normalizeMenuVisibility();
   buildMenu();
   setRole("Admin",true);
   navigate("dashboard");

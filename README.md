@@ -1,17 +1,16 @@
-# ONE PLAN — Enterprise Interface v5.4
+# ONE PLAN v5.4.1 — Enterprise Fix Pack
 
-This release upgrades the OnePlan interface for large-enterprise use while preserving all v5.3 planning and device-folder storage functions.
+This package preserves the v5.4 enterprise interface and adds the requested fixes:
 
-## v5.4 interface changes
-- Executive dashboard with enterprise KPI hierarchy
-- Professional dark navigation and refined top bar
-- Larger implementation-load visualization
-- Project-status, overdue, upcoming, and team-workload panels
-- Consistent cards, tables, filters, buttons, Gantt and modal styling
-- Responsive layouts for desktop, iPad and mobile
-
-## Storage
-The primary state can still be stored in a user-selected local folder through Chrome or Microsoft Edge. The selected folder contains `oneplan-state.json` and the `backups` folder. Browser cache remains available as a fallback.
+1. Admin-controlled main-menu visibility in Settings. Dashboard and Settings remain available.
+2. Dashboard Period context typography increased by 50%.
+3. Dashboard card rows aligned to equal height. “Implementation Load” renamed to “Workload” with Previous / Current / Next 6 Weeks selection.
+4. Gantt Today action moves active-today projects to the first rows and scrolls to the Today marker.
+5. Gantt and Store Capacity zoom controls work with reset behavior.
+6. Gantt and Store Capacity line/font sizes scale with zoom density.
+7. Dashboard no longer embeds the Gantt; the timeline remains in the Gantt Chart menu.
 
 ## Deploy
-Upload all files to the GitHub repository root and deploy as a Render Node Web Service.
+Upload all files to the GitHub repository root, then use Render **Manual Deploy → Clear build cache & deploy**.
+
+Verify `/api/health` reports `5.4.1-enterprise-fixes`.
