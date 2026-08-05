@@ -707,7 +707,7 @@ tbody tr:hover{background:#f8fbff}
 }
 
 
-/* v5.4.1 enterprise fixes */
+/* v5.4.2 equal-height dashboard */
 .context-chip{height:38px;padding:0 13px;font-size:15px;font-weight:500;white-space:nowrap}
 .context-chip b{font-size:15px;font-weight:700}
 .kpi-grid,.enterprise-dashboard-main,.enterprise-dashboard-secondary{align-items:stretch;grid-auto-rows:1fr}
@@ -744,8 +744,40 @@ tbody tr:hover{background:#f8fbff}
 .switch input:disabled+span{opacity:.52;cursor:not-allowed}
 @media(max-width:900px){.menu-visibility-grid{grid-template-columns:1fr}.workload-title{align-items:flex-start;flex-direction:column}.workload-period{margin-left:0;width:100%}.workload-period button{flex:1;min-width:0}.context-chip{font-size:13px}.context-chip b{font-size:13px}}
 
+
+/* v5.4.2 equal-height dashboard and Current + Next 6 Weeks */
+@media(min-width:1181px){
+  .enterprise-dashboard-main{grid-template-rows:360px}
+  .enterprise-dashboard-secondary{grid-template-rows:318px}
+}
+.enterprise-dashboard-main>.card,
+.enterprise-dashboard-secondary>.card{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  align-self:stretch;
+  overflow:hidden;
+}
+.enterprise-dashboard-main>.card{height:100%;min-height:360px}
+.enterprise-dashboard-secondary>.card{height:100%;min-height:318px}
+.implementation-card #implementationLoadChart{flex:1;min-height:0;display:flex;flex-direction:column}
+.implementation-card #implementationLoadChart>.impl-legend{flex:0 0 auto}
+.implementation-card #implementationLoadChart>.impl-chart{flex:1;min-height:215px;height:auto}
+.implementation-card #implementationLoadChart>.impl-nav{flex:0 0 auto}
+.health-card .donut-wrap{flex:1;min-height:0;margin:0}
+.enterprise-dashboard-secondary .dashboard-list{flex:1;min-height:0;overflow:auto;padding-right:3px}
+.enterprise-dashboard-secondary #teamWorkloadChart{flex:1;min-height:0;overflow:auto}
+.enterprise-dashboard-secondary .dashboard-card-footer,
+.health-card .dashboard-card-footer{margin-top:auto;flex:0 0 auto}
+@media(max-width:1180px){
+  .enterprise-dashboard-main>.card,.enterprise-dashboard-secondary>.card{height:auto;min-height:350px}
+}
+@media(max-width:720px){
+  .enterprise-dashboard-main>.card,.enterprise-dashboard-secondary>.card{min-height:0}
+}
+
 </style>
-  <meta name="oneplan-build" content="v5.4.1-enterprise-fixes">
+  <meta name="oneplan-build" content="v5.4.2-equal-height-workload">
 </head>
 <body>
 <div class="app">
@@ -807,7 +839,7 @@ tbody tr:hover{background:#f8fbff}
 <script>
 "use strict";
 /* =====================================================================
-   ONE PLAN v5.4.1 — enterprise interface fixes and controls.
+   ONE PLAN v5.4.2 — equal-height dashboard and current-plus-next workload view.
    Vanilla JS, single file, no build. Fixes: relational model, derived
    capacity, rule engine, derived status, real time/year, validation,
    RBAC, pagination, shared filters, real charts, calendar nav, exports.
@@ -2251,7 +2283,7 @@ function buildImplementationLoadBars(mode=workloadPeriod){
   const currentMonday=weekRange(wk,yr).start;
   const config={
     previous:{start:addDays(currentMonday,-42),count:6,label:"Previous 6 weeks"},
-    current:{start:new Date(currentMonday),count:1,label:"Current week"},
+    current:{start:new Date(currentMonday),count:7,label:"Current + next 6 weeks"},
     next:{start:addDays(currentMonday,7),count:6,label:"Next 6 weeks"}
   }[mode]||{start:addDays(currentMonday,7),count:6,label:"Next 6 weeks"};
   const windowStart=config.start;
@@ -2315,7 +2347,7 @@ function renderImplementationLoad(bars){
     return `<div class="impl-week ${b.cur?"cur":b.prev?"prev":""}"><div class="impl-bar-area"><div class="impl-stackbar ${b.pct>100?"over":""} ${b.cur?"current":""}" style="height:${shown}%"><span class="impl-total">${Math.round(b.pct)}%</span>${segs}</div></div></div>`;
   }).join("");
   const labels=bars.map(b=>`<div class="impl-wk ${b.cur?"cur":b.prev?"prev":""}">${b.wk}${b.cur?" ●":""}</div>`).join("");
-  const modeLabel={previous:"Previous 6 weeks",current:"Current week",next:"Next 6 weeks"}[workloadPeriod]||"Next 6 weeks";
+  const modeLabel={previous:"Previous 6 weeks",current:"Current + next 6 weeks",next:"Next 6 weeks"}[workloadPeriod]||"Next 6 weeks";
   const colsStyle=`grid-template-columns:repeat(${Math.max(1,bars.length)},minmax(24px,1fr))`;
   return `<div class="impl-legend">${legend}</div><div class="impl-chart"><div class="impl-axis"><span class="a100">100%</span><span class="a75">75%</span><span class="a50">50%</span><span class="a25">25%</span><span class="a0">0%</span></div><div class="impl-plot"><div class="impl-cols" style="${colsStyle}">${columns}</div></div><div class="impl-week-labels" style="${colsStyle}">${labels}</div></div><div class="impl-nav"><span>${esc(modeLabel)}</span><span style="color:var(--primary);font-weight:700">● ${bars.length} week${bars.length===1?"":"s"} displayed</span></div>`;
 }

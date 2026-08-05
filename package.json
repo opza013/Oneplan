@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.1",
+  "version": "5.4.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan Range Operation Platform v5.4.1 enterprise fixes, admin menu controls, workload period selector, and working zoom"
+  "description": "OnePlan Range Operation Platform v5.4.2 equal-height dashboard cards and Current plus Next 6 Weeks workload view"
 }
