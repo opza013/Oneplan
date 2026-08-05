@@ -6,7 +6,7 @@
 <title>One Plan — Range Operation Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --nav:#06294f; --nav-2:#0a3b6e; --nav-deep:#041b38;
@@ -516,8 +516,198 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 @media(max-width:900px){.cloud-sync-pill .cloud-label{display:none}.cloud-sync-pill{width:34px;padding:0;justify-content:center}.cloud-state-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.cloud-state-grid{grid-template-columns:1fr}.cloud-token-row{grid-template-columns:1fr}}
 
+
+/* =====================================================================
+   ONE PLAN v5.4 — Enterprise interface layer
+   Visual redesign only. Existing planning, storage and workflow logic
+   remains unchanged.
+   ===================================================================== */
+:root{
+  --nav:#071f3f; --nav-2:#0a2f59; --nav-deep:#04162e;
+  --primary:#1557c0; --primary-2:#2f7df6; --primary-3:#67a5ff;
+  --sky:#edf5ff; --bg:#f3f6fa; --bg-2:#f8fafc; --card:#ffffff;
+  --line:#dfe7f1; --line-2:#edf1f6;
+  --text:#10233d; --muted:#64748b; --muted-2:#94a3b8;
+  --green:#16a34a; --amber:#f59e0b; --red:#ef4444; --purple:#7c3aed;
+  --shadow-sm:0 1px 2px rgba(15,35,61,.04),0 2px 8px rgba(15,35,61,.035);
+  --shadow:0 8px 24px rgba(15,35,61,.08);
+  --shadow-lg:0 22px 60px rgba(15,35,61,.16);
+  --radius:12px; --radius-sm:8px;
+  --sans:"Inter","IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+body{background:#f3f6fa;color:var(--text)}
+.app{background:#f3f6fa}
+
+/* Enterprise navigation */
+.sidebar{
+  width:248px;
+  background:linear-gradient(180deg,#071f3f 0%,#082b52 56%,#051a34 100%);
+  border-right:1px solid rgba(255,255,255,.05);
+  box-shadow:8px 0 28px rgba(4,22,46,.16);
+}
+.brand{height:82px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.09);position:relative}
+.brand:after{content:"";position:absolute;left:20px;right:20px;bottom:-1px;height:2px;background:linear-gradient(90deg,#3b82f6,transparent)}
+.brand-title b{font-size:25px;letter-spacing:1.1px;line-height:1;font-weight:800}
+.brand-title span{margin-top:7px;font-size:11px;letter-spacing:.42px;color:#b7d8ff;font-weight:500}
+.menu-section{padding:18px 20px 7px;color:#79a9db;font-size:9px;letter-spacing:1.3px}
+.menu{padding:0 12px;gap:4px}
+.menu button{
+  min-height:43px;padding:8px 11px;border-radius:9px;color:#dceaff;font-size:13px;font-weight:600;
+  border:1px solid transparent;transition:background .14s,border-color .14s,transform .14s;
+}
+.menu button:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.07);transform:translateX(2px)}
+.menu button.active{
+  color:#fff;background:linear-gradient(90deg,#1557c0,#2f7df6);border-color:rgba(255,255,255,.18);
+  box-shadow:0 8px 20px rgba(21,87,192,.33);transform:none;
+}
+.menu button .ico{width:27px;height:27px;border-radius:7px;background:rgba(255,255,255,.08);font-size:14px;color:#dceaff}
+.menu button.active .ico{background:rgba(255,255,255,.16);color:#fff}
+.side-foot{padding:14px}
+.rolebox{padding:11px 12px;background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.11);border-radius:10px}
+.rolebox label{color:#8fb8e2}
+.rolebox select{height:32px;border-radius:7px;background:#fff;color:#10233d}
+.avatar{width:34px;height:34px;font-size:14px;background:linear-gradient(135deg,#dbeafe,#ffffff);box-shadow:0 0 0 2px rgba(255,255,255,.13)}
+
+/* Enterprise top bar */
+.topbar{
+  height:72px;padding:0 24px;background:rgba(255,255,255,.97);border-bottom:1px solid #dfe7f1;
+  box-shadow:0 3px 14px rgba(15,35,61,.045);gap:14px;
+}
+.title-wrap .title{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.25px}
+.title-wrap .crumb{font-size:11px;color:#718096;margin-top:3px}
+.search{margin-left:auto}
+.search input{width:360px;height:39px;border-radius:9px;border-color:#d8e2ee;background:#f8fafc;padding-left:38px;font-size:12.5px}
+.search:before{content:"⌕";left:13px;font-size:19px;color:#64748b}
+.cloud-sync-pill{height:36px;border-radius:8px;padding:0 10px;background:#fff}
+.bell{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;background:#fff;font-size:17px}
+.bell:hover{background:#f8fafc}
+#newPlanBtn{height:38px;border-radius:8px;padding:0 15px;box-shadow:0 5px 14px rgba(21,87,192,.22)}
+.top-profile{height:38px;display:flex;align-items:center;gap:9px;padding:0 8px;border-left:1px solid var(--line)}
+.top-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#eff6ff);color:#123d72;font-size:12px;font-weight:800;border:1px solid #c8dcf4}
+.top-profile-copy{display:flex;flex-direction:column;line-height:1.15;min-width:85px}
+.top-profile-copy b{font-size:11px;color:#1e293b}
+.top-profile-copy span{font-size:9px;color:#94a3b8;margin-top:2px}
+
+.content{padding:22px 24px 34px;background:#f3f6fa}
+.page{max-width:1760px;margin:0 auto}
+
+/* Enterprise cards and controls */
+.card{border:1px solid #dfe7f1;border-radius:12px;box-shadow:var(--shadow-sm);padding:17px 18px;background:#fff}
+.card:hover{border-color:#d6e1ed}
+.section-title{font-family:var(--sans);font-size:13px;font-weight:700;color:#172b48;margin-bottom:13px}
+.section-title .small{font-size:10px;color:#718096;font-weight:500}
+.btn{height:34px;border-radius:8px;padding:0 12px;border-color:#d9e3ee;font-size:11.5px}
+.btn.sm{height:29px;padding:0 9px;border-radius:7px;font-size:10.5px}
+.btn.primary{background:linear-gradient(135deg,#1557c0,#2f7df6);box-shadow:0 5px 14px rgba(21,87,192,.22)}
+.toolbar{padding:12px 13px;border-radius:11px;box-shadow:var(--shadow-sm);border-color:#dfe7f1}
+.fld label{font-size:9px;color:#64748b;letter-spacing:.55px}
+.fld select,.fld input,.multi-trigger{height:34px;border-radius:8px;border-color:#dce5ef;background:#fff}
+
+/* Dashboard heading */
+.dashboard-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin:0 0 15px}
+.dashboard-heading h2{font-size:21px;line-height:1.2;margin:0;color:#10233d;letter-spacing:-.35px}
+.dashboard-heading p{font-size:11px;color:#718096;margin:5px 0 0}
+.dashboard-heading .dashboard-context{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.context-chip{height:30px;display:inline-flex;align-items:center;gap:6px;border:1px solid #dfe7f1;border-radius:8px;background:#fff;padding:0 10px;color:#64748b;font-size:10px;font-weight:600;box-shadow:var(--shadow-sm)}
+.context-chip b{color:#172b48;font-family:var(--mono);font-size:10px}
+
+/* KPI cards */
+.kpi-grid{grid-template-columns:repeat(6,minmax(145px,1fr));gap:12px}
+.kpi{position:relative;min-height:104px;gap:12px;padding:15px 15px 13px;align-items:flex-start;overflow:hidden;border-top:3px solid var(--kpi-color,#2f7df6)}
+.kpi:after{content:"";position:absolute;right:-22px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:color-mix(in srgb,var(--kpi-color,#2f7df6) 8%,transparent)}
+.kpi .icon{width:38px;height:38px;border-radius:50%;font-size:16px;background:color-mix(in srgb,var(--kpi-color,#2f7df6) 12%,white)!important;color:var(--kpi-color,#2f7df6);border:1px solid color-mix(in srgb,var(--kpi-color,#2f7df6) 22%,white)}
+.kpi .label{font-size:10.5px;color:#52647a;font-weight:600;margin-top:1px}
+.kpi .num{font-size:24px;color:#10233d;margin-top:3px;letter-spacing:-.8px}
+.kpi .sub{font-size:9px;color:#94a3b8;margin-top:4px}
+.kpi.click:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,35,61,.09);border-color:#d8e3ef;border-top-color:var(--kpi-color,#2f7df6)}
+
+/* Enterprise dashboard layout */
+.enterprise-dashboard-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.8fr);gap:14px;margin-top:15px}
+.enterprise-dashboard-secondary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px}
+.enterprise-dashboard-main>.card,.enterprise-dashboard-secondary>.card{min-width:0}
+.enterprise-dashboard-main .implementation-card{min-height:350px}
+.enterprise-dashboard-main .health-card{min-height:350px}
+.dashboard-list{display:flex;flex-direction:column;gap:2px}
+.dashboard-list-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:9px;align-items:start;padding:9px 0;border-bottom:1px solid #edf1f6}
+.dashboard-list-row:last-child{border-bottom:0}
+.dashboard-list-row .status-dot{width:7px;height:7px;border-radius:50%;margin-top:5px}
+.dashboard-list-row b{display:block;font-size:11px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dashboard-list-row .meta{font-size:9.5px;color:#718096;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dashboard-list-row time{font-family:var(--mono);font-size:9px;color:#64748b;white-space:nowrap;padding-top:2px}
+.dashboard-card-footer{display:flex;justify-content:flex-end;padding-top:10px;margin-top:4px;border-top:1px solid #edf1f6}
+.dashboard-card-footer button{border:0;background:transparent;color:#1557c0;font-size:10px;font-weight:700;cursor:pointer}
+.team-load-list{display:flex;flex-direction:column;gap:10px;padding-top:3px}
+.team-load-row{display:grid;grid-template-columns:64px minmax(0,1fr) 44px;gap:9px;align-items:center}
+.team-load-row .team-name{font-size:10px;font-weight:700;color:#334155}
+.team-load-track{height:8px;border-radius:999px;background:#edf2f7;overflow:hidden}
+.team-load-track i{display:block;height:100%;border-radius:999px;min-width:2px}
+.team-load-row .team-pct{font-family:var(--mono);font-size:9px;color:#64748b;text-align:right}
+
+/* Dashboard project health */
+.donut-wrap{justify-content:center;gap:24px;padding:20px 5px 8px}
+.donut{width:158px;height:158px;box-shadow:inset 0 0 0 1px rgba(15,35,61,.04)}
+.donut:after{inset:27px;box-shadow:0 0 0 1px #edf1f6}
+.donut .ctr b{font-size:28px}.donut .ctr span{font-size:9px}
+.dlegend{min-width:135px;gap:10px}
+.dlg{font-size:10.5px;color:#475569}.dlg b{color:#10233d}
+
+/* Implementation chart */
+.impl-chart{height:240px;margin-top:5px;grid-template-columns:38px minmax(0,1fr)}
+.impl-legend{margin:3px 0 13px;gap:8px 15px}
+.impl-legend span{font-size:9px;color:#52647a}
+.impl-plot{border-left:1px solid #dce5ef;border-bottom:1px solid #dce5ef;background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(25% - 1px),#e7edf4 calc(25% - 1px),#e7edf4 25%)}
+.impl-stackbar{width:min(42px,72%);border-radius:5px 5px 2px 2px;box-shadow:none;border:1px solid rgba(15,35,61,.08)}
+.impl-total{font-size:9px;top:-19px;color:#10233d}
+.impl-wk{font-size:9px;color:#64748b}.impl-wk.cur{color:#1557c0;font-weight:800}
+.impl-nav{font-size:9px;padding-top:7px}
+.impl-loading{height:230px;display:grid;place-items:center;color:#718096;font-size:11px}
+
+/* Gantt and tables */
+.gantt-shell{border-radius:12px;border-color:#dfe7f1;box-shadow:var(--shadow-sm)}
+.gantt-top{padding:13px 16px;background:#fff}
+.gantt-top h3{font-family:var(--sans);font-size:13px}
+.grow.head{background:#f8fafc}.grow.head .gcell-left{background:#f8fafc}
+.gcell-left{padding:9px 13px}.pname{font-size:11.5px}.powner{font-size:9.5px}
+.tbl-wrap{border-color:#e3eaf2;border-radius:9px}
+table{font-size:11.5px}
+thead th{background:#f8fafc;padding:10px 11px;font-size:9px;letter-spacing:.5px;color:#64748b}
+tbody td{padding:10px 11px;border-bottom-color:#edf1f6}
+tbody tr:hover{background:#f8fbff}
+.pill{font-size:9.5px;padding:3px 8px}
+.tag{font-size:9.5px;border-radius:5px}
+
+/* Modals */
+.modal-bg{backdrop-filter:blur(2px)}
+.modal{border-radius:14px;box-shadow:0 28px 80px rgba(3,20,43,.28)}
+.modal-head{background:#fff}
+
+@media(max-width:1450px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .enterprise-dashboard-secondary{grid-template-columns:1fr 1fr}
+  .enterprise-dashboard-secondary>.card:last-child{grid-column:1/-1}
+}
+@media(max-width:1180px){
+  .enterprise-dashboard-main{grid-template-columns:1fr}
+  .search input{width:260px}
+  .top-profile-copy{display:none}.top-profile{min-width:42px;padding:0 4px}
+}
+@media(max-width:1024px){
+  .sidebar{width:74px}
+  .brand{height:72px}
+  .enterprise-dashboard-secondary{grid-template-columns:1fr}
+  .enterprise-dashboard-secondary>.card:last-child{grid-column:auto}
+}
+@media(max-width:720px){
+  .topbar{height:64px;padding:0 11px}.title-wrap .crumb,.top-profile{display:none}
+  .search input{width:145px;height:36px}.content{padding:14px}
+  .dashboard-heading{flex-direction:column}.dashboard-heading .dashboard-context{justify-content:flex-start}
+  .kpi-grid{grid-template-columns:1fr 1fr}.kpi{min-height:94px;padding:13px}.kpi .num{font-size:21px}
+  .enterprise-dashboard-main,.enterprise-dashboard-secondary{grid-template-columns:1fr}
+  .implementation-card{overflow:hidden}.impl-chart{height:210px}
+}
+
 </style>
-  <meta name="oneplan-build" content="brand-subtitle-nowrap-v6">
+  <meta name="oneplan-build" content="v5.4-enterprise-interface">
 </head>
 <body>
 <div class="app">
@@ -553,6 +743,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
       <div class="search"><input id="globalSearch" placeholder="Search project, store, owner, milestone…" /></div>
       <button class="cloud-sync-pill" id="cloudSyncPill" data-state="local" onclick="navigate('settings')" title="Storage status"><span class="cloud-dot"></span><span class="cloud-label" id="cloudSyncLabel">Local cache</span></button>
       <div class="bell" title="Alerts" onclick="navigate('approval')">🔔<span class="badge" id="notiCount">0</span></div>
+      <div class="top-profile" title="Current access role"><div class="top-avatar" id="topRoleAvatar">A</div><div class="top-profile-copy"><b id="topRoleName">Admin</b><span>OnePlan User</span></div></div>
       <button class="btn primary" id="newPlanBtn" onclick="openPlanModal()">+ New Plan</button>
     </header>
     <section class="content" id="content">
@@ -1527,7 +1718,14 @@ const PERM={
   review:r=>["Admin","Approver","Reviewer"].includes(r)
 };
 function can(action){ return PERM[action]?PERM[action](role):false; }
-function setRole(r,skipRender=false){ role=r; document.getElementById("roleAvatar").innerText=r[0]; document.getElementById("newPlanBtn").style.display=can("create")?"":"none"; if(!skipRender)renderAll(); }
+function setRole(r,skipRender=false){
+  role=r;
+  const sideAvatar=document.getElementById("roleAvatar"); if(sideAvatar) sideAvatar.innerText=r[0];
+  const topAvatar=document.getElementById("topRoleAvatar"); if(topAvatar) topAvatar.innerText=r[0];
+  const topRole=document.getElementById("topRoleName"); if(topRole) topRole.innerText=r;
+  const newBtn=document.getElementById("newPlanBtn"); if(newBtn) newBtn.style.display=can("create")?"":"none";
+  if(!skipRender)renderAll();
+}
 
 /* ---------- 9. SHARED FILTER CONTEXT (syncs across modules) ---------- */
 const MULTI_FILTER_FIELDS=new Set(["division","department","type","status","owner","milestone","milestoneStatus","format","zone","storeNo","capacityStatus"]);
@@ -1623,7 +1821,7 @@ function resetFilters(){
 
 /* ---------- 10. small helpers ---------- */
 function statusText(s){return {OnTrack:"On Track",AtRisk:"At Risk",Delayed:"Delayed",Completed:"Completed",Cancelled:"Cancelled"}[s]||s;}
-function statusColor(s){return {OnTrack:"var(--green)",AtRisk:"var(--amber)",Delayed:"var(--red)",Completed:"var(--blue)",Cancelled:"var(--slate)"}[s]||"var(--slate)";}
+function statusColor(s){return {OnTrack:"var(--green)",InProgress:"var(--green)",Upcoming:"var(--primary)",AtRisk:"var(--amber)",Delayed:"var(--red)",Completed:"var(--blue)",Cancelled:"var(--slate)"}[s]||"var(--slate)";}
 function apvColor(a){return {Approved:"#0c7d4d","Pending Review":"#6d54e6",Draft:"#8696a8",Rejected:"#b81f1f","Need Revision":"#9a5e00"}[a]||"#5f7184";}
 function apvTag(a){return `<span class="apv" style="color:${apvColor(a)}">${a}</span>`;}
 function pill(s){return `<span class="pill st-${s}">${statusText(s)}</span>`;}
@@ -2013,6 +2211,15 @@ function renderImplementationLoad(bars){
   const labels=bars.map(b=>`<div class="impl-wk ${b.cur?"cur":b.prev?"prev":""}">${b.wk}${b.cur?" ●":""}</div>`).join("");
   return `<div class="impl-legend">${legend}</div><div class="impl-chart"><div class="impl-axis"><span class="a100">100%</span><span class="a75">75%</span><span class="a50">50%</span><span class="a25">25%</span><span class="a0">0%</span></div><div class="impl-plot"><div class="impl-cols">${columns}</div></div><div class="impl-week-labels">${labels}</div></div><div class="impl-nav"><span style="color:var(--muted-2)">◀ previous</span><span style="color:var(--primary);font-weight:700">● current week</span><span>next 6 →</span></div>`;
 }
+function renderTeamWorkloadList(bars){
+  const current=bars.find(x=>x.cur)||bars[1]||bars[0];
+  if(!current) return `<div class="empty">No workload data</div>`;
+  return `<div class="team-load-list">${current.teams.map(t=>{
+    const util=Math.max(0,Math.round(t.util));
+    const width=Math.min(100,util);
+    return `<div class="team-load-row"><span class="team-name">${esc(t.label)}</span><div class="team-load-track" title="${esc(`${t.activities} active milestones · ${util}% of team capacity`)}"><i style="width:${width}%;background:${t.color}"></i></div><span class="team-pct">${util}%</span></div>`;
+  }).join("")}</div>`;
+}
 function scheduleImplementationLoadRender(){
   const token=++implementationLoadRenderToken;
   const run=()=>{
@@ -2023,9 +2230,13 @@ function scheduleImplementationLoadRender(){
       const bars=buildImplementationLoadBars();
       if(token!==implementationLoadRenderToken||!document.body.contains(host)) return;
       host.innerHTML=renderImplementationLoad(bars);
+      const teamHost=document.getElementById("teamWorkloadChart");
+      if(teamHost) teamHost.innerHTML=renderTeamWorkloadList(bars);
     }catch(err){
       console.error("Implementation Load render failed",err);
       host.innerHTML=`<div class="empty">Implementation Load could not be calculated. Other dashboard functions remain available.</div>`;
+      const teamHost=document.getElementById("teamWorkloadChart");
+      if(teamHost) teamHost.innerHTML=`<div class="empty">Team workload unavailable.</div>`;
     }
   };
   if("requestIdleCallback" in window) requestIdleCallback(run,{timeout:350});
@@ -2039,73 +2250,68 @@ function renderDashboard(){
   projects.forEach(p=>counts[projState(p)]++);
   const pend=projects.filter(p=>p.approval==="Pending Review").length;
   const overdue=projects.filter(isOverdue).length;
-  // store overload this week
   const wk=isoWeek(today()), yr=isoWeekYear(today());
   const overStores=stores.filter(s=>storeUtil(s,wk,yr).status==="Over").length;
-  // donut
   const total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
   const segs=[["OnTrack","var(--green)"],["AtRisk","var(--amber)"],["Delayed","var(--red)"],["Completed","var(--blue)"],["Cancelled","var(--slate)"]];
   let acc=0; const stops=segs.map(([k,c])=>{const from=acc/total*360; acc+=counts[k]; const to=acc/total*360; return `${c} ${from}deg ${to}deg`;}).join(",");
-  // action items derived
-  const dueDD=projects.filter(p=>{const m=p.milestones.find(x=>x.key==="DD");return m&&msState(m)==="Delayed";}).length;
-  const commWk=projects.filter(p=>{const m=p.milestones.find(x=>x.key==="COMM");return m&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),weekRange(wk,yr).start,weekRange(wk,yr).end);}).length;
-  const conflicts=detectConflicts().length;
+
+  const msRows=[];
+  for(const p of projects){
+    if(p.statusOverride==="Cancelled") continue;
+    for(const m of (p.milestones||[])){
+      if(!m.plannedEnd) continue;
+      const due=parseDate(m.plannedEnd);
+      if(!Number.isFinite(due.getTime())) continue;
+      msRows.push({p,m,due,state:msState(m)});
+    }
+  }
+  const overdueMs=msRows.filter(x=>x.state==="Delayed").sort((a,b)=>a.due-b.due).slice(0,5);
+  const next7End=addDays(today(),7);
+  const upcomingMs=msRows.filter(x=>x.due>=today()&&x.due<=next7End&&x.state!=="Completed").sort((a,b)=>a.due-b.due).slice(0,5);
+
+  const listRows=(rows,type)=>rows.map(({p,m,due,state})=>`<div class="dashboard-list-row"><span class="status-dot" style="background:${type==="over"?"var(--red)":statusColor(state)}"></span><div><b title="${esc(p.name)}">${esc(m.name||m.key)} — ${esc(p.name)}</b><div class="meta">${esc(m.owner||p.owner||"Unassigned")} · ${esc(p.code||"")}</div></div><time>${fmtDisp(due).replace(/\s\d{4}$/,'')}</time></div>`).join("")||`<div class="empty" style="padding:24px 8px">No ${type==="over"?"overdue":"upcoming"} milestone.</div>`;
 
   return `
-  <div class="hero">
-    <div class="hero-card">
-      <h2>Control Tower</h2>
-      <p>Single view across critical path, capacity and approvals. Status and capacity are computed live from plan dates and store load — not entered by hand.</p>
-      <div class="hero-meta">
-        <div>TODAY<b>${fmtDisp(today())}</b></div>
-        <div>ISO WEEK<b>${weekKeyOf(today())} · ${isoWeekYear(today())}</b></div>
-        <div>PLAN YEAR<b>${SETTINGS.planYear}</b></div>
-        <div>ACTIVE PLANS<b>${list.length}</b></div>
-      </div>
-    </div>
-    <div class="quick-card"><div class="section-title">Quick Action</div><div class="quick">
-      ${can("create")?`<button onclick="openPlanModal()"><b>+ New Plan</b><span class="small">Create with capacity check</span></button>`:""}
-      <button onclick="navigate('gantt')"><b>View Gantt</b><span class="small">Milestone timeline</span></button>
-      <button onclick="navigate('storecapacity')"><b>Store Capacity</b><span class="small">Live workload</span></button>
-      <button onclick="navigate('approval')"><b>Approval (${pend})</b><span class="small">Pending queue</span></button>
-    </div></div>
+  <div class="dashboard-heading">
+    <div><h2>Executive Dashboard</h2><p>Portfolio health, critical milestones and implementation capacity in one governed view.</p></div>
+    <div class="dashboard-context"><span class="context-chip">Data as of <b>${fmtDisp(today())}</b></span><span class="context-chip">Current <b>${weekKeyOf(today())}</b></span><span class="context-chip">Plan year <b>${SETTINGS.planYear}</b></span></div>
   </div>
 
   <div class="grid kpi-grid">
-    ${kpiCard("Active Projects",list.length,"▦","var(--primary)","plans")}
-    ${kpiCard("On Track",counts.OnTrack,"✓","var(--green)","plans","OnTrack")}
-    ${kpiCard("At Risk",counts.AtRisk,"!","var(--amber)","plans","AtRisk")}
-    ${kpiCard("Delayed / Overdue",counts.Delayed,"×","var(--red)","plans","Delayed")}
-    ${kpiCard("Pending Approval",pend,"⌛","var(--purple)","approval")}
-    ${kpiCard("Store Overload",overStores,"▥","var(--red)","storecapacity")}
+    ${kpiCard("Active Projects",list.length,"▦","var(--primary)","plans",null,"Portfolio")}
+    ${kpiCard("On Track",counts.OnTrack,"✓","var(--green)","plans","OnTrack",`${Math.round(counts.OnTrack/Math.max(1,list.length)*100)}% of active`)}
+    ${kpiCard("At Risk",counts.AtRisk,"!","var(--amber)","plans","AtRisk",`${Math.round(counts.AtRisk/Math.max(1,list.length)*100)}% of active`)}
+    ${kpiCard("Delayed / Overdue",counts.Delayed,"!","var(--red)","plans","Delayed",`${overdue} project overdue`)}
+    ${kpiCard("Pending Approval",pend,"✓","var(--purple)","approval",null,"Review queue")}
+    ${kpiCard("Store Overload",overStores,"▥","#0f766e","storecapacity",null,weekKeyOf(today()))}
   </div>
 
-  <div class="grid dash-3" style="margin-top:16px">
-    <div class="card"><div class="section-title">Project Health</div>
-      <div class="donut-wrap">
-        <div class="donut" style="background:conic-gradient(${stops})"><div class="ctr"><b>${list.length}</b><span>active</span></div></div>
-        <div class="dlegend">${segs.map(([k,c])=>`<div class="dlg"><span class="dot" style="background:${c}"></span>${statusText(k)}<b>${counts[k]}</b></div>`).join("")}</div>
-      </div>
-    </div>
-    <div class="card"><div class="section-title">Implementation Load <span class="small">(planned team workload vs capacity · prev 1 + current + next 6 weeks)</span></div>
+  <div class="enterprise-dashboard-main">
+    <div class="card implementation-card"><div class="section-title">Implementation Load <span class="small">Planned team workload vs capacity · previous 1 + current + next 6 weeks</span></div>
       <div id="implementationLoadChart"><div class="impl-loading">Calculating team workload…</div></div>
     </div>
-    <div class="card"><div class="section-title">This Week — Action Items</div>
-      <div class="tbl-wrap"><table><tbody>
-        <tr><td>Overdue Floor Plan DD</td><td class="num"><b>${dueDD}</b></td></tr>
-        <tr><td>Pending approvals</td><td class="num"><b>${pend}</b></td></tr>
-        <tr><td>Store Comms due this week</td><td class="num"><b>${commWk}</b></td></tr>
-        <tr><td>Stores over capacity (${weekKeyOf(today())})</td><td class="num"><b>${overStores}</b></td></tr>
-        <tr><td>Format/week conflicts</td><td class="num"><b>${conflicts}</b></td></tr>
-      </tbody></table></div>
+    <div class="card health-card"><div class="section-title">Project Status</div>
+      <div class="donut-wrap">
+        <div class="donut" style="background:conic-gradient(${stops})"><div class="ctr"><b>${list.length}</b><span>active projects</span></div></div>
+        <div class="dlegend">${segs.map(([k,c])=>`<div class="dlg"><span class="dot" style="background:${c}"></span>${statusText(k)}<b>${counts[k]}</b></div>`).join("")}</div>
+      </div>
+      <div class="dashboard-card-footer"><button onclick="navigate('plans')">View all projects →</button></div>
     </div>
   </div>
-  <div style="margin-top:16px">${renderGantt()}</div>`;
+
+  <div class="enterprise-dashboard-secondary">
+    <div class="card"><div class="section-title">Overdue Milestones</div><div class="dashboard-list">${listRows(overdueMs,"over")}</div><div class="dashboard-card-footer"><button onclick="navigate('plans')">View all overdue →</button></div></div>
+    <div class="card"><div class="section-title">Upcoming Milestones <span class="small">Next 7 days</span></div><div class="dashboard-list">${listRows(upcomingMs,"upcoming")}</div><div class="dashboard-card-footer"><button onclick="navigate('calendar')">View calendar →</button></div></div>
+    <div class="card"><div class="section-title">Workload by Team <span class="small">${weekKeyOf(today())}</span></div><div id="teamWorkloadChart"><div class="impl-loading" style="height:160px">Calculating team workload…</div></div><div class="dashboard-card-footer"><button onclick="navigate('planload')">View workload detail →</button></div></div>
+  </div>
+
+  <div style="margin-top:14px">${renderGantt()}</div>`;
 }
-function kpiCard(label,num,icon,color,page,statusFilter){
+function kpiCard(label,num,icon,color,page,statusFilter,sub="Live data"){
   const click=page?`onclick="${statusFilter?`F.status=['${statusFilter}'];`:""}navigate('${page}')"`:"";
-  return `<div class="card kpi ${page?"click":""}" ${click}><div class="icon" style="background:${color}">${icon}</div>
-    <div><div class="label">${label}</div><div class="num">${num}</div><div class="sub">live</div></div></div>`;
+  return `<div class="card kpi ${page?"click":""}" style="--kpi-color:${color}" ${click}><div class="icon">${icon}</div>
+    <div><div class="label">${label}</div><div class="num">${num}</div><div class="sub">${esc(sub)}</div></div></div>`;
 }
 
 /* ---------- 15. PROJECT PLAN LIST (sort + paginate) ---------- */

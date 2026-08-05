@@ -1,13 +1,17 @@
-# ONE PLAN — Device Folder Storage v5.3
+# ONE PLAN — Enterprise Interface v5.4
 
-This build stores the OnePlan state in a folder selected from the user's computer through the browser folder picker.
+This release upgrades the OnePlan interface for large-enterprise use while preserving all v5.3 planning and device-folder storage functions.
 
-## Files created in the selected folder
-- `oneplan-state.json` — active application state
-- `backups/` — automatic and manual JSON backups (maximum 20)
+## v5.4 interface changes
+- Executive dashboard with enterprise KPI hierarchy
+- Professional dark navigation and refined top bar
+- Larger implementation-load visualization
+- Project-status, overdue, upcoming, and team-workload panels
+- Consistent cards, tables, filters, buttons, Gantt and modal styling
+- Responsive layouts for desktop, iPad and mobile
 
-## Browser requirement
-Use Microsoft Edge or Google Chrome on Windows through the Render HTTPS URL. The browser requires the user to choose the folder and grant read/write permission. The app can display the selected folder name, but browsers do not expose the full absolute Windows path.
+## Storage
+The primary state can still be stored in a user-selected local folder through Chrome or Microsoft Edge. The selected folder contains `oneplan-state.json` and the `backups` folder. Browser cache remains available as a fallback.
 
 ## Deploy
-Upload all files to the GitHub repository root and deploy as a Render Node Web Service. The Render server only hosts the app; the primary OnePlan data file is written to the folder selected on each device.
+Upload all files to the GitHub repository root and deploy as a Render Node Web Service.
