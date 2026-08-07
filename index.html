@@ -500,6 +500,32 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
   .nextstep-actions{justify-content:flex-end}
 }
 
+
+/* v5.4.4 Task → Sub Task → Key Milestone hierarchy */
+.milestone-master-code{display:inline-flex;align-items:center;gap:7px}
+.milestone-master-swatch{width:18px;height:18px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(15,34,54,.16);flex:none}
+.ms-form-toolbar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin:8px 0}
+.ms-form-toolbar .small{max-width:760px}
+.plan-activity-list{display:flex;flex-direction:column;gap:7px}
+.plan-activity-row{display:grid;grid-template-columns:minmax(145px,1fr) minmax(135px,1fr) minmax(185px,1.25fr) 128px 128px 126px auto;gap:7px;align-items:end;border:1px solid var(--line);border-radius:9px;padding:8px;background:#fbfdff}
+.plan-activity-row .ff{min-width:0}
+.plan-activity-row .ff label{font-size:9px;margin-bottom:3px}
+.plan-activity-row input,.plan-activity-row select{height:31px;font-size:11px;padding:4px 7px}
+.plan-activity-actions{display:flex;align-items:center;gap:4px;padding-bottom:1px;white-space:nowrap}
+.plan-activity-index{display:inline-flex;min-width:22px;height:22px;align-items:center;justify-content:center;border-radius:999px;background:var(--blue-bg);color:var(--primary);font-size:9px;font-weight:800;margin-right:4px}
+.task-path{display:flex;align-items:center;gap:5px;min-width:0;color:var(--muted);font-size:9.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-path b{color:var(--text);font-weight:800}
+.gantt-task-label{font-size:9px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-subtask-label{font-size:11.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.gantt-milestone-meta{display:flex;align-items:center;gap:5px;margin-top:3px;min-width:0}
+.gantt-activity-row .gcell-left{padding-top:6px;padding-bottom:6px}
+.gantt-activity-row .gbarwrap{height:42px}
+.activity-nextstep-head .task-path{max-width:58%}
+.milestone-panel-path{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:0 0 10px;padding:7px 9px;border-radius:7px;background:#f8fafc;border:1px solid var(--line);font-size:10px;color:var(--muted)}
+.milestone-panel-path b{color:var(--text)}
+@media(max-width:1250px){.plan-activity-row{grid-template-columns:1fr 1fr 1.1fr 120px 120px 120px}.plan-activity-actions{grid-column:1/-1;justify-content:flex-end}}
+@media(max-width:760px){.plan-activity-row{grid-template-columns:1fr 1fr}.plan-activity-actions{grid-column:1/-1}}
+
 /* ---------- AI Radar-style Cloud State ---------- */
 .cloud-sync-pill{height:34px;display:inline-flex;align-items:center;gap:7px;padding:0 11px;border:1px solid #dbe3ef;border-radius:999px;background:#f8fafc;color:#475569;font:600 11px/1 inherit;white-space:nowrap;cursor:pointer}
 .cloud-sync-pill:hover{background:#f1f5f9}
@@ -795,7 +821,7 @@ tbody tr:hover{background:#f8fbff}
 }
 
 </style>
-  <meta name="oneplan-build" content="v5.4.3-row-level-alignment">
+  <meta name="oneplan-build" content="v5.4.4-task-subtask-milestone">
 </head>
 <body>
 <div class="app">
@@ -857,7 +883,7 @@ tbody tr:hover{background:#f8fbff}
 <script>
 "use strict";
 /* =====================================================================
-   ONE PLAN v5.4.3 — row-level dashboard alignment and current-plus-next workload view.
+   ONE PLAN v5.4.4 — Task → Sub Task → Key Milestone hierarchy with milestone color master.
    Vanilla JS, single file, no build. Fixes: relational model, derived
    capacity, rule engine, derived status, real time/year, validation,
    RBAC, pagination, shared filters, real charts, calendar nav, exports.
@@ -926,30 +952,34 @@ function today(){ return SETTINGS.simulatedToday ? parseDate(SETTINGS.simulatedT
 /* ---------- 3. MASTERS ---------- */
 // Single authoritative milestone master (unique names; dependency + SLA fields)
 let MILESTONES = [
-  {key:"KO",   full:"Kick Off",                  offset:0,  dur:2,  dep:null,  warn:1},
-  {key:"NWT1", full:"NWT1 Submission",           offset:2,  dur:3,  dep:"KO",  warn:1},
-  {key:"SPR",  full:"Space Review & Sign-off",   offset:7,  dur:12, dep:"NWT1",warn:3},
-  {key:"RSO",  full:"Range Review & Sign-off",   offset:21, dur:7,  dep:"SPR", warn:2},
-  {key:"LSO",  full:"Layout Review & Sign-off",  offset:21, dur:8,  dep:"SPR", warn:2},
-  {key:"NWT3", full:"NWT3 Submission",           offset:28, dur:3,  dep:"RSO", warn:1},
-  {key:"POG",  full:"POG Drawing & Sign-off",    offset:30, dur:8,  dep:"LSO", warn:3},
-  {key:"DD",   full:"Floor Plan DD & Sign-off",  offset:39, dur:13, dep:"POG", warn:3},
-  {key:"COMM", full:"Store Communication",       offset:53, dur:9,  dep:"DD",  warn:2},
-  {key:"ORD",  full:"Ordering",                  offset:64, dur:10, dep:"COMM",warn:2},
-  {key:"IMP",  full:"Implementation",            offset:76, dur:9,  dep:"ORD", warn:3}
+  {key:"KO",   full:"Kick Off",                  offset:0,  dur:2,  dep:null,  warn:1, color:"#7357ff"},
+  {key:"NWT1", full:"NWT1 Submission",           offset:2,  dur:3,  dep:"KO",  warn:1, color:"#00a3ff"},
+  {key:"SPR",  full:"Space Review & Sign-off",   offset:7,  dur:12, dep:"NWT1",warn:3, color:"#0095da"},
+  {key:"RSO",  full:"Range Review & Sign-off",   offset:21, dur:7,  dep:"SPR", warn:2, color:"#16a76a"},
+  {key:"LSO",  full:"Layout Review & Sign-off",  offset:21, dur:8,  dep:"SPR", warn:2, color:"#0aa3a3"},
+  {key:"NWT3", full:"NWT3 Submission",           offset:28, dur:3,  dep:"RSO", warn:1, color:"#00a3ff"},
+  {key:"POG",  full:"POG Drawing & Sign-off",    offset:30, dur:8,  dep:"LSO", warn:3, color:"#e8930c"},
+  {key:"DD",   full:"Floor Plan DD & Sign-off",  offset:39, dur:13, dep:"POG", warn:3, color:"#e23b3b"},
+  {key:"COMM", full:"Store Communication",       offset:53, dur:9,  dep:"DD",  warn:2, color:"#6d54e6"},
+  {key:"ORD",  full:"Ordering",                  offset:64, dur:10, dep:"COMM",warn:2, color:"#d4459e"},
+  {key:"IMP",  full:"Implementation",            offset:76, dur:9,  dep:"ORD", warn:3, color:"#0c7d4d"}
 ];
 const DEFAULT_MILESTONES = MILESTONES.map(m=>({...m}));
 let MSMAP = Object.fromEntries(MILESTONES.map(m=>[m.key,m]));
 function rebuildMSMap(){ MSMAP = Object.fromEntries(MILESTONES.map(m=>[m.key,m])); }
 function normalizeMilestoneKey(key){ return String(key||"").trim().toUpperCase().replace(/\s+/g,"_"); }
 function normalizeMilestone(m){
+  const key=normalizeMilestoneKey(m.key);
+  const palette={KO:"#7357ff",NWT1:"#00a3ff",SPR:"#0095da",RSO:"#16a76a",LSO:"#0aa3a3",NWT3:"#00a3ff",POG:"#e8930c",DD:"#e23b3b",COMM:"#6d54e6",ORD:"#d4459e",IMP:"#0c7d4d"};
+  const color=/^#[0-9a-f]{6}$/i.test(String(m.color||""))?String(m.color).toLowerCase():(palette[key]||"#2d7ff9");
   return {
-    key: normalizeMilestoneKey(m.key),
+    key,
     full: String(m.full||m.name||m.key||"").trim(),
     offset: Math.max(0, Number(m.offset||0)),
     dur: Math.max(1, Number(m.dur||m.days||1)),
     dep: m.dep ? normalizeMilestoneKey(m.dep) : null,
-    warn: Math.max(0, Number(m.warn||0))
+    warn: Math.max(0, Number(m.warn||0)),
+    color
   };
 }
 function normalizeMilestones(list){
@@ -964,10 +994,33 @@ function normalizeMilestones(list){
   return out.length?out:DEFAULT_MILESTONES.map(m=>({...m}));
 }
 function milestoneColor(key){
+  const master=MILESTONES.find(m=>m.key===key);
+  if(master?.color) return master.color;
   const palette=["#7357ff","#00a3ff","#0095da","#16a76a","#0aa3a3","#e8930c","#e23b3b","#6d54e6","#d4459e","#0c7d4d","#64748b","#2d7ff9"];
   const i=Math.max(0,MILESTONES.findIndex(m=>m.key===key));
   return palette[i%palette.length];
 }
+function newActivityId(){ return "ACT-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7); }
+function validActivityId(id){ return /^[A-Za-z0-9_-]+$/.test(String(id||""))?String(id):newActivityId(); }
+function defaultTaskForMilestone(key){
+  if(["KO","NWT1","NWT3"].includes(key)) return "Governance";
+  if(["SPR","RSO","LSO"].includes(key)) return "Range & Space";
+  if(["POG","DD"].includes(key)) return "Drawing & Layout";
+  if(["COMM","ORD","IMP"].includes(key)) return "Store Execution";
+  return "Project Execution";
+}
+function normalizeProjectActivity(m,index=0){
+  if(!m||typeof m!=="object") m={};
+  m.id=validActivityId(m.id);
+  m.key=normalizeMilestoneKey(m.key||MILESTONES[0]?.key||"KO");
+  m.task=String(m.task||defaultTaskForMilestone(m.key)||"Project Execution").trim()||"Project Execution";
+  m.subTask=String(m.subTask||m.subtask||m.phase||"Main").trim()||"Main";
+  m.owner=String(m.owner||"").trim();
+  normalizeMilestoneNextSteps(m);
+  return m;
+}
+function activityRef(m){ return String(m?.id||m?.key||""); }
+function activityLabel(m){ return `${m?.task||"Project Execution"} → ${m?.subTask||"Main"} → ${m?.key||""}`; }
 const DIVISIONS=["DGF","DGNF","Fresh","HBA","GM"];
 const TYPES=["MRC","PROJECT","MINOR","SSPOG","NPD"];
 const FORMATS=["Hypermarket", "Supermarket", "Mini Supermarket", "CPFM"];
@@ -1047,7 +1100,7 @@ function seedProjects(stores){
     }
     const milestones=MILESTONES.map(m=>{
       const ps=addDays(startD,m.offset), pe=addDays(startD,m.offset+m.dur);
-      return {key:m.key, plannedStart:localISO(ps), plannedEnd:localISO(pe), actualStart:null, actualEnd:null, status:"Upcoming", owner};
+      return {id:newActivityId(),key:m.key,task:defaultTaskForMilestone(m.key),subTask:"Main",plannedStart:localISO(ps),plannedEnd:localISO(pe),actualStart:null,actualEnd:null,status:"Upcoming",owner};
     });
     // realistic progress front: complete milestones already in the past; leave ~22% with one overdue (genuine Delayed); a few run ahead
     const pastCount=milestones.filter(m=>parseDate(m.plannedEnd)<t).length;
@@ -1924,8 +1977,8 @@ function monthName(m){return ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"
 function uniq(field){return ["All",...Array.from(new Set(projects.map(p=>p[field]).filter(Boolean))).sort()];}
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function liveDate(p){
-  const imp=(p.milestones||[]).find(m=>m.key==="IMP"&&m.plannedStart);
-  return imp ? parseDate(imp.plannedStart) : parseDate(p.end||p.start);
+  const dates=(p.milestones||[]).filter(m=>m.key==="IMP"&&m.plannedStart).map(m=>parseDate(m.plannedStart)).filter(d=>Number.isFinite(d.getTime()));
+  return dates.length?new Date(Math.min(...dates.map(d=>d.getTime()))):parseDate(p.end||p.start);
 }
 function liveWeekLabel(p){
   const ld=liveDate(p);
@@ -1948,10 +2001,11 @@ function nextProjectCode(base,id){
   return `${base}-${String(n).padStart(2,"0")}`;
 }
 function buildProjectCodeFromForm(id=""){
-  const type=document.getElementById("fType")?.value || "";
-  const dept=document.getElementById("fDepartment")?.value || "";
-  const impDate=document.querySelector('.ms-s[data-k="IMP"]')?.value || "";
-  if(!type || !dept || !impDate) return "";
+  const type=document.getElementById("fType")?.value||"";
+  const dept=document.getElementById("fDepartment")?.value||"";
+  syncPlanActivityDraftFromDom();
+  const impDate=(planActivityDraft||[]).filter(a=>a.key==="IMP"&&a.plannedStart).map(a=>a.plannedStart).sort()[0]||"";
+  if(!type||!dept||!impDate)return "";
   const d=parseDate(impDate);
   const base=`${SETTINGS.planYear}WK${String(isoWeek(d)).padStart(2,"0")}-${normalizeProjectPart(type)}-${normalizeProjectPart(dept)}`;
   return nextProjectCode(base,id);
@@ -2203,90 +2257,27 @@ function ganttCols(min,max){
   return cols;
 }
 function renderGantt(){
-  const {min,max}=ganttRange();
-  const visibleWindow={start:min,end:max};
-  const baseProjects=filteredProjects();
-  let all=sortByLiveWeek(viewMode==="day"
-    ? baseProjects.filter(p=>(p.milestones||[]).some(m=>m.plannedStart&&m.plannedEnd&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),visibleWindow.start,visibleWindow.end)))
-    : baseProjects);
-  const todayDate=today();
-  const activeToday=p=>(p.milestones||[]).some(m=>m.plannedStart&&m.plannedEnd&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),todayDate,todayDate));
-  const nextActivityDate=p=>{
-    const dates=(p.milestones||[]).filter(m=>m.plannedStart&&parseDate(m.plannedStart)>=todayDate).map(m=>parseDate(m.plannedStart).getTime());
-    return dates.length?Math.min(...dates):Number.POSITIVE_INFINITY;
-  };
-  if(ganttTodayFocus){
-    all=[...all].sort((a,b)=>Number(activeToday(b))-Number(activeToday(a)) || nextActivityDate(a)-nextActivityDate(b) || liveDate(a)-liveDate(b));
-  }
-  const cols=ganttCols(min,max); const cw=colW(); const totalW=cols.length*cw;
-  const ganttScale=Math.max(.65,Math.min(1.25,ganttZoom));
-  const todayX=Math.max(0,Math.min(totalW,offX(today(),min)));
-  const monthSpans=[]; cols.forEach(c=>{const last=monthSpans[monthSpans.length-1]; if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
-
+  const {min,max}=ganttRange(),visibleWindow={start:min,end:max},baseProjects=filteredProjects();
+  let all=sortByLiveWeek(viewMode==="day"?baseProjects.filter(p=>(p.milestones||[]).some(m=>m.plannedStart&&m.plannedEnd&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),visibleWindow.start,visibleWindow.end))):baseProjects);
+  const todayDate=today(),activeToday=p=>(p.milestones||[]).some(m=>m.plannedStart&&m.plannedEnd&&rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),todayDate,todayDate));
+  const nextActivityDate=p=>{const dates=(p.milestones||[]).filter(m=>m.plannedStart&&parseDate(m.plannedStart)>=todayDate).map(m=>parseDate(m.plannedStart).getTime());return dates.length?Math.min(...dates):Number.POSITIVE_INFINITY;};
+  if(ganttTodayFocus)all=[...all].sort((a,b)=>Number(activeToday(b))-Number(activeToday(a))||nextActivityDate(a)-nextActivityDate(b)||liveDate(a)-liveDate(b));
+  const cols=ganttCols(min,max),cw=colW(),totalW=cols.length*cw,ganttScale=Math.max(.65,Math.min(1.25,ganttZoom)),todayX=Math.max(0,Math.min(totalW,offX(today(),min)));
+  const monthSpans=[];cols.forEach(c=>{const last=monthSpans[monthSpans.length-1];if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
   function barFor(p){
-    const vis=p.milestones.filter(m=>{
-      if(!m.plannedStart||!m.plannedEnd) return false;
-      const keyOk=filterHas("milestone",m.key);
-      const stOk=filterHas("milestoneStatus",msState(m));
-      const visibleOk=rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),visibleWindow.start,visibleWindow.end);
-      const perOk=!hasPeriod()|| (()=>{const w=periodWindow();return rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),w.start,w.end);})();
-      return keyOk&&stOk&&perOk&&visibleOk;
-    });
-    const pStart=parseDate(p.start), pEnd=parseDate(p.end);
-    const showSummary=rangeOverlaps(pStart,pEnd,visibleWindow.start,visibleWindow.end);
-    const ps=Math.max(0,Math.min(offX(pStart,min),totalW));
-    const pe=Math.max(0,Math.min(offX(addDays(pEnd,1),min),totalW));
-    const sumW=Math.max(0,pe-ps);
-    const pct=projPercent(p);
+    const vis=(p.milestones||[]).filter(m=>{if(!m.plannedStart||!m.plannedEnd)return false;const keyOk=filterHas("milestone",m.key),stOk=filterHas("milestoneStatus",msState(m)),visibleOk=rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),visibleWindow.start,visibleWindow.end),perOk=!hasPeriod()||(()=>{const w=periodWindow();return rangeOverlaps(parseDate(m.plannedStart),parseDate(m.plannedEnd),w.start,w.end);})();return keyOk&&stOk&&perOk&&visibleOk;}).map((m,i)=>normalizeProjectActivity(m,i));
+    const laneEnds=[],laneMap=new Map();
+    [...vis].sort((a,b)=>parseDate(a.plannedStart)-parseDate(b.plannedStart)||parseDate(a.plannedEnd)-parseDate(b.plannedEnd)).forEach(m=>{const st=parseDate(m.plannedStart).getTime();let lane=laneEnds.findIndex(end=>end<st);if(lane<0){lane=laneEnds.length;laneEnds.push(0);}laneEnds[lane]=parseDate(m.plannedEnd).getTime();laneMap.set(activityRef(m),lane);});
+    const laneCount=Math.max(1,laneEnds.length),pStart=parseDate(p.start),pEnd=parseDate(p.end),showSummary=rangeOverlaps(pStart,pEnd,visibleWindow.start,visibleWindow.end),ps=Math.max(0,Math.min(offX(pStart,min),totalW)),pe=Math.max(0,Math.min(offX(addDays(pEnd,1),min),totalW)),sumW=Math.max(0,pe-ps),pct=projPercent(p);
     let bars=showSummary&&sumW>0?`<div class="gsummary" style="left:${ps}px;width:${Math.max(6,sumW)}px"><i style="width:${pct}%"></i></div>`:"";
-    bars+=vis.map((m,i)=>{
-      const st=msState(m);
-      const rawL=offX(parseDate(m.plannedStart),min);
-      const rawR=offX(addDays(parseDate(m.plannedEnd),1),min);
-      const l=Math.max(0,Math.min(rawL,totalW));
-      const r=Math.max(0,Math.min(rawR,totalW));
-      const w=Math.max(20,r-l);
-      const y=Math.round(14*ganttScale + (i%3)*13*ganttScale);
-      const cls=[`c-${m.key}`, st==="Completed"?"done":"", st==="Delayed"?"delay":st==="AtRisk"?"risk":"", filterValues("milestone").includes(m.key)?"sel":""].join(" ");
-      const ck=st==="Completed"?`<span class="ck">✓</span>`:"";
-      return `<div class="ms ${cls}" style="left:${l}px;width:${w}px;top:${y}px" title="${m.key} · ${MSMAP[m.key]?.full||""}\n${m.plannedStart} → ${m.plannedEnd}\nStatus: ${statusText(st)}">${m.key}${ck}</div>`;
-    }).join("");
-    const st=projState(p);
-    const todayActive=activeToday(p);
-    return `<div class="grow ${ganttTodayFocus&&todayActive?"today-focus-row":""}"><div class="gcell-left">
-        <button class="project-link pname" title="Open Detail Plan · ${esc(p.name)}" onclick="openDetailPlan('${p.id}')">${esc(p.name)}</button>${ganttTodayFocus&&todayActive?`<span class="today-active-tag">TODAY ACTIVE</span>`:""}
-        <div class="powner">${liveWeekLabel(p)} · ${esc(p.owner)} · ${p.division}/${p.format}</div>
-        ${pill(st)}
-      </div><div class="gtl"><div class="gbarwrap">
-        ${bars}
-      </div></div></div>`;
+    bars+=vis.map(m=>{const st=msState(m),l=Math.max(0,Math.min(offX(parseDate(m.plannedStart),min),totalW)),r=Math.max(0,Math.min(offX(addDays(parseDate(m.plannedEnd),1),min),totalW)),w=Math.max(28,r-l),lane=laneMap.get(activityRef(m))||0,y=Math.round(13*ganttScale+lane*22*ganttScale),cls=[st==="Completed"?"done":"",st==="Delayed"?"delay":st==="AtRisk"?"risk":"",filterValues("milestone").includes(m.key)?"sel":""].join(" "),ck=st==="Completed"?`<span class="ck">✓</span>`:"",text=`${m.subTask||"Main"} · ${m.key}`,title=`${activityLabel(m)}\n${MSMAP[m.key]?.full||m.key}\n${m.plannedStart} → ${m.plannedEnd}\nStatus: ${statusText(st)}`;return `<div class="ms ${cls}" style="left:${l}px;width:${w}px;top:${y}px;background:${milestoneColor(m.key)}" title="${esc(title)}">${esc(text)}${ck}</div>`;}).join("");
+    const st=projState(p),todayActive=activeToday(p),taskCount=new Set((p.milestones||[]).map(m=>m.task||defaultTaskForMilestone(m.key))).size,subCount=new Set((p.milestones||[]).map(m=>(m.task||"")+"|"+(m.subTask||"Main"))).size,rowH=Math.max(54,Math.round(38+laneCount*22*ganttScale));
+    return `<div class="grow ${ganttTodayFocus&&todayActive?"today-focus-row":""}"><div class="gcell-left"><button class="project-link pname" title="Open Detail Plan · ${esc(p.name)}" onclick="openDetailPlan('${p.id}')">${esc(p.name)}</button>${ganttTodayFocus&&todayActive?`<span class="today-active-tag">TODAY ACTIVE</span>`:""}<div class="powner">${liveWeekLabel(p)} · ${esc(p.owner)} · ${p.division}/${p.format}</div><div class="task-path"><b>${taskCount}</b> Task${taskCount===1?"":"s"} → <b>${subCount}</b> Sub Task${subCount===1?"":"s"}</div>${pill(st)}</div><div class="gtl"><div class="gbarwrap" style="height:${rowH}px">${bars}</div></div></div>`;
   }
-
   const rowsHtml=all.map(barFor).join("");
-
-  const head=`<div class="grow head"><div class="gcell-left">Project / Milestone</div><div class="gtime">
-    <div class="gmonths">${monthSpans.map(s=>`<div class="gmonth" style="width:${s.n*cw}px">${s.m}</div>`).join("")}</div>
-    <div class="gcols">${cols.map(c=>`<div class="gcol ${c.wknd?"wknd":""}" style="width:${cw}px">${c.label}<span class="wd">${c.sub}</span></div>`).join("")}</div>
-    <div class="today-pin" style="left:${todayX}px" title="Today · ${fmtDisp(today())}"><span>TODAY</span></div>
-  </div></div>`;
-
-  return `${toolbar({})}
-  <div class="gantt-shell" style="--gantt-scale:${ganttScale}">
-    <div class="gantt-top">
-      <div><h3>Key Milestone Timeline</h3>
-        <div class="small">Today: ${fmtDisp(today())} · ${weekKeyOf(today())} ${isoWeekYear(today())} · Showing ${all.length} project(s) · Sorted by Live Week${viewMode==="day"&&!hasPeriod()?" · Day view focuses current Mon-Sun week":""}</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn ghost" onclick="goGanttToday()">Today</button>
-        ${can("create")?`<button class="btn primary" onclick="openPlanModal()">+ Add Plan</button>`:""}
-        <button class="btn ghost" onclick="navigate('storecapacity')">Store Capacity →</button></div>
-    </div>
-    <div class="gantt-scroll"><div class="gantt" style="width:${260+totalW}px">${head}${rowsHtml||`<div class="empty">No project matches the current filters.</div>`}</div></div>
-  </div>
-  <div class="card" style="margin-top:14px"><div class="section-title">Milestone Legend</div><div class="legend-row">
-    ${MILESTONES.map(m=>`<div class="lg"><span class="sw" style="background:${milestoneColor(m.key)}"></span>${m.key} — ${m.full}</div>`).join("")}
-  </div></div>`;
+  const head=`<div class="grow head"><div class="gcell-left">Project / Task / Sub Task / Milestone</div><div class="gtime"><div class="gmonths">${monthSpans.map(s=>`<div class="gmonth" style="width:${s.n*cw}px">${s.m}</div>`).join("")}</div><div class="gcols">${cols.map(c=>`<div class="gcol ${c.wknd?"wknd":""}" style="width:${cw}px">${c.label}<span class="wd">${c.sub}</span></div>`).join("")}</div><div class="today-pin" style="left:${todayX}px" title="Today · ${fmtDisp(today())}"><span>TODAY</span></div></div></div>`;
+  return `${toolbar({})}<div class="gantt-shell" style="--gantt-scale:${ganttScale}"><div class="gantt-top"><div><h3>Task / Sub Task / Key Milestone Timeline</h3><div class="small">Today: ${fmtDisp(today())} · ${weekKeyOf(today())} ${isoWeekYear(today())} · Showing ${all.length} project(s) · overlapping activities are automatically stacked</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="goGanttToday()">Today</button>${can("create")?`<button class="btn primary" onclick="openPlanModal()">+ Add Plan</button>`:""}<button class="btn ghost" onclick="navigate('storecapacity')">Store Capacity →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${260+totalW}px">${head}${rowsHtml||`<div class="empty">No project matches the current filters.</div>`}</div></div></div><div class="card" style="margin-top:14px"><div class="section-title">Milestone Legend</div><div class="legend-row">${MILESTONES.map(m=>`<div class="lg"><span class="sw" style="background:${milestoneColor(m.key)}"></span>${m.key} — ${m.full}</div>`).join("")}</div></div>`;
 }
-
 function inclusiveOverlapDays(aStart,aEnd,bStart,bEnd){
   const as=parseDate(aStart), ae=parseDate(aEnd);
   if(!Number.isFinite(as.getTime())||!Number.isFinite(ae.getTime())) return 0;
@@ -2794,12 +2785,12 @@ function renderMaster(){
   </div>
 
   <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
-    <div class="card"><div class="section-title">Key Milestone Master <span class="small">${MILESTONES.length} stages · delete allowed only when unused</span>
+    <div class="card"><div class="section-title">Key Milestone Master <span class="small">${MILESTONES.length} stages · Gantt color is configurable · delete allowed only when unused</span>
       ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openMilestoneModal()">+ Add Milestone</button>`:""}</div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Code</th><th>Milestone</th><th>Depends</th><th class="num">Offset</th><th class="num">Days</th><th class="num">Warn</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${MILESTONES.map((m,i)=>{const used=milestoneProjectUsage(m.key); const depUsed=milestoneDependencyUsage(m.key); return `<tr><td>${i+1}</td><td><b>${m.key}</b></td><td>${esc(m.full)}</td><td>${m.dep||"—"}</td><td class="num">${m.offset}</td><td class="num">${m.dur}</td><td class="num">${m.warn}</td><td class="num" title="${used} project(s), ${depUsed} milestone dependency reference(s)">${used}${depUsed?` +${depUsed} dep`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openMilestoneModal('${m.key}')">Edit</button><button class="btn sm danger" onclick="deleteMilestone('${m.key}')" ${used||depUsed||MILESTONES.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Code</th><th>Color</th><th>Milestone</th><th>Depends</th><th class="num">Offset</th><th class="num">Days</th><th class="num">Warn</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${MILESTONES.map((m,i)=>{const used=milestoneProjectUsage(m.key); const depUsed=milestoneDependencyUsage(m.key); return `<tr><td>${i+1}</td><td><b>${m.key}</b></td><td><span class="milestone-master-code"><span class="milestone-master-swatch" style="background:${milestoneColor(m.key)}"></span><code>${esc(m.color||milestoneColor(m.key))}</code></span></td><td>${esc(m.full)}</td><td>${m.dep||"—"}</td><td class="num">${m.offset}</td><td class="num">${m.dur}</td><td class="num">${m.warn}</td><td class="num" title="${used} project(s), ${depUsed} milestone dependency reference(s)">${used}${depUsed?` +${depUsed} dep`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openMilestoneModal('${m.key}')">Edit</button><button class="btn sm danger" onclick="deleteMilestone('${m.key}')" ${used||depUsed||MILESTONES.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
       </tbody></table></div>
-      <div class="small" style="margin-top:8px">Admin can add, edit and delete milestones. Delete is blocked if the code is used in any project timeline or referenced as another milestone dependency. When a milestone is already used by projects, its code is locked; name, offset, duration, dependency and warning days can still be maintained.</div></div>
+      <div class="small" style="margin-top:8px">Admin can add, edit and delete milestones. Delete is blocked if the code is used in any project timeline or referenced as another milestone dependency. When a milestone is already used by projects, its code is locked; name, Gantt color, offset, duration, dependency and warning days can still be maintained.</div></div>
     <div class="card"><div class="section-title">Capacity Model</div>
       <div class="tbl-wrap"><table><thead><tr><th>Format</th><th class="num">Capacity / store / week (min)</th></tr></thead><tbody>
         ${FORMATS.map(f=>`<tr><td>${f}</td><td class="num">${CAP_BY_FORMAT[f]}</td></tr>`).join("")}
@@ -2834,6 +2825,7 @@ function openMilestoneModal(key=""){
       <div class="form-grid" style="grid-template-columns:1fr 1.6fr">
         <div class="ff"><label>Milestone Code <span class="req">*</span></label><input id="msKey" value="${m?esc(m.key):""}" placeholder="e.g. QA" ${codeLocked?"readonly":""}></div>
         <div class="ff"><label>Milestone Name <span class="req">*</span></label><input id="msFull" value="${m?esc(m.full):""}" placeholder="e.g. Quality Review & Sign-off"></div>
+        <div class="ff"><label>Gantt Color <span class="req">*</span></label><div style="display:flex;gap:7px;align-items:center"><input id="msColor" type="color" value="${m?esc(m.color||milestoneColor(m.key)):"#2d7ff9"}" style="width:52px;padding:2px" oninput="document.getElementById('msColorHex').value=this.value"><input id="msColorHex" value="${m?esc(m.color||milestoneColor(m.key)):"#2d7ff9"}" maxlength="7" placeholder="#2d7ff9" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('msColor').value=this.value"></div></div>
         <div class="ff"><label>Depends On</label><select id="msDep">${depOptions}</select></div>
         <div class="ff"><label>Offset from Kick-off (days)</label><input id="msOffset" type="number" min="0" value="${m?m.offset:0}"></div>
         <div class="ff"><label>Duration (days)</label><input id="msDur" type="number" min="1" value="${m?m.dur:1}"></div>
@@ -2850,12 +2842,14 @@ function saveMilestone(originalKey=""){
   const err=document.getElementById("msErr");
   const key=normalizeMilestoneKey(document.getElementById("msKey").value);
   const full=document.getElementById("msFull").value.trim();
+  const color=(document.getElementById("msColorHex")?.value||document.getElementById("msColor")?.value||"#2d7ff9").trim().toLowerCase();
   const dep=document.getElementById("msDep").value||null;
   const offset=Number(document.getElementById("msOffset").value||0);
   const dur=Number(document.getElementById("msDur").value||0);
   const warn=Number(document.getElementById("msWarn").value||0);
   if(!key||!/^[A-Z0-9_-]{2,12}$/.test(key)){ err.innerText="Milestone code is required and must use 2-12 characters: A-Z, 0-9, _ or -."; return; }
   if(!full){ err.innerText="Milestone name is required."; return; }
+  if(!/^#[0-9a-f]{6}$/i.test(color)){ err.innerText="Gantt color must be a 6-digit HEX value, e.g. #2d7ff9."; return; }
   if(dep===key){ err.innerText="A milestone cannot depend on itself."; return; }
   if(offset<0||dur<1||warn<0){ err.innerText="Offset must be 0 or more; duration must be at least 1 day; warning days must be 0 or more."; return; }
   if(MILESTONES.some(m=>m.key!==originalKey&&m.key===key)){ err.innerText="Milestone code already exists."; return; }
@@ -2863,7 +2857,7 @@ function saveMilestone(originalKey=""){
   if(existing && originalKey!==key && (milestoneProjectUsage(originalKey)>0 || milestoneDependencyUsage(originalKey)>0)){
     err.innerText="Milestone code cannot be changed while it is used by project timelines or dependencies."; return;
   }
-  const payload={key,full,dep,offset,dur,warn};
+  const payload={key,full,dep,offset,dur,warn,color};
   if(existing){ Object.assign(existing,payload); MILESTONES.forEach(m=>{ if(m.dep===originalKey) m.dep=key; }); }
   else { MILESTONES.push(payload); }
   MILESTONES=normalizeMilestones(MILESTONES).sort((a,b)=>a.offset-b.offset||a.key.localeCompare(b.key));
@@ -3063,24 +3057,16 @@ function setSimToday(v){ SETTINGS.simulatedToday=v; saveState(); renderAll(); }
 
 /* ---------- 23. PLAN MODAL + VALIDATION + RULE ENGINE ---------- */
 let modalStores=[];
+let planActivityDraft=[];
 let modalStoreFilter={format:"All",zone:"All",q:""};
 function openPlanModal(id){
   if(!can("create")&&!id){ alert("Your role cannot create plans."); return; }
-  const p = id?projects.find(x=>x.id===id):null;
-  const start = p?p.start:"";
-  modalStores = p?[...p.storeIds]:[];
-  const msRows = MILESTONES.map((m,i)=>{
-    const item=p?p.milestones.find(x=>x.key===m.key):null;
-    const s=item?item.plannedStart:"";
-    const e=item?item.plannedEnd:"";
-    const st=item?item.status:"Upcoming";
-    return `<div class="ms-form-row"><b>${i+1}. ${m.key} <span class="small">${m.full}</span></b>
-      <input type="date" class="ms-s" data-k="${m.key}" value="${s}">
-      <input type="date" class="ms-e" data-k="${m.key}" value="${e}">
-      <select class="ms-st" data-k="${m.key}">${["Upcoming","InProgress","Completed","AtRisk","Delayed"].map(x=>`<option ${st===x?"selected":""}>${x}</option>`).join("")}</select></div>`;
-  }).join("");
+  const p=id?projects.find(x=>x.id===id):null;
+  modalStores=p?[...p.storeIds]:[];
+  const source=p&&Array.isArray(p.milestones)&&p.milestones.length?p.milestones:MILESTONES.map(m=>({id:newActivityId(),key:m.key,task:defaultTaskForMilestone(m.key),subTask:"Main",plannedStart:"",plannedEnd:"",status:"Upcoming",owner:p?.owner||"",nextSteps:[]}));
+  planActivityDraft=source.map((a,i)=>{const x=(typeof structuredClone==="function")?structuredClone(a):JSON.parse(JSON.stringify(a));normalizeProjectActivity(x,i);return x;});
   const fmt=p?p.format:"";
-  modalStoreFilter = {format: fmt || "All", zone: "All", q: ""};
+  modalStoreFilter={format:fmt||"All",zone:"All",q:""};
   document.getElementById("planModalInner").innerHTML=`
     <div class="modal-head"><h2>${p?"Edit Plan":"Create New Plan"}</h2><button class="x" onclick="closeModal('planModal')">✕</button></div>
     <div class="modal-body">
@@ -3097,31 +3083,43 @@ function openPlanModal(id){
         <div class="ff"><label>Approval</label><select id="fApproval">${["Draft","Pending Review","Approved","Need Revision","Rejected"].map(a=>`<option ${(!p&&a==="Draft")||(p&&p.approval===a)?"selected":""}>${a}</option>`).join("")}</select></div>
         <div class="ff"><label>Planned Start <span class="req">*</span></label><input id="fStart" type="date" value="${p?p.start:""}"><div class="msg">Required</div></div>
         <div class="ff"><label>Planned End <span class="req">*</span></label><input id="fEnd" type="date" value="${p?p.end:""}"><div class="msg">Must be after start</div></div>
-        <div class="ff"><label>&nbsp;</label><div class="small">${p?'Status is derived from milestone dates.':'Start with blank values. Fill Type, Department and IMP date to generate Project Code.'}</div></div>
+        <div class="ff"><label>&nbsp;</label><div class="small">${p?'Status is derived from activity dates.':'Define Task → Sub Task / Phase → Key Milestone. The first IMP start date drives the Project Code / Live Week.'}</div></div>
       </div>
-      <div style="margin-top:14px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted)">APPLIED STORES <span class="req">*</span> <span class="small" id="storeCount"></span></label>
-        <div class="store-select-panel" id="storeSelectPanel"></div>
-        <div class="store-pick" id="storePick"></div>
-      </div>
-      <div style="margin-top:16px"><div class="section-title">Key Milestone Schedule <span class="small">Blank by default — set dates manually per plan</span></div><div id="msForm">${msRows}</div></div>
+      <div style="margin-top:14px"><label style="font-size:11px;font-weight:700;color:var(--muted)">APPLIED STORES <span class="req">*</span> <span class="small" id="storeCount"></span></label><div class="store-select-panel" id="storeSelectPanel"></div><div class="store-pick" id="storePick"></div></div>
+      <div style="margin-top:16px"><div class="section-title">Task → Sub Task → Key Milestone Schedule <span class="small">Parallel phases and repeated milestone codes are supported.</span></div><div class="ms-form-toolbar"><span class="small">Example: Drawing & Layout → Phase 1 → POG, then duplicate for Phase 2 / Phase 3; DD can run in the same or overlapping phases.</span><button type="button" class="btn sm primary" onclick="addPlanActivityRow()">+ Add Activity</button></div><div id="msForm" class="plan-activity-list">${renderPlanActivityRowsMarkup()}</div></div>
       <div id="capPreview"></div>
     </div>
-    <div class="modal-foot">
-      <span class="left" id="formErr"></span>
-      <button class="btn" onclick="closeModal('planModal')">Cancel</button>
-      <button class="btn ghost" onclick="savePlan(true)">Save Draft</button>
-      <button class="btn primary" onclick="savePlan(false)">Submit Plan</button>
-    </div>`;
+    <div class="modal-foot"><span class="left" id="formErr"></span><button class="btn" onclick="closeModal('planModal')">Cancel</button><button class="btn ghost" onclick="savePlan(true)">Save Draft</button><button class="btn primary" onclick="savePlan(false)">Submit Plan</button></div>`;
   document.getElementById("planModal").classList.add("active");
-  syncDept(); if(p)document.getElementById("fDepartment").value=p.department;
-  renderStorePick();
-  // live capacity preview + auto project code/name
+  syncDept();if(p)document.getElementById("fDepartment").value=p.department;renderStorePick();
   ["fStart","fEnd","fType","fMin"].forEach(idd=>document.getElementById(idd).addEventListener("change",()=>{updateCapPreview();updateProjectNameFromFields();}));
-  document.querySelectorAll(".ms-s,.ms-e").forEach(el=>el.addEventListener("change",()=>{updateCapPreview();updateProjectNameFromFields();}));
-  updateProjectNameFromFields();
-  updateCapPreview();
+  updateProjectNameFromFields();updateCapPreview();
 }
+function renderPlanActivityRowsMarkup(){
+  return (planActivityDraft||[]).map((a,i)=>{
+    normalizeProjectActivity(a,i);
+    const masterOptions=MILESTONES.map(m=>`<option value="${m.key}" ${a.key===m.key?"selected":""}>${esc(m.key)} — ${esc(m.full)}</option>`).join("");
+    const states=["Upcoming","InProgress","Completed","AtRisk","Delayed"];
+    return `<div class="plan-activity-row" data-activity-id="${esc(a.id)}">
+      <div class="ff"><label><span class="plan-activity-index">${i+1}</span>Task <span class="req">*</span></label><input class="act-task" value="${esc(a.task||"")}" placeholder="e.g. Drawing & Layout" oninput="syncPlanActivityDraftFromDom()"></div>
+      <div class="ff"><label>Sub Task / Phase <span class="req">*</span></label><input class="act-subtask" value="${esc(a.subTask||"")}" placeholder="e.g. Phase 1" oninput="syncPlanActivityDraftFromDom()"></div>
+      <div class="ff"><label>Key Milestone <span class="req">*</span></label><select class="act-key ms-k" onchange="syncPlanActivityDraftFromDom();updateCapPreview();updateProjectNameFromFields()">${masterOptions}</select></div>
+      <div class="ff"><label>Planned Start <span class="req">*</span></label><input type="date" class="act-start ms-s" value="${a.plannedStart||""}" onchange="syncPlanActivityDraftFromDom();updateCapPreview();updateProjectNameFromFields()"></div>
+      <div class="ff"><label>Planned End <span class="req">*</span></label><input type="date" class="act-end ms-e" value="${a.plannedEnd||""}" onchange="syncPlanActivityDraftFromDom();updateCapPreview();updateProjectNameFromFields()"></div>
+      <div class="ff"><label>Status</label><select class="act-status ms-st" onchange="syncPlanActivityDraftFromDom()">${states.map(x=>`<option value="${x}" ${a.status===x?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="plan-activity-actions"><button type="button" class="btn sm" onclick="duplicatePlanActivityRow('${a.id}')">Duplicate</button><button type="button" class="btn sm danger" onclick="removePlanActivityRow('${a.id}')">Delete</button></div>
+    </div>`;
+  }).join("")||`<div class="empty">No activity yet. Click <b>+ Add Activity</b>.</div>`;
+}
+function syncPlanActivityDraftFromDom(){
+  const rows=[...document.querySelectorAll("#msForm .plan-activity-row")];if(!rows.length)return;
+  planActivityDraft=rows.map(row=>{const id=row.dataset.activityId,old=(planActivityDraft||[]).find(x=>x.id===id)||{};return {...old,id:validActivityId(id),task:row.querySelector(".act-task")?.value.trim()||"",subTask:row.querySelector(".act-subtask")?.value.trim()||"",key:row.querySelector(".act-key")?.value||"",plannedStart:row.querySelector(".act-start")?.value||"",plannedEnd:row.querySelector(".act-end")?.value||"",status:row.querySelector(".act-status")?.value||"Upcoming"};});
+}
+function rerenderPlanActivityRows(){const box=document.getElementById("msForm");if(box)box.innerHTML=renderPlanActivityRowsMarkup();updateCapPreview();updateProjectNameFromFields();}
+function addPlanActivityRow(){syncPlanActivityDraftFromDom();const last=planActivityDraft[planActivityDraft.length-1],key=last?.key||MILESTONES[0]?.key||"KO";planActivityDraft.push({id:newActivityId(),task:last?.task||defaultTaskForMilestone(key),subTask:"",key,plannedStart:last?.plannedEnd||"",plannedEnd:last?.plannedEnd||"",status:"Upcoming",owner:document.getElementById("fOwner")?.value||"",nextSteps:[]});rerenderPlanActivityRows();requestAnimationFrame(()=>document.querySelector("#msForm .plan-activity-row:last-child .act-subtask")?.focus());}
+function nextPhaseName(name){const m=String(name||"").match(/^(.*?phase\s*)(\d+)$/i);if(m)return m[1]+(Number(m[2])+1);return /^phase/i.test(String(name||""))?"Phase 2":"Phase 2";}
+function duplicatePlanActivityRow(id){syncPlanActivityDraftFromDom();const i=planActivityDraft.findIndex(x=>x.id===id);if(i<0)return;const src=planActivityDraft[i],copy={...src,id:newActivityId(),subTask:nextPhaseName(src.subTask),nextSteps:[],nextStep:"",nextStepDue:"",nextStepStatus:"Not Started"};planActivityDraft.splice(i+1,0,copy);rerenderPlanActivityRows();}
+function removePlanActivityRow(id){syncPlanActivityDraftFromDom();if(planActivityDraft.length<=1){alert("A project must contain at least one Task / Sub Task / Key Milestone activity.");return;}planActivityDraft=planActivityDraft.filter(x=>x.id!==id);rerenderPlanActivityRows();}
 function syncDept(){
   const dv=document.getElementById("fDivision").value;
   const deptEl=document.getElementById("fDepartment");
@@ -3241,49 +3239,22 @@ function toggleStore(id,on){
 function collectModal(){
   const id=document.getElementById("fId").value||("P-"+nextId());
   const existingProject=projects.find(p=>p.id===id);
-  const milestones=MILESTONES.map(m=>{
-    const s=document.querySelector(`.ms-s[data-k="${m.key}"]`).value;
-    const e=document.querySelector(`.ms-e[data-k="${m.key}"]`).value;
-    const st=document.querySelector(`.ms-st[data-k="${m.key}"]`).value;
-    const old=existingProject?.milestones?.find(x=>x.key===m.key)||{};
-    normalizeMilestoneNextSteps(old);
-    const preservedSteps=(old.nextSteps||[]).map(step=>({...step}));
-    const firstStep=preservedSteps[0]||null;
-    return {key:m.key,plannedStart:s,plannedEnd:e,actualStart:old.actualStart||null,actualEnd:old.actualEnd||null,status:st,owner:document.getElementById("fOwner").value||"TBC",nextSteps:preservedSteps,nextStep:firstStep?.text||"",nextStepDue:firstStep?.dueDate||"",nextStepStatus:firstStep?.status||(st==="Completed"?"Completed":"Not Started")};
+  syncPlanActivityDraftFromDom();
+  const milestones=(planActivityDraft||[]).map((draft,i)=>{
+    const old=existingProject?.milestones?.find(x=>x.id===draft.id)||{};normalizeMilestoneNextSteps(old);
+    const preservedSteps=(old.nextSteps||draft.nextSteps||[]).map(step=>({...step})),firstStep=preservedSteps[0]||null;
+    return {id:validActivityId(draft.id),task:String(draft.task||"").trim(),subTask:String(draft.subTask||"").trim(),key:normalizeMilestoneKey(draft.key),plannedStart:draft.plannedStart||"",plannedEnd:draft.plannedEnd||"",actualStart:old.actualStart||draft.actualStart||null,actualEnd:old.actualEnd||draft.actualEnd||null,status:draft.status||"Upcoming",owner:document.getElementById("fOwner").value||"TBC",nextSteps:preservedSteps,nextStep:firstStep?.text||"",nextStepDue:firstStep?.dueDate||"",nextStepStatus:firstStep?.status||((draft.status||"Upcoming")==="Completed"?"Completed":"Not Started")};
   });
-  const autoCode=buildProjectCodeFromForm(id);
-  document.getElementById("fCode").value=autoCode;
-  document.getElementById("fName").value=autoCode;
-  return {id,
-    code:autoCode,
-    name:autoCode,
-    type:document.getElementById("fType").value,division:document.getElementById("fDivision").value,
-    department:document.getElementById("fDepartment").value,owner:document.getElementById("fOwner").value.trim(),
-    format:document.getElementById("fFormat").value,storeFormatScope:[...new Set(modalStores.map(id=>{const s=stores.find(x=>x.id===id);return s?s.format:null;}).filter(Boolean))],minutesPerStore:Number(document.getElementById("fMin").value||0),
-    storeIds:[...modalStores],start:document.getElementById("fStart").value,end:document.getElementById("fEnd").value,
-    approval:document.getElementById("fApproval").value,statusOverride:null,milestones};
+  const autoCode=buildProjectCodeFromForm(id);document.getElementById("fCode").value=autoCode;document.getElementById("fName").value=autoCode;
+  return {id,code:autoCode,name:autoCode,type:document.getElementById("fType").value,division:document.getElementById("fDivision").value,department:document.getElementById("fDepartment").value,owner:document.getElementById("fOwner").value.trim(),format:document.getElementById("fFormat").value,storeFormatScope:[...new Set(modalStores.map(id=>{const s=stores.find(x=>x.id===id);return s?s.format:null;}).filter(Boolean))],minutesPerStore:Number(document.getElementById("fMin").value||0),storeIds:[...modalStores],start:document.getElementById("fStart").value,end:document.getElementById("fEnd").value,approval:document.getElementById("fApproval").value,statusOverride:null,milestones};
 }
 function nextId(){ let n=1000; projects.forEach(p=>{const v=Number(String(p.id).replace("P-",""));if(v>=n)n=v+1;}); return n; }
 function validate(p){
   const errs={};
-  if(!p.code) errs.fCode=1;
-  else if(projects.some(x=>x.id!==p.id&&x.code===p.code)) errs.fCode=1;
-  if(!p.name) errs.fName=1;
-  if(!p.type) errs.fType=1;
-  if(!p.division) errs.fDivision=1;
-  if(!p.department) errs.fDepartment=1;
-  if(!p.format) errs.fFormat=1;
-  if(!p.owner) errs.fOwner=1;
-  if(!p.minutesPerStore || p.minutesPerStore<=0) errs.fMin=1;
-  if(!p.start) errs.fStart=1;
-  if(!p.end||!p.start||parseDate(p.end)<=parseDate(p.start)) errs.fEnd=1;
-  // milestones are manually defined; both dates are required and must be ordered within the project window
+  if(!p.code)errs.fCode=1;else if(projects.some(x=>x.id!==p.id&&x.code===p.code))errs.fCode=1;
+  if(!p.name)errs.fName=1;if(!p.type)errs.fType=1;if(!p.division)errs.fDivision=1;if(!p.department)errs.fDepartment=1;if(!p.format)errs.fFormat=1;if(!p.owner)errs.fOwner=1;if(!p.minutesPerStore||p.minutesPerStore<=0)errs.fMin=1;if(!p.start)errs.fStart=1;if(!p.end||!p.start||parseDate(p.end)<=parseDate(p.start))errs.fEnd=1;
   const badMs=[];
-  p.milestones.forEach(m=>{
-    if(!m.plannedStart || !m.plannedEnd){ badMs.push(m.key); return; }
-    if(parseDate(m.plannedEnd)<parseDate(m.plannedStart)) badMs.push(m.key);
-    if(p.start&&p.end&&(parseDate(m.plannedStart)<parseDate(p.start)||parseDate(m.plannedEnd)>addDays(parseDate(p.end),1))) badMs.push(m.key);
-  });
+  p.milestones.forEach(m=>{const ref=activityRef(m);if(!m.task||!m.subTask||!m.key||!m.plannedStart||!m.plannedEnd){badMs.push(ref);return;}if(parseDate(m.plannedEnd)<parseDate(m.plannedStart))badMs.push(ref);if(p.start&&p.end&&(parseDate(m.plannedStart)<parseDate(p.start)||parseDate(m.plannedEnd)>addDays(parseDate(p.end),1)))badMs.push(ref);});
   return {errs,badMs,storeErr:p.storeIds.length===0};
 }
 function updateCapPreview(){
@@ -3304,9 +3275,9 @@ function savePlan(draft){
   const v=validate(p);
   // paint errors
   ["fCode","fName","fType","fDivision","fDepartment","fFormat","fMin","fOwner","fStart","fEnd"].forEach(idd=>{const el=document.getElementById(idd)?.closest(".ff");if(el)el.classList.toggle("err",!!v.errs[idd]);});
-  document.querySelectorAll(".ms-s,.ms-e").forEach(el=>el.classList.toggle("bad",v.badMs.includes(el.dataset.k)));
+  document.querySelectorAll("#msForm .plan-activity-row").forEach(row=>{const bad=v.badMs.includes(row.dataset.activityId);row.querySelectorAll(".ms-s,.ms-e,.act-task,.act-subtask,.act-key").forEach(el=>el.classList.toggle("bad",bad));});
   const errCount=Object.keys(v.errs).length+(v.storeErr?1:0)+(v.badMs.length?1:0);
-  if(errCount){ document.getElementById("formErr").innerHTML=`<span style="color:var(--red)">Fix ${errCount} issue(s): ${[Object.keys(v.errs).length?"fields":"",v.storeErr?"no stores selected":"",v.badMs.length?"milestone dates ("+[...new Set(v.badMs)].join(",")+")":""].filter(Boolean).join(" · ")}</span>`; return; }
+  if(errCount){ document.getElementById("formErr").innerHTML=`<span style="color:var(--red)">Fix ${errCount} issue(s): ${[Object.keys(v.errs).length?"fields":"",v.storeErr?"no stores selected":"",v.badMs.length?"Task / Sub Task / Milestone hierarchy or activity dates":""].filter(Boolean).join(" · ")}</span>`; return; }
   // rule engine: block overload approval unless override
   if(!draft && p.approval==="Approved"){
     const imp=projectCapacityImpact(p);
@@ -3358,7 +3329,7 @@ function normalizeMilestoneNextSteps(m){
 }
 function ensureDetailFields(p){
   if(!p||!Array.isArray(p.milestones)) return p;
-  p.milestones.forEach(normalizeMilestoneNextSteps);
+  p.milestones.forEach((m,i)=>normalizeProjectActivity(m,i));
   return p;
 }
 function detailProjectList(){ return sortByLiveWeek(projects); }
@@ -3429,170 +3400,36 @@ function syncProjectPlannedRange(p){
   p.start=valid.map(x=>x.plannedStart).sort()[0];
   p.end=valid.map(x=>x.plannedEnd).sort().slice(-1)[0];
 }
-function saveMilestoneSchedule(projectId,key){
-  if(!can("edit")){ alert("Your role cannot edit milestone dates."); return; }
-  const {p,m}=getActivity(projectId,key); if(!p||!m)return;
-  const start=document.getElementById(`milestone-start-${projectId}-${key}`)?.value||"";
-  const end=document.getElementById(`milestone-end-${projectId}-${key}`)?.value||"";
-  if(!start||!end){ alert("Please select both Planned Start and Planned End."); return; }
-  if(parseDate(end)<parseDate(start)){ alert("Planned End cannot be earlier than Planned Start."); document.getElementById(`milestone-end-${projectId}-${key}`)?.focus(); return; }
-  const oldStart=m.plannedStart||"",oldEnd=m.plannedEnd||"";
-  if(start===oldStart&&end===oldEnd){ alert("No date changes to save."); return; }
-  m.plannedStart=start; m.plannedEnd=end;
-  syncProjectPlannedRange(p);
-  logHist(p,"Updated milestone schedule",`${key}: ${oldStart} → ${oldEnd} changed to ${start} → ${end}`);
-  saveState();
-  renderPage("detailplan");
-  requestAnimationFrame(()=>requestAnimationFrame(()=>openDetailMilestone(projectId,key)));
+function saveMilestoneSchedule(projectId,ref){
+  if(!can("edit")){alert("Your role cannot edit milestone dates.");return;}const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const aref=activityRef(m),start=document.getElementById(`milestone-start-${projectId}-${aref}`)?.value||"",end=document.getElementById(`milestone-end-${projectId}-${aref}`)?.value||"";if(!start||!end){alert("Please select both Planned Start and Planned End.");return;}if(parseDate(end)<parseDate(start)){alert("Planned End cannot be earlier than Planned Start.");document.getElementById(`milestone-end-${projectId}-${aref}`)?.focus();return;}const oldStart=m.plannedStart||"",oldEnd=m.plannedEnd||"";if(start===oldStart&&end===oldEnd){alert("No date changes to save.");return;}m.plannedStart=start;m.plannedEnd=end;syncProjectPlannedRange(p);logHist(p,"Updated milestone schedule",`${activityLabel(m)}: ${oldStart} → ${oldEnd} changed to ${start} → ${end}`);saveState();renderPage("detailplan");requestAnimationFrame(()=>requestAnimationFrame(()=>openDetailMilestone(projectId,aref)));
 }
-function openDetailMilestone(projectId,key){
-  const {p,m}=getActivity(projectId,key); if(!p||!m)return;
-  const master=MSMAP[m.key]||{};
-  const state=msState(m),duration=daysBetween(parseDate(m.plannedStart),parseDate(m.plannedEnd))+1;
-  const panel=document.getElementById("detailMilestonePanel"),shade=document.getElementById("detailMilestoneShade");
-  if(!panel||!shade)return;
-  const scheduleBlock=can("edit")?`<div class="milestone-date-editor"><div class="date-editor-title"><span>Edit Planned Schedule</span><span>${duration} day${duration===1?"":"s"}</span></div><div class="milestone-date-fields"><div class="milestone-date-field"><label for="milestone-start-${p.id}-${m.key}">Planned Start</label><input id="milestone-start-${p.id}-${m.key}" type="date" value="${m.plannedStart||""}"></div><div class="milestone-date-field"><label for="milestone-end-${p.id}-${m.key}">Planned End</label><input id="milestone-end-${p.id}-${m.key}" type="date" value="${m.plannedEnd||""}"></div></div><div class="milestone-date-save"><span class="small">Saving updates the Project Gantt and overall project period.</span><button class="btn sm primary" onclick="saveMilestoneSchedule('${p.id}','${m.key}')">Save Dates</button></div></div>`:`<div class="milestone-info"><span>Planned Start</span><b>${fmtDisp(parseDate(m.plannedStart))}</b></div><div class="milestone-info"><span>Planned End</span><b>${fmtDisp(parseDate(m.plannedEnd))}</b></div>`;
-  panel.innerHTML=`<div class="milestone-panel-head"><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><div class="milestone-panel-title"><h3>${esc(master.full||m.key)}</h3><div class="small">${esc(p.name)}</div></div><button class="milestone-panel-close" onclick="closeDetailMilestone()" aria-label="Close milestone details">✕</button></div><div class="milestone-panel-body"><div class="milestone-panel-status"><span class="pill st-${state==="InProgress"?"OnTrack":state}">${statusText(state)}</span><span class="small">${duration} day${duration===1?"":"s"}</span></div><div class="milestone-info-grid"><div class="milestone-info"><span>Owner</span><b>${esc(m.owner||p.owner||"TBC")}</b></div><div class="milestone-info"><span>Dependency</span><b>${master.dep?`${esc(master.dep)} — ${esc(MSMAP[master.dep]?.full||master.dep)}`:"None"}</b></div>${scheduleBlock}<div class="milestone-info"><span>Actual Start</span><b>${m.actualStart?fmtDisp(parseDate(m.actualStart)):"—"}</b></div><div class="milestone-info"><span>Actual End</span><b>${m.actualEnd?fmtDisp(parseDate(m.actualEnd)):"—"}</b></div></div><div class="milestone-panel-section">Next Steps <span class="nextstep-count">${m.nextSteps.length}</span></div>${milestonePanelNextSteps(m)}<div class="milestone-panel-actions"><button class="btn sm" onclick="focusActivityNextSteps('${p.id}','${m.key}')">Open Activity Details</button>${can("edit")?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${m.key}')">+ Add Next Step</button>`:""}</div></div>`;
-  panel.classList.add("active"); shade.classList.add("active"); panel.setAttribute("aria-hidden","false");
+function openDetailMilestone(projectId,ref){
+  const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const master=MSMAP[m.key]||{},state=msState(m),duration=daysBetween(parseDate(m.plannedStart),parseDate(m.plannedEnd))+1,panel=document.getElementById("detailMilestonePanel"),shade=document.getElementById("detailMilestoneShade");if(!panel||!shade)return;const aref=activityRef(m);
+  const scheduleBlock=can("edit")?`<div class="milestone-date-editor"><div class="date-editor-title"><span>Edit Planned Schedule</span><span>${duration} day${duration===1?"":"s"}</span></div><div class="milestone-date-fields"><div class="milestone-date-field"><label for="milestone-start-${p.id}-${aref}">Planned Start</label><input id="milestone-start-${p.id}-${aref}" type="date" value="${m.plannedStart||""}"></div><div class="milestone-date-field"><label for="milestone-end-${p.id}-${aref}">Planned End</label><input id="milestone-end-${p.id}-${aref}" type="date" value="${m.plannedEnd||""}"></div></div><div class="milestone-date-save"><span class="small">Saving updates the Project Gantt and overall project period.</span><button class="btn sm primary" onclick="saveMilestoneSchedule('${p.id}','${aref}')">Save Dates</button></div></div>`:`<div class="milestone-info"><span>Planned Start</span><b>${fmtDisp(parseDate(m.plannedStart))}</b></div><div class="milestone-info"><span>Planned End</span><b>${fmtDisp(parseDate(m.plannedEnd))}</b></div>`;
+  panel.innerHTML=`<div class="milestone-panel-head"><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><div class="milestone-panel-title"><h3>${esc(master.full||m.key)}</h3><div class="small">${esc(p.name)}</div></div><button class="milestone-panel-close" onclick="closeDetailMilestone()" aria-label="Close milestone details">✕</button></div><div class="milestone-panel-body"><div class="milestone-panel-path"><b>${esc(m.task||"Project Execution")}</b><span>→</span><b>${esc(m.subTask||"Main")}</b><span>→</span><span>${esc(m.key)}</span></div><div class="milestone-panel-status"><span class="pill st-${state==="InProgress"?"OnTrack":state}">${statusText(state)}</span><span class="small">${duration} day${duration===1?"":"s"}</span></div><div class="milestone-info-grid"><div class="milestone-info"><span>Owner</span><b>${esc(m.owner||p.owner||"TBC")}</b></div><div class="milestone-info"><span>Dependency</span><b>${master.dep?`${esc(master.dep)} — ${esc(MSMAP[master.dep]?.full||master.dep)}`:"None"}</b></div>${scheduleBlock}<div class="milestone-info"><span>Actual Start</span><b>${m.actualStart?fmtDisp(parseDate(m.actualStart)):"—"}</b></div><div class="milestone-info"><span>Actual End</span><b>${m.actualEnd?fmtDisp(parseDate(m.actualEnd)):"—"}</b></div></div><div class="milestone-panel-section">Next Steps <span class="nextstep-count">${m.nextSteps.length}</span></div>${milestonePanelNextSteps(m)}<div class="milestone-panel-actions"><button class="btn sm" onclick="focusActivityNextSteps('${p.id}','${aref}')">Open Activity Details</button>${can("edit")?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${aref}')">+ Add Next Step</button>`:""}</div></div>`;panel.classList.add("active");shade.classList.add("active");panel.setAttribute("aria-hidden","false");
 }
-function closeDetailMilestone(){
-  document.getElementById("detailMilestonePanel")?.classList.remove("active");
-  document.getElementById("detailMilestoneShade")?.classList.remove("active");
-  document.getElementById("detailMilestonePanel")?.setAttribute("aria-hidden","true");
-}
-function focusActivityNextSteps(projectId,key){
-  closeDetailMilestone();
-  const card=document.getElementById(`activity-card-${projectId}-${key}`); if(!card)return;
-  card.scrollIntoView({behavior:"smooth",block:"center"});
-  card.classList.add("activity-focus");
-  setTimeout(()=>card.classList.remove("activity-focus"),1600);
-}
+function closeDetailMilestone(){document.getElementById("detailMilestonePanel")?.classList.remove("active");document.getElementById("detailMilestoneShade")?.classList.remove("active");document.getElementById("detailMilestonePanel")?.setAttribute("aria-hidden","true");}
+function focusActivityNextSteps(projectId,ref){closeDetailMilestone();const card=document.getElementById(`activity-card-${projectId}-${ref}`);if(!card)return;card.scrollIntoView({behavior:"smooth",block:"center"});card.classList.add("activity-focus");setTimeout(()=>card.classList.remove("activity-focus"),1600);}
 function renderProjectGantt(p){
-  const {min,max}=detailGanttRange(p), cols=ganttCols(min,max), cw=colW(), totalW=cols.length*cw;
-  const todayRaw=offX(today(),min), showToday=todayRaw>=0&&todayRaw<=totalW;
-  const monthSpans=[]; cols.forEach(c=>{const last=monthSpans[monthSpans.length-1];if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
-  const head=`<div class="grow head"><div class="gcell-left">Activity / Next Steps</div><div class="gtime"><div class="gmonths">${monthSpans.map(x=>`<div class="gmonth" style="width:${x.n*cw}px">${x.m}</div>`).join("")}</div><div class="gcols">${cols.map(c=>`<div class="gcol ${c.wknd?"wknd":""}" style="width:${cw}px">${c.label}<span class="wd">${c.sub}</span></div>`).join("")}</div>${showToday?`<div class="today-pin" id="detailGanttTodayPin" data-timeline-x="${todayRaw}" style="left:${todayRaw}px" title="Today · ${fmtDisp(today())}"><span>TODAY</span></div>`:""}</div></div>`;
-  const rows=(p.milestones||[]).filter(m=>m.plannedStart&&m.plannedEnd).map(m=>{
-    const l=Math.max(0,Math.min(offX(parseDate(m.plannedStart),min),totalW));
-    const r=Math.max(0,Math.min(offX(addDays(parseDate(m.plannedEnd),1),min),totalW));
-    const w=Math.max(24,r-l), st=msState(m), summary=activityNextStepSummary(m);
-    const cls=[`c-${m.key}`,st==="Completed"?"done":"",st==="Delayed"?"delay":st==="AtRisk"?"risk":""].join(" ");
-    const title=`${MSMAP[m.key]?.full||m.key}\n${m.plannedStart} → ${m.plannedEnd}\nActivity: ${statusText(st)}\n${summary.title}`;
-    return `<div class="grow"><div class="gcell-left"><div class="pname"><button class="activity-code milestone-open-btn" style="background:${milestoneColor(m.key)}" onclick="openDetailMilestone('${p.id}','${m.key}')" title="Open ${esc(MSMAP[m.key]?.full||m.key)} details">${esc(m.key)}</button>${esc(MSMAP[m.key]?.full||m.key)}</div><div class="powner" title="${esc(summary.title)}">${esc(summary.label)}</div></div><div class="gtl"><div class="gbarwrap"><button class="ms ${cls}" style="left:${l}px;width:${w}px" title="${esc(title)}" onclick="openDetailMilestone('${p.id}','${m.key}')">${esc(m.key)}</button></div></div></div>`;
-  }).join("");
-  return `<div class="gantt-shell detail-gantt" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">Activity timeline · ${p.milestones.length} activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="goDetailGanttToday()">Today</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
+  const {min,max}=detailGanttRange(p),cols=ganttCols(min,max),cw=colW(),totalW=cols.length*cw,todayRaw=offX(today(),min),showToday=todayRaw>=0&&todayRaw<=totalW,monthSpans=[];cols.forEach(c=>{const last=monthSpans[monthSpans.length-1];if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
+  const head=`<div class="grow head"><div class="gcell-left">Task / Sub Task / Key Milestone</div><div class="gtime"><div class="gmonths">${monthSpans.map(x=>`<div class="gmonth" style="width:${x.n*cw}px">${x.m}</div>`).join("")}</div><div class="gcols">${cols.map(c=>`<div class="gcol ${c.wknd?"wknd":""}" style="width:${cw}px">${c.label}<span class="wd">${c.sub}</span></div>`).join("")}</div>${showToday?`<div class="today-pin" id="detailGanttTodayPin" data-timeline-x="${todayRaw}" style="left:${todayRaw}px" title="Today · ${fmtDisp(today())}"><span>TODAY</span></div>`:""}</div></div>`;
+  const activities=(p.milestones||[]).filter(m=>m.plannedStart&&m.plannedEnd).map((m,i)=>normalizeProjectActivity(m,i)).sort((a,b)=>String(a.task).localeCompare(String(b.task))||String(a.subTask).localeCompare(String(b.subTask))||parseDate(a.plannedStart)-parseDate(b.plannedStart));
+  const rows=activities.map(m=>{const l=Math.max(0,Math.min(offX(parseDate(m.plannedStart),min),totalW)),r=Math.max(0,Math.min(offX(addDays(parseDate(m.plannedEnd),1),min),totalW)),w=Math.max(24,r-l),st=msState(m),summary=activityNextStepSummary(m),ref=activityRef(m),cls=[st==="Completed"?"done":"",st==="Delayed"?"delay":st==="AtRisk"?"risk":""].join(" "),title=`${activityLabel(m)}\n${MSMAP[m.key]?.full||m.key}\n${m.plannedStart} → ${m.plannedEnd}\nActivity: ${statusText(st)}\n${summary.title}`;return `<div class="grow gantt-activity-row"><div class="gcell-left"><div class="gantt-task-label">${esc(m.task||"Project Execution")}</div><div class="gantt-subtask-label">${esc(m.subTask||"Main")}</div><div class="gantt-milestone-meta"><button class="activity-code milestone-open-btn" style="background:${milestoneColor(m.key)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button><span class="small">${esc(MSMAP[m.key]?.full||m.key)}</span></div><div class="nextstep-summary" title="${esc(summary.title)}">${esc(summary.label)}</div></div><div class="gtl"><div class="gbarwrap"><button class="ms ${cls}" style="left:${l}px;width:${w}px;background:${milestoneColor(m.key)}" title="${esc(title)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button></div></div></div>`;}).join("");
+  const taskCount=new Set(activities.map(m=>m.task)).size,subCount=new Set(activities.map(m=>m.task+"|"+m.subTask)).size;return `<div class="gantt-shell detail-gantt" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">${taskCount} Task${taskCount===1?"":"s"} · ${subCount} Sub Task${subCount===1?"":"s"} · ${activities.length} milestone activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="goDetailGanttToday()">Today</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
 }
-function filterDetailProjectSelect(query){
-  const select=document.getElementById("detailProjectSelect"); if(!select)return;
-  const q=String(query||"").trim().toLowerCase();
-  Array.from(select.options).forEach(o=>{o.hidden=!!q&&!o.text.toLowerCase().includes(q)&&!o.selected;});
-}
-function detailToolbar(p,list){
-  return `<div class="toolbar detail-filter"><div class="fld detail-project-search"><label>Search Project</label><input type="search" placeholder="Name / owner / week" oninput="filterDetailProjectSelect(this.value)"></div><div class="fld project-select"><label>Project</label><select id="detailProjectSelect" onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div><div class="fld"><label>Zoom</label><div class="segmented"><button onclick="zoomGantt(-0.2)" ${ganttZoom<=0.5?"disabled":""}>−</button><button onclick="zoomGantt(0)" style="min-width:54px">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div></div>`;
-}
-function getActivity(projectId,key){
-  const p=projects.find(x=>x.id===projectId),m=p?.milestones?.find(x=>x.key===key);
-  if(m) normalizeMilestoneNextSteps(m);
-  return {p,m};
-}
-function addActivityNextStep(projectId,key){
-  if(!can("edit")){ alert("Your role cannot add activity next steps."); return; }
-  const {p,m}=getActivity(projectId,key); if(!p||!m)return;
-  const id=newNextStepId(),stamp=new Date().toISOString();
-  m.nextSteps.push({id,text:"",dueDate:m.plannedEnd||"",status:"Not Started",createdAt:stamp,updatedAt:stamp});
-  syncLegacyNextStepFields(m);
-  logHist(p,"Added next step",`${key}: New next step`);
-  saveState(); renderPage("detailplan");
-  setTimeout(()=>document.getElementById(`ns-text-${projectId}-${key}-${id}`)?.focus(),30);
-}
-function updateNextStepSaveState(projectId,key,stepId){
-  const {m}=getActivity(projectId,key); if(!m)return;
-  const step=m.nextSteps.find(x=>x.id===stepId); if(!step)return;
-  const textEl=document.getElementById(`ns-text-${projectId}-${key}-${stepId}`);
-  const dueEl=document.getElementById(`ns-due-${projectId}-${key}-${stepId}`);
-  const statusEl=document.getElementById(`ns-status-${projectId}-${key}-${stepId}`);
-  const saveBtn=document.getElementById(`ns-save-${projectId}-${key}-${stepId}`);
-  if(!textEl||!dueEl||!statusEl||!saveBtn)return;
-  const text=textEl.value.trim(), dueDate=dueEl.value||"", status=statusEl.value||"Not Started";
-  const dirty=text!==(step.text||"").trim() || dueDate!==(step.dueDate||"") || status!==(step.status||"Not Started");
-  const enabled=Boolean(text)&&dirty;
-  saveBtn.disabled=!enabled;
-  saveBtn.title=enabled?"Save changes":"No new data or changes to save";
-  saveBtn.setAttribute("aria-disabled",String(!enabled));
-}
-function saveActivityNextStep(projectId,key,stepId){
-  if(!can("edit")){ alert("Your role cannot edit activity next steps."); return; }
-  const {p,m}=getActivity(projectId,key); if(!p||!m)return;
-  const step=m.nextSteps.find(x=>x.id===stepId); if(!step)return;
-  const saveBtn=document.getElementById(`ns-save-${projectId}-${key}-${stepId}`);
-  if(saveBtn?.disabled)return;
-  const text=document.getElementById(`ns-text-${projectId}-${key}-${stepId}`)?.value.trim()||"";
-  if(!text){ document.getElementById(`ns-text-${projectId}-${key}-${stepId}`)?.focus(); return; }
-  step.text=text;
-  step.dueDate=document.getElementById(`ns-due-${projectId}-${key}-${stepId}`)?.value||"";
-  step.status=document.getElementById(`ns-status-${projectId}-${key}-${stepId}`)?.value||"Not Started";
-  step.updatedAt=new Date().toISOString(); if(!step.createdAt)step.createdAt=step.updatedAt;
-  syncLegacyNextStepFields(m);
-  logHist(p,"Updated next step",`${key}: ${step.text}${step.dueDate?` · due ${step.dueDate}`:""} · ${step.status}`);
-  saveState(); renderPage("detailplan");
-}
+function filterDetailProjectSelect(query){const select=document.getElementById("detailProjectSelect");if(!select)return;const q=String(query||"").trim().toLowerCase();Array.from(select.options).forEach(o=>{o.hidden=!!q&&!o.text.toLowerCase().includes(q)&&!o.selected;});}
+function detailToolbar(p,list){return `<div class="toolbar detail-filter"><div class="fld detail-project-search"><label>Search Project</label><input type="search" placeholder="Name / owner / week" oninput="filterDetailProjectSelect(this.value)"></div><div class="fld project-select"><label>Project</label><select id="detailProjectSelect" onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div><div class="fld"><label>Zoom</label><div class="segmented"><button onclick="zoomGantt(-0.2)" ${ganttZoom<=0.5?"disabled":""}>−</button><button onclick="zoomGantt(0)" style="min-width:54px">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div></div>`;}
+function getActivity(projectId,ref){const p=projects.find(x=>x.id===projectId),m=p?.milestones?.find(x=>activityRef(x)===ref)||p?.milestones?.find(x=>x.key===ref);if(m)normalizeProjectActivity(m);return {p,m};}
+function addActivityNextStep(projectId,ref){if(!can("edit")){alert("Your role cannot add activity next steps.");return;}const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const id=newNextStepId(),stamp=new Date().toISOString();m.nextSteps.push({id,text:"",dueDate:m.plannedEnd||"",status:"Not Started",createdAt:stamp,updatedAt:stamp});syncLegacyNextStepFields(m);logHist(p,"Added next step",`${activityLabel(m)}: New next step`);saveState();renderPage("detailplan");setTimeout(()=>document.getElementById(`ns-text-${projectId}-${activityRef(m)}-${id}`)?.focus(),30);}
+function updateNextStepSaveState(projectId,ref,stepId){const {m}=getActivity(projectId,ref);if(!m)return;const step=m.nextSteps.find(x=>x.id===stepId);if(!step)return;const textEl=document.getElementById(`ns-text-${projectId}-${ref}-${stepId}`),dueEl=document.getElementById(`ns-due-${projectId}-${ref}-${stepId}`),statusEl=document.getElementById(`ns-status-${projectId}-${ref}-${stepId}`),saveBtn=document.getElementById(`ns-save-${projectId}-${ref}-${stepId}`);if(!textEl||!dueEl||!statusEl||!saveBtn)return;const text=textEl.value.trim(),dueDate=dueEl.value||"",status=statusEl.value||"Not Started",dirty=text!==(step.text||"").trim()||dueDate!==(step.dueDate||"")||status!==(step.status||"Not Started"),enabled=Boolean(text)&&dirty;saveBtn.disabled=!enabled;saveBtn.title=enabled?"Save changes":"No new data or changes to save";saveBtn.setAttribute("aria-disabled",String(!enabled));}
+function saveActivityNextStep(projectId,ref,stepId){if(!can("edit")){alert("Your role cannot edit activity next steps.");return;}const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const step=m.nextSteps.find(x=>x.id===stepId);if(!step)return;const saveBtn=document.getElementById(`ns-save-${projectId}-${ref}-${stepId}`);if(saveBtn?.disabled)return;const text=document.getElementById(`ns-text-${projectId}-${ref}-${stepId}`)?.value.trim()||"";if(!text){document.getElementById(`ns-text-${projectId}-${ref}-${stepId}`)?.focus();return;}step.text=text;step.dueDate=document.getElementById(`ns-due-${projectId}-${ref}-${stepId}`)?.value||"";step.status=document.getElementById(`ns-status-${projectId}-${ref}-${stepId}`)?.value||"Not Started";step.updatedAt=new Date().toISOString();if(!step.createdAt)step.createdAt=step.updatedAt;syncLegacyNextStepFields(m);logHist(p,"Updated next step",`${activityLabel(m)}: ${step.text}${step.dueDate?` · due ${step.dueDate}`:""} · ${step.status}`);saveState();renderPage("detailplan");}
 let pendingNextStepDelete=null;
-function deleteActivityNextStep(projectId,key,stepId){
-  if(!can("edit")){ alert("Your role cannot delete activity next steps."); return; }
-  const {p,m}=getActivity(projectId,key); if(!p||!m)return;
-  const step=m.nextSteps.find(x=>x.id===stepId); if(!step)return;
-  pendingNextStepDelete={projectId,key,stepId};
-  document.getElementById("genModalInner").innerHTML=`
-    <div class="modal-head"><h2>Confirm Delete Next Step</h2><button class="x" onclick="cancelDeleteActivityNextStep()">✕</button></div>
-    <div class="modal-body"><div class="delete-confirm-body"><div class="delete-confirm-icon">!</div><div class="delete-confirm-copy"><p>Delete this Next Step from <b>${esc(key)} — ${esc(MSMAP[key]?.full||key)}</b>?</p><div class="delete-confirm-item">${esc(step.text||"Blank next step")}${step.dueDate?`<div class="small" style="margin-top:4px">Due ${esc(step.dueDate)} · ${esc(step.status||"Not Started")}</div>`:""}</div><p class="small" style="margin-top:9px">This action cannot be undone.</p></div></div></div>
-    <div class="modal-foot"><button class="btn" onclick="cancelDeleteActivityNextStep()">Cancel</button><button class="btn danger" onclick="confirmDeleteActivityNextStep()">Delete Next Step</button></div>`;
-  document.getElementById("genModal").classList.add("active");
-}
-function cancelDeleteActivityNextStep(){ pendingNextStepDelete=null; closeModal("genModal"); }
-function confirmDeleteActivityNextStep(){
-  const pending=pendingNextStepDelete; pendingNextStepDelete=null;
-  if(!pending){ closeModal("genModal"); return; }
-  const {p,m}=getActivity(pending.projectId,pending.key); if(!p||!m){ closeModal("genModal"); return; }
-  const idx=m.nextSteps.findIndex(x=>x.id===pending.stepId); if(idx<0){ closeModal("genModal"); return; }
-  const step=m.nextSteps[idx];
-  m.nextSteps.splice(idx,1); syncLegacyNextStepFields(m);
-  logHist(p,"Deleted next step",`${pending.key}: ${step.text||"Blank next step"}`);
-  saveState(); closeModal("genModal"); renderPage("detailplan");
-}
-function saveAllActivityNextSteps(projectId){
-  if(!can("edit")){ alert("Your role cannot edit activity next steps."); return; }
-  const p=projects.find(x=>x.id===projectId); if(!p)return;
-  let saved=0,blank=0;
-  (p.milestones||[]).forEach(m=>{
-    normalizeMilestoneNextSteps(m);
-    m.nextSteps.forEach(step=>{
-      const textEl=document.getElementById(`ns-text-${projectId}-${m.key}-${step.id}`);
-      if(!textEl)return;
-      const text=textEl.value.trim();
-      if(!text){ blank++; return; }
-      step.text=text;
-      step.dueDate=document.getElementById(`ns-due-${projectId}-${m.key}-${step.id}`)?.value||"";
-      step.status=document.getElementById(`ns-status-${projectId}-${m.key}-${step.id}`)?.value||"Not Started";
-      step.updatedAt=new Date().toISOString(); if(!step.createdAt)step.createdAt=step.updatedAt;
-      saved++;
-    });
-    syncLegacyNextStepFields(m);
-  });
-  logHist(p,"Updated activity next steps",`Saved ${saved} next step${saved===1?"":"s"}${blank?` · ${blank} blank item${blank===1?"":"s"} skipped`:""}`);
-  saveState(); renderPage("detailplan");
-  if(blank) alert(`${blank} blank next step${blank===1?" was":"s were"} not saved. Enter a description or delete the blank item.`);
-}
-function renderNextStepItem(p,m,step,index,editable){
-  const dueOver=step.dueDate&&parseDate(step.dueDate)<today()&&step.status!=="Completed";
-  const changeHandler=`updateNextStepSaveState('${p.id}','${m.key}','${step.id}')`;
-  return `<div class="nextstep-item"><div class="nextstep-index">${index+1}</div><div class="nextstep-field"><label for="ns-text-${p.id}-${m.key}-${step.id}">Next Step</label><input class="nextstep-input" id="ns-text-${p.id}-${m.key}-${step.id}" aria-label="Next Step ${index+1}" title="Next Step ${index+1}" value="${esc(step.text||"")}" placeholder="Enter next action / deliverable" ${editable?`oninput="${changeHandler}"`:"disabled"}></div><div class="nextstep-field"><label for="ns-due-${p.id}-${m.key}-${step.id}">Due Date</label><input class="nextstep-input ${dueOver?"due-over":""}" id="ns-due-${p.id}-${m.key}-${step.id}" aria-label="Due Date" title="${dueOver?"Overdue":"Due Date"}" type="date" value="${step.dueDate||""}" ${editable?`onchange="${changeHandler}"`:"disabled"}></div><div class="nextstep-field"><label for="ns-status-${p.id}-${m.key}-${step.id}">Status</label><select class="nextstep-input nextstep-status" id="ns-status-${p.id}-${m.key}-${step.id}" aria-label="Next Step Status" title="Next Step Status" ${editable?`onchange="${changeHandler}"`:"disabled"}>${NEXT_STEP_STATUSES.map(x=>`<option ${step.status===x?"selected":""}>${x}</option>`).join("")}</select></div><div class="nextstep-actions">${editable?`<button class="btn sm primary nextstep-save" id="ns-save-${p.id}-${m.key}-${step.id}" title="No new data or changes to save" aria-disabled="true" disabled onclick="saveActivityNextStep('${p.id}','${m.key}','${step.id}')">Save</button><button class="btn sm danger nextstep-delete" title="Delete Next Step" onclick="deleteActivityNextStep('${p.id}','${m.key}','${step.id}')">Delete</button>`:'<span class="small">View only</span>'}</div></div>`;
-}
-function renderActivityNextStepCard(p,m,editable){
-  normalizeMilestoneNextSteps(m);
-  const activityState=msState(m),steps=m.nextSteps||[];
-  const stack=steps.length?steps.map((step,i)=>renderNextStepItem(p,m,step,i,editable)).join(""):`<div class="nextstep-empty">No next step recorded.${editable?' Click <b>+ Add Next Step</b> to create the first action.':''}</div>`;
-  return `<div class="activity-nextstep-card" id="activity-card-${p.id}-${m.key}"><div class="activity-nextstep-head"><div class="activity-main"><div><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><b>${esc(MSMAP[m.key]?.full||m.key)}</b> <span class="nextstep-count">${steps.length}</span></div><div class="small">Owner: ${esc(m.owner||p.owner)} · Planned ${m.plannedStart} → ${m.plannedEnd}</div></div><div class="activity-meta"><span class="pill st-${activityState==="InProgress"?"OnTrack":activityState}">${statusText(activityState)}</span>${editable?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${m.key}')">+ Add Next Step</button>`:""}</div></div><div class="nextstep-stack">${stack}</div></div>`;
-}
+function deleteActivityNextStep(projectId,ref,stepId){if(!can("edit")){alert("Your role cannot delete activity next steps.");return;}const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const step=m.nextSteps.find(x=>x.id===stepId);if(!step)return;pendingNextStepDelete={projectId,ref,stepId};document.getElementById("genModalInner").innerHTML=`<div class="modal-head"><h2>Confirm Delete Next Step</h2><button class="x" onclick="cancelDeleteActivityNextStep()">✕</button></div><div class="modal-body"><div class="delete-confirm-body"><div class="delete-confirm-icon">!</div><div class="delete-confirm-copy"><p>Delete this Next Step from <b>${esc(activityLabel(m))}</b>?</p><div class="delete-confirm-item">${esc(step.text||"Blank next step")}${step.dueDate?`<div class="small" style="margin-top:4px">Due ${esc(step.dueDate)} · ${esc(step.status||"Not Started")}</div>`:""}</div><p class="small" style="margin-top:9px">This action cannot be undone.</p></div></div></div><div class="modal-foot"><button class="btn" onclick="cancelDeleteActivityNextStep()">Cancel</button><button class="btn danger" onclick="confirmDeleteActivityNextStep()">Delete Next Step</button></div>`;document.getElementById("genModal").classList.add("active");}
+function cancelDeleteActivityNextStep(){pendingNextStepDelete=null;closeModal("genModal");}
+function confirmDeleteActivityNextStep(){const pending=pendingNextStepDelete;pendingNextStepDelete=null;if(!pending){closeModal("genModal");return;}const {p,m}=getActivity(pending.projectId,pending.ref);if(!p||!m){closeModal("genModal");return;}const idx=m.nextSteps.findIndex(x=>x.id===pending.stepId);if(idx<0){closeModal("genModal");return;}const step=m.nextSteps[idx];m.nextSteps.splice(idx,1);syncLegacyNextStepFields(m);logHist(p,"Deleted next step",`${activityLabel(m)}: ${step.text||"Blank next step"}`);saveState();closeModal("genModal");renderPage("detailplan");}
+function saveAllActivityNextSteps(projectId){if(!can("edit")){alert("Your role cannot edit activity next steps.");return;}const p=projects.find(x=>x.id===projectId);if(!p)return;let saved=0,blank=0;(p.milestones||[]).forEach((m,mi)=>{normalizeProjectActivity(m,mi);const ref=activityRef(m);m.nextSteps.forEach(step=>{const textEl=document.getElementById(`ns-text-${projectId}-${ref}-${step.id}`);if(!textEl)return;const text=textEl.value.trim();if(!text){blank++;return;}step.text=text;step.dueDate=document.getElementById(`ns-due-${projectId}-${ref}-${step.id}`)?.value||"";step.status=document.getElementById(`ns-status-${projectId}-${ref}-${step.id}`)?.value||"Not Started";step.updatedAt=new Date().toISOString();if(!step.createdAt)step.createdAt=step.updatedAt;saved++;});syncLegacyNextStepFields(m);});logHist(p,"Updated activity next steps",`Saved ${saved} next step${saved===1?"":"s"}${blank?` · ${blank} blank item${blank===1?"":"s"} skipped`:""}`);saveState();renderPage("detailplan");if(blank)alert(`${blank} blank next step${blank===1?" was":"s were"} not saved. Enter a description or delete the blank item.`);}
+function renderNextStepItem(p,m,step,index,editable){const dueOver=step.dueDate&&parseDate(step.dueDate)<today()&&step.status!=="Completed",ref=activityRef(m),changeHandler=`updateNextStepSaveState('${p.id}','${ref}','${step.id}')`;return `<div class="nextstep-item"><div class="nextstep-index">${index+1}</div><div class="nextstep-field"><label for="ns-text-${p.id}-${ref}-${step.id}">Next Step</label><input class="nextstep-input" id="ns-text-${p.id}-${ref}-${step.id}" value="${esc(step.text||"")}" placeholder="Enter next action / deliverable" ${editable?`oninput="${changeHandler}"`:"disabled"}></div><div class="nextstep-field"><label for="ns-due-${p.id}-${ref}-${step.id}">Due Date</label><input class="nextstep-input ${dueOver?"due-over":""}" id="ns-due-${p.id}-${ref}-${step.id}" type="date" value="${step.dueDate||""}" ${editable?`onchange="${changeHandler}"`:"disabled"}></div><div class="nextstep-field"><label for="ns-status-${p.id}-${ref}-${step.id}">Status</label><select class="nextstep-input nextstep-status" id="ns-status-${p.id}-${ref}-${step.id}" ${editable?`onchange="${changeHandler}"`:"disabled"}>${NEXT_STEP_STATUSES.map(x=>`<option ${step.status===x?"selected":""}>${x}</option>`).join("")}</select></div><div class="nextstep-actions">${editable?`<button class="btn sm primary nextstep-save" id="ns-save-${p.id}-${ref}-${step.id}" disabled onclick="saveActivityNextStep('${p.id}','${ref}','${step.id}')">Save</button><button class="btn sm danger nextstep-delete" onclick="deleteActivityNextStep('${p.id}','${ref}','${step.id}')">Delete</button>`:'<span class="small">View only</span>'}</div></div>`;}
+function renderActivityNextStepCard(p,m,editable){normalizeProjectActivity(m);const activityState=msState(m),steps=m.nextSteps||[],ref=activityRef(m),stack=steps.length?steps.map((step,i)=>renderNextStepItem(p,m,step,i,editable)).join(""):`<div class="nextstep-empty">No next step recorded.${editable?' Click <b>+ Add Next Step</b> to create the first action.':''}</div>`;return `<div class="activity-nextstep-card" id="activity-card-${p.id}-${ref}"><div class="activity-nextstep-head"><div class="activity-main"><div><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><b>${esc(MSMAP[m.key]?.full||m.key)}</b> <span class="nextstep-count">${steps.length}</span></div><div class="task-path"><b>${esc(m.task||"Project Execution")}</b><span>→</span><b>${esc(m.subTask||"Main")}</b></div><div class="small">Owner: ${esc(m.owner||p.owner)} · Planned ${m.plannedStart} → ${m.plannedEnd}</div></div><div class="activity-meta"><span class="pill st-${activityState==="InProgress"?"OnTrack":activityState}">${statusText(activityState)}</span>${editable?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${ref}')">+ Add Next Step</button>`:""}</div></div><div class="nextstep-stack">${stack}</div></div>`;}
 function renderDetailPlan(){
   const list=detailProjectList();
   if(!list.length) return `<div class="empty">No projects available.</div>`;
@@ -3675,15 +3512,15 @@ function onePlanRepairData(){
       if(!Array.isArray(p.storeIds)) { p.storeIds=[]; changed=true; }
       if(!Array.isArray(p.milestones) || !p.milestones.length){
         const s=p.start||localISO(today());
-        p.milestones=MILESTONES.map(m=>({key:m.key,plannedStart:localISO(addDays(parseDate(s),m.offset)),plannedEnd:localISO(addDays(parseDate(s),m.offset+m.dur-1)),status:"Upcoming"}));
+        p.milestones=MILESTONES.map(m=>({id:newActivityId(),task:defaultTaskForMilestone(m.key),subTask:"Main",key:m.key,plannedStart:localISO(addDays(parseDate(s),m.offset)),plannedEnd:localISO(addDays(parseDate(s),m.offset+m.dur-1)),status:"Upcoming",owner:p.owner||"TBC"}));
         changed=true;
       }
-      p.milestones=p.milestones.filter(m=>m && m.key && m.plannedStart && m.plannedEnd);
-      p.milestones.forEach(m=>{
-        const before=JSON.stringify({nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
-        normalizeMilestoneNextSteps(m);
-        const after=JSON.stringify({nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
-        if(before!==after) changed=true;
+      p.milestones=p.milestones.filter(m=>m&&m.key);
+      p.milestones.forEach((m,mi)=>{
+        const before=JSON.stringify({id:m.id,task:m.task,subTask:m.subTask,nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
+        normalizeProjectActivity(m,mi);if(!m.owner)m.owner=p.owner||"TBC";
+        const after=JSON.stringify({id:m.id,task:m.task,subTask:m.subTask,nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
+        if(before!==after)changed=true;
       });
       if(!p.minutesPerStore) p.minutesPerStore=LOAD_BY_TYPE[p.type]||120;
       if(!p.approval) p.approval="Draft";
