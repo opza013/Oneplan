@@ -618,6 +618,7 @@ body.detail-gantt-expand-active .topbar,body.detail-gantt-expand-active .sidebar
 #master .card.master-expanded th{position:sticky;top:0;z-index:3;background:#f8fafc}
 #master .card.master-expanded .btn.sm{height:31px;font-size:10.5px}
 body.master-expand-active .topbar,body.master-expand-active .sidebar{filter:saturate(.85)}
+/* v5.4.19 Task Master quick reorder controls aligned with NWT Master */
 /* v5.4.18 Keep Add/Edit/Delete dialogs usable above expanded Master cards */
 body.master-expand-active .modal-bg{z-index:2300}
 body.master-expand-active .modal{position:relative;z-index:2301}
@@ -942,7 +943,7 @@ tbody tr:hover{background:#f8fbff}
 @media(max-width:760px){.milestone-pic-row{grid-template-columns:56px minmax(0,1fr) auto}.activity-responsibility-row{grid-template-columns:1fr}}
 
 </style>
-  <meta name="oneplan-build" content="v5.4.10-milestone-multi-pic">
+  <meta name="oneplan-build" content="v5.4.19-task-master-reorder">
 </head>
 <body>
 <div class="app">
@@ -3125,7 +3126,7 @@ function renderMaster(){
     <div class="card master-card-third"><div class="section-title">Task Master <span class="small">${TASK_MASTER.length} tasks · source for Task dropdown in Project / Detail Plan</span>
       ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openTaskModal()">+ Add Task</button>`:""}</div>
       <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Task</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${TASK_MASTER.map((t,i)=>{const used=taskProjectUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openTaskModal('${encodeURIComponent(t.name)}')">Edit</button><button class="btn sm danger" onclick="deleteTaskMaster('${encodeURIComponent(t.name)}')" ${used||TASK_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      ${TASK_MASTER.map((t,i)=>{const used=taskProjectUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveTaskMaster('${encodeURIComponent(t.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveTaskMaster('${encodeURIComponent(t.name)}',1)" ${i===TASK_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm" onclick="openTaskModal('${encodeURIComponent(t.name)}')">Edit</button><button class="btn sm danger" onclick="deleteTaskMaster('${encodeURIComponent(t.name)}')" ${used||TASK_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
       </tbody></table></div>
       <div class="small" style="margin-top:8px">Task is controlled by Master Data. Sub Task / Phase remains free-form inside each project. Delete is blocked while the Task is used by any project activity.</div></div>
     <div class="card master-card-third"><div class="section-title">NWT Master <span class="small">${NWT_MASTER.length} responsible units · assign PIC units inside Key Milestone Master</span>
@@ -3219,6 +3220,18 @@ function saveTaskMaster(originalEnc=""){
   if(original&&original!==name){projects.forEach(p=>{let n=0;(p.milestones||[]).forEach(m=>{if(normalizeTaskName(m.task)===original){m.task=name;n++;}});if(n)logHist(p,"Task master renamed",`${original} → ${name} · ${n} activity(s)`);});}
   const remaining=TASK_MASTER.filter(t=>t.name!==original); const insertAt=Math.max(0,Math.min(remaining.length,order-1)); remaining.splice(insertAt,0,{name,order}); TASK_MASTER=normalizeTasks(remaining);
   saveState();closeModal("genModal");renderAll();
+}
+function moveTaskMaster(encodedName,direction){
+  if(!can("master")){alert("Only Admin can edit master data.");return;}
+  const name=decodeURIComponent(encodedName||"");
+  const from=TASK_MASTER.findIndex(t=>t.name===name);
+  if(from<0)return;
+  const to=from+(Number(direction)<0?-1:1);
+  if(to<0||to>=TASK_MASTER.length)return;
+  const next=TASK_MASTER.map(t=>({...t}));
+  [next[from],next[to]]=[next[to],next[from]];
+  TASK_MASTER=next.map((t,i)=>({name:normalizeTaskName(t.name),order:i+1}));
+  saveState();renderAll();
 }
 function deleteTaskMaster(encodedName){
   if(!can("master")){alert("Only Admin can edit master data.");return;} const name=decodeURIComponent(encodedName||""); const used=taskProjectUsage(name);

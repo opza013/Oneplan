@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.18",
+  "version": "5.4.19",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan v5.4.18 fixes Master Data Add/Edit/Delete dialogs so they remain fully usable while a Master card is expanded."
+  "description": "OnePlan v5.4.19 adds quick Move Up / Move Down ordering controls to Task Master, matching NWT Master."
 }

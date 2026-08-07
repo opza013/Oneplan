@@ -20,5 +20,12 @@ Health check version: `5.4.15-detail-gantt-expand-zoom`.
 - Zoom range remains 50%–250%, preserving horizontal center during zoom.
 - Main Gantt Chart is unchanged.
 
+
+## v5.4.19 Task Master Reorder
+
+- Task Master now has ↑ / ↓ quick-order buttons matching NWT Master.
+- Every move immediately reindexes and saves the Task display order.
+- Works in normal and expanded Master Data views.
+
 ## v5.4.18 Master Expand Modal Fix
 Master Data Add/Edit/Delete dialogs now stay above the expanded Master card overlay.
