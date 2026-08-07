@@ -1,3 +1,6 @@
+
+## v5.4.20 update
+Key Milestone Master now includes quick Move Up / Move Down controls (↑ / ↓), matching Task Master and NWT Master. Reordering re-indexes Display Order and saves immediately.
 # ONE PLAN v5.4.15 — Detail Plan Gantt Expand & Zoom
 
 Enterprise Master Data workspace update. Key Milestone Master is prioritized at the top, governance masters are grouped together, operational masters share a row, and Role Permissions remains at the bottom. Expanded cards close with an X-only control.
