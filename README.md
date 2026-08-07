@@ -1,3 +1,13 @@
+# ONE PLAN v5.4.5
+
+**Gantt Sort + Detail Plan Structure Management**
+
+- Gantt default sort follows Key Milestone Master Display Order.
+- Users can switch Gantt sorting to Task/Sub Task, Planned Start, Live Week, Project Name, or Owner.
+- Detail Plan can add/edit/delete Task → Sub Task → Key Milestone hierarchy directly.
+- Key Milestone Master now includes Display Order used by the Gantt default.
+- Existing v5.4.4 data migrates automatically; no storage reset is required.
+
 # ONE PLAN v5.4.4 — Task / Sub Task / Key Milestone
 
 ## New

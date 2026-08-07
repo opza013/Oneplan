@@ -1,1 +1,1 @@
-5.4.4-task-subtask-milestone
+5.4.5-gantt-sort-detail-structure
