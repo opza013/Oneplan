@@ -1,22 +1,13 @@
-# ONE PLAN v5.4.5
+# ONE PLAN v5.4.6 — Task Master Dropdown
 
-**Gantt Sort + Detail Plan Structure Management**
+Enterprise Range Operation Platform.
 
-- Gantt default sort follows Key Milestone Master Display Order.
-- Users can switch Gantt sorting to Task/Sub Task, Planned Start, Live Week, Project Name, or Owner.
-- Detail Plan can add/edit/delete Task → Sub Task → Key Milestone hierarchy directly.
-- Key Milestone Master now includes Display Order used by the Gantt default.
-- Existing v5.4.4 data migrates automatically; no storage reset is required.
+## Update
+- **Master Data → Task Master**: Admin can add, edit, reorder and delete Task values.
+- **Task** is now selected from a Master Data dropdown in Project Schedule and Detail Plan.
+- **Sub Task / Phase remains free form** for project-specific phases such as Phase 1 / 2 / 3.
+- Task deletion is blocked while in use; renaming updates linked project activities.
+- Existing Task values are preserved and auto-migrated into Task Master.
+- Key Milestone colors/order, Gantt sorting and Task → Sub Task → Key Milestone structure remain available.
 
-# ONE PLAN v5.4.4 — Task / Sub Task / Key Milestone
-
-## New
-- Admin can configure the Gantt color of every Key Milestone in Master Data.
-- Project schedule now uses `Task → Sub Task / Phase → Key Milestone`.
-- A milestone code can be repeated multiple times in one project using unique activity IDs.
-- Supports parallel phases such as POG Phase 1/2/3 and Floorplan Phase 1/2/3.
-- Detail Gantt shows one activity lane per Task/Sub Task/Milestone.
-- All-project Gantt automatically stacks overlapping activities.
-- Existing v5.4.3 data is migrated automatically with Task/Sub Task defaults.
-
-Deploy all files to GitHub root and use Render Clear build cache & deploy. Verify `/api/health` = `5.4.4-task-subtask-milestone`.
+Deploy to the existing Render Node Web Service and verify `/api/health` reports `5.4.6-task-master-dropdown`.
