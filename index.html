@@ -573,6 +573,28 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
   .master-data-grid>.master-card-standard .tbl-wrap,.master-data-grid>.master-card-large .tbl-wrap{max-height:360px}
 }
 
+/* v5.4.12 Event identity labels + Event Type Master */
+.master-expand-btn{margin-left:6px;flex:none}
+.master-expand-btn .expand-ico{font-size:13px;line-height:1}
+.master-expand-backdrop{position:fixed;inset:0;background:rgba(3,18,35,.50);backdrop-filter:blur(2px);z-index:1998;display:none}
+.master-expand-backdrop.show{display:block}
+#master .card.master-expanded{
+  position:fixed!important;inset:20px!important;z-index:1999!important;width:auto!important;height:auto!important;max-width:none!important;min-height:0!important;
+  margin:0!important;padding:18px 20px!important;display:flex!important;flex-direction:column!important;background:#fff!important;
+  border:1px solid #cbd9e8!important;border-radius:14px!important;box-shadow:0 28px 90px rgba(4,22,46,.32)!important;overflow:hidden!important;
+}
+#master .card.master-expanded .section-title{flex:none;min-height:38px;margin-bottom:10px}
+#master .card.master-expanded .tbl-wrap{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:auto!important;border:1px solid var(--line-2);border-radius:8px}
+#master .card.master-expanded>.small:last-child{flex:none;min-height:0!important;margin-top:10px!important}
+#master .card.master-expanded table{font-size:12px}
+#master .card.master-expanded th{position:sticky;top:0;z-index:3;background:#f8fafc}
+#master .card.master-expanded .btn.sm{height:31px;font-size:10.5px}
+body.master-expand-active .topbar,body.master-expand-active .sidebar{filter:saturate(.85)}
+@media(max-width:760px){
+  #master .card.master-expanded{inset:8px!important;padding:12px!important;border-radius:10px!important}
+  #master .card.master-expanded table{font-size:11px}
+}
+
 /* ---------- AI Radar-style Cloud State ---------- */
 .cloud-sync-pill{height:34px;display:inline-flex;align-items:center;gap:7px;padding:0 11px;border:1px solid #dbe3ef;border-radius:999px;background:#f8fafc;color:#475569;font:600 11px/1 inherit;white-space:nowrap;cursor:pointer}
 .cloud-sync-pill:hover{background:#f1f5f9}
@@ -1190,8 +1212,38 @@ function normalizeProjectActivity(m,index=0){
 }
 function activityRef(m){ return String(m?.id||m?.key||""); }
 function activityLabel(m){ return `${m?.task||"Project Execution"} → ${m?.subTask||"Main"} → ${m?.key||""}`; }
+
+// Event Type Master controls the Event Type dropdown used by Create/Edit Plan.
+// Internal project records retain the `type` property for backward compatibility.
+let EVENT_TYPE_MASTER=[
+  {name:"MRC",order:1},
+  {name:"PROJECT",order:2},
+  {name:"MINOR",order:3},
+  {name:"SSPOG",order:4},
+  {name:"NPD",order:5}
+];
+const DEFAULT_EVENT_TYPE_MASTER=EVENT_TYPE_MASTER.map(t=>({...t}));
+function normalizeEventTypeName(v){return String(v||"").trim().replace(/\s+/g," ");}
+function normalizeEventTypes(list){
+  const out=[],seen=new Set();
+  (Array.isArray(list)&&list.length?list:DEFAULT_EVENT_TYPE_MASTER).forEach((raw,i)=>{
+    const name=normalizeEventTypeName(typeof raw==="string"?raw:raw?.name); const k=name.toLowerCase();
+    if(!name||seen.has(k))return; seen.add(k);
+    const ro=Number(typeof raw==="string"?i+1:raw?.order); out.push({name,order:Number.isFinite(ro)&&ro>0?ro:i+1});
+  });
+  out.sort((a,b)=>a.order-b.order||a.name.localeCompare(b.name)); out.forEach((t,i)=>t.order=i+1);
+  return out.length?out:DEFAULT_EVENT_TYPE_MASTER.map(t=>({...t}));
+}
+function eventTypeNames(){return EVENT_TYPE_MASTER.map(t=>t.name);}
+function eventTypeOptions(selected="",blank=false){
+  const sel=normalizeEventTypeName(selected); const rows=[];
+  if(blank)rows.push(`<option value="">Select Event Type</option>`);
+  EVENT_TYPE_MASTER.forEach(t=>rows.push(`<option value="${esc(t.name)}" ${t.name===sel?"selected":""}>${esc(t.name)}</option>`));
+  if(sel&&!EVENT_TYPE_MASTER.some(t=>t.name===sel))rows.push(`<option value="${esc(sel)}" selected>${esc(sel)} (legacy)</option>`);
+  return rows.join("");
+}
+
 const DIVISIONS=["DGF","DGNF","Fresh","HBA","GM"];
-const TYPES=["MRC","PROJECT","MINOR","SSPOG","NPD"];
 const FORMATS=["Hypermarket", "Supermarket", "Mini Supermarket", "CPFM"];
 const DEPTS={DGF:["Ambient Food","Beverage"],DGNF:["HLH","Stationery"],Fresh:["Fruit & Veg","Butchery"],HBA:["Health & Beauty","Personal Care"],GM:["Home","Electrical"]};
 const OWNERS=["Jane Smith","Emily Chen","Arthit P.","Nicha S.","David Park","Suda K.","Mark Lee","Ploy R.","Tanawat J.","Mei Lin"];
@@ -1249,7 +1301,7 @@ function seedProjects(stores){
   const sharedHyper=(byFmt[campaignFormat]||stores).slice(0,5).map(s=>s.id);   // overload these on purpose
   for(let i=0;i<108;i++){
     idn++;
-    const type=TYPES[i%TYPES.length];
+    const type=eventTypeNames()[i%Math.max(1,eventTypeNames().length)]||"PROJECT";
     const division=DIVISIONS[i%DIVISIONS.length];
     const dept=DEPTS[division][i%DEPTS[division].length];
     const owner=OWNERS[i%OWNERS.length];
@@ -1351,7 +1403,7 @@ function cloudHeaders(){
   return h;
 }
 function cloudSnapshot(){
-  return {settings:SETTINGS,tasks:TASK_MASTER,nwts:NWT_MASTER,milestones:MILESTONES,stores,projects};
+  return {settings:SETTINGS,eventTypes:EVENT_TYPE_MASTER,tasks:TASK_MASTER,nwts:NWT_MASTER,milestones:MILESTONES,stores,projects};
 }
 function cloudValidateState(o){
   if(!o||typeof o!=="object") return "State must be an object.";
@@ -1368,6 +1420,7 @@ function loadState(){
     try{
       const o=JSON.parse(raw);
       SETTINGS=Object.assign(SETTINGS,o.settings||{});
+      EVENT_TYPE_MASTER=normalizeEventTypes(o.eventTypes||EVENT_TYPE_MASTER);
       TASK_MASTER=normalizeTasks(o.tasks||TASK_MASTER);
       NWT_MASTER=normalizeNwts(o.nwts||NWT_MASTER);
       MILESTONES=normalizeMilestones(o.milestones||MILESTONES);
@@ -1447,6 +1500,7 @@ function cloudApplyState(state,meta){
   try{
     SETTINGS=Object.assign(SETTINGS,state.settings||{});
     SETTINGS.dataFileName=SETTINGS.dataFileName||"oneplan-state.json"; SETTINGS.syncMode="auto";
+    EVENT_TYPE_MASTER=normalizeEventTypes(state.eventTypes||EVENT_TYPE_MASTER);
     TASK_MASTER=normalizeTasks(state.tasks||TASK_MASTER);
     NWT_MASTER=normalizeNwts(state.nwts||NWT_MASTER);
     MILESTONES=normalizeMilestones(state.milestones||MILESTONES); rebuildMSMap();
@@ -1557,7 +1611,7 @@ function cloudRestoreBeforePull(){
   try{
     const o=JSON.parse(raw); const err=cloudValidateState(o); if(err)throw new Error(err);
     CLOUD_SYNC.applying=true;
-    SETTINGS=Object.assign(SETTINGS,o.settings||{}); TASK_MASTER=normalizeTasks(o.tasks||TASK_MASTER); NWT_MASTER=normalizeNwts(o.nwts||NWT_MASTER); MILESTONES=normalizeMilestones(o.milestones||MILESTONES); rebuildMSMap(); stores=o.stores;projects=o.projects;onePlanRepairData();
+    SETTINGS=Object.assign(SETTINGS,o.settings||{}); EVENT_TYPE_MASTER=normalizeEventTypes(o.eventTypes||EVENT_TYPE_MASTER); TASK_MASTER=normalizeTasks(o.tasks||TASK_MASTER); NWT_MASTER=normalizeNwts(o.nwts||NWT_MASTER); MILESTONES=normalizeMilestones(o.milestones||MILESTONES); rebuildMSMap(); stores=o.stores;projects=o.projects;onePlanRepairData();
     CLOUD_SYNC.applying=false; DEVICE_STORAGE.dirty=true; saveLocalCache(cloudSnapshot()); deviceQueueSave(); renderAll(); cloudUpdateStatus();
   }catch(e){ CLOUD_SYNC.applying=false; alert("Restore failed: "+e.message); }
 }
@@ -1773,6 +1827,7 @@ function deviceApplyState(state,meta={}){
   DEVICE_STORAGE.applying=true;
   try{
     SETTINGS=Object.assign(SETTINGS,state.settings||{});
+    EVENT_TYPE_MASTER=normalizeEventTypes(state.eventTypes||EVENT_TYPE_MASTER);
     SETTINGS.storageProvider="device-folder";
     SETTINGS.dataPath="device-folder";
     SETTINGS.dataFileName=DEVICE_STORAGE.fileName;
@@ -2328,7 +2383,7 @@ function toolbar(opts={}){
   let html=`<div class="toolbar">`;
   if(opts.project!==false){
     html+=multiFilterControl("Division","division",uniq("division"))+multiFilterControl("Department","department",uniq("department"))+
-      multiFilterControl("Type","type",TYPES.length?TYPES:uniq("type"))+
+      multiFilterControl("Event Type","type",eventTypeNames().length?eventTypeNames():uniq("type"))+
       multiFilterControl("Status","status",[{value:"OnTrack",text:"On Track"},{value:"AtRisk",text:"At Risk"},{value:"Delayed",text:"Delayed"},{value:"Completed",text:"Completed"},{value:"Cancelled",text:"Cancelled"}])+
       multiFilterControl("Owner","owner",uniq("owner"))+multiFilterControl("Format","format",FORMATS)+
       multiFilterControl("Key Milestone","milestone",MILESTONES.map(m=>({value:m.key,text:`${m.key} — ${m.full}`})))+
@@ -2958,6 +3013,60 @@ function renderReports(){
 }
 
 /* ---------- 21. MASTER DATA ---------- */
+let MASTER_EXPANDED_KEY="";
+function masterCardKey(card){
+  const title=card?.querySelector(".section-title");
+  return (title?.childNodes?.[0]?.textContent||title?.textContent||"Master").trim().replace(/\s+/g," ");
+}
+function closeMasterExpanded(){
+  const current=document.querySelector("#master .card.master-expanded");
+  if(current) current.classList.remove("master-expanded");
+  document.getElementById("masterExpandBackdrop")?.classList.remove("show");
+  document.body.classList.remove("master-expand-active");
+  MASTER_EXPANDED_KEY="";
+  decorateMasterExpandButtons();
+}
+function toggleMasterCardExpand(btn){
+  const card=btn?.closest(".card"); if(!card)return;
+  if(card.classList.contains("master-expanded")){ closeMasterExpanded(); return; }
+  document.querySelector("#master .card.master-expanded")?.classList.remove("master-expanded");
+  MASTER_EXPANDED_KEY=card.dataset.masterExpandKey||masterCardKey(card);
+  card.classList.add("master-expanded");
+  let backdrop=document.getElementById("masterExpandBackdrop");
+  if(!backdrop){
+    backdrop=document.createElement("div");backdrop.id="masterExpandBackdrop";backdrop.className="master-expand-backdrop";
+    backdrop.addEventListener("click",closeMasterExpanded);document.body.appendChild(backdrop);
+  }
+  backdrop.classList.add("show"); document.body.classList.add("master-expand-active");
+  decorateMasterExpandButtons();
+  card.querySelector(".tbl-wrap")?.scrollTo({top:0,left:0});
+}
+function decorateMasterExpandButtons(){
+  const root=document.getElementById("master"); if(!root)return;
+  root.querySelectorAll(":scope > .card, .master-data-grid > .card").forEach((card,i)=>{
+    const title=card.querySelector(":scope > .section-title"); if(!title)return;
+    const key=masterCardKey(card)||`Master ${i+1}`; card.dataset.masterExpandKey=key;
+    let btn=title.querySelector(".master-expand-btn");
+    if(!btn){
+      btn=document.createElement("button");btn.type="button";btn.className="btn sm ghost master-expand-btn";
+      btn.addEventListener("click",()=>toggleMasterCardExpand(btn));title.appendChild(btn);
+    }
+    const expanded=card.classList.contains("master-expanded");
+    btn.innerHTML=`<span class="expand-ico">${expanded?"↙":"⛶"}</span>${expanded?"Restore":"Expand"}`;
+    btn.title=expanded?"Restore normal Master Data layout":"Temporarily expand this Master Data section";
+  });
+}
+function restoreMasterExpandedCard(){
+  if(!MASTER_EXPANDED_KEY){decorateMasterExpandButtons();return;}
+  const cards=[...document.querySelectorAll("#master > .card, #master .master-data-grid > .card")];
+  const card=cards.find(c=>(c.dataset.masterExpandKey||masterCardKey(c))===MASTER_EXPANDED_KEY);
+  if(!card){MASTER_EXPANDED_KEY="";decorateMasterExpandButtons();return;}
+  card.classList.add("master-expanded");
+  let backdrop=document.getElementById("masterExpandBackdrop");
+  if(!backdrop){backdrop=document.createElement("div");backdrop.id="masterExpandBackdrop";backdrop.className="master-expand-backdrop";backdrop.addEventListener("click",closeMasterExpanded);document.body.appendChild(backdrop);}
+  backdrop.classList.add("show");document.body.classList.add("master-expand-active");decorateMasterExpandButtons();
+}
+
 function renderMaster(){
   const admin=can("master");
   const q=(F.q||"").toLowerCase();
@@ -2983,6 +3092,12 @@ function renderMaster(){
   </div>
 
   <div class="master-data-grid">
+    <div class="card master-card-wide"><div class="section-title">Event Type Master <span class="small">${EVENT_TYPE_MASTER.length} types · source for Event Type dropdown in Create / Edit Plan</span>
+      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openEventTypeModal()">+ Add Event Type</button>`:""}</div>
+      <div class="tbl-wrap" style="max-height:260px"><table><thead><tr><th>Order</th><th>Event Type</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${EVENT_TYPE_MASTER.map((t,i)=>{const used=eventTypeUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveEventTypeMaster('${encodeURIComponent(t.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveEventTypeMaster('${encodeURIComponent(t.name)}',1)" ${i===EVENT_TYPE_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm danger" onclick="deleteEventTypeMaster('${encodeURIComponent(t.name)}')" ${used||EVENT_TYPE_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      </tbody></table></div>
+      <div class="small" style="margin-top:8px">Event Type is controlled by Master Data and feeds the Event Type dropdown. Add or reorder types here. Delete is blocked while an Event Type is used by any existing plan.</div></div>
     <div class="card master-card-standard"><div class="section-title">Task Master <span class="small">${TASK_MASTER.length} tasks · source for Task dropdown in Project / Detail Plan</span>
       ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openTaskModal()">+ Add Task</button>`:""}</div>
       <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Task</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
@@ -3019,7 +3134,40 @@ function renderMaster(){
 }
 
 
-/* ---------- 21a. TASK MASTER CRUD ---------- */
+/* ---------- 21a. EVENT TYPE MASTER CRUD ---------- */
+function eventTypeUsage(name){return projects.filter(p=>normalizeEventTypeName(p.type)===name).length;}
+function openEventTypeModal(){
+  if(!can("master")){alert("Only Admin can edit master data.");return;}
+  document.getElementById("genModalInner").innerHTML=`<div class="modal-head"><h2>Add Event Type</h2><button class="x" onclick="closeModal('genModal')">✕</button></div><div class="modal-body"><div class="form-grid" style="grid-template-columns:1.6fr 1fr"><div class="ff"><label>Event Type <span class="req">*</span></label><input id="eventTypeMasterName" placeholder="e.g. MRC / PROJECT / NPD"></div><div class="ff"><label>Display Order <span class="req">*</span></label><input id="eventTypeMasterOrder" type="number" min="1" max="${EVENT_TYPE_MASTER.length+1}" value="${EVENT_TYPE_MASTER.length+1}"></div></div><div id="eventTypeMasterErr" class="small" style="color:var(--red);margin-top:8px"></div></div><div class="modal-foot"><button class="btn" onclick="closeModal('genModal')">Cancel</button><button class="btn primary" onclick="saveEventTypeMaster()">Add Event Type</button></div>`;
+  document.getElementById("genModal").classList.add("active");
+  setTimeout(()=>document.getElementById("eventTypeMasterName")?.focus(),20);
+}
+function saveEventTypeMaster(){
+  if(!can("master"))return;
+  const name=normalizeEventTypeName(document.getElementById("eventTypeMasterName")?.value);
+  const order=Math.max(1,Number(document.getElementById("eventTypeMasterOrder")?.value||EVENT_TYPE_MASTER.length+1));
+  const err=document.getElementById("eventTypeMasterErr");
+  if(!name){if(err)err.textContent="Event Type is required.";return;}
+  if(EVENT_TYPE_MASTER.some(t=>t.name.toLowerCase()===name.toLowerCase())){if(err)err.textContent="Event Type already exists.";return;}
+  const next=EVENT_TYPE_MASTER.map(t=>({...t})); const insertAt=Math.max(0,Math.min(next.length,order-1));
+  next.splice(insertAt,0,{name,order}); EVENT_TYPE_MASTER=normalizeEventTypes(next);
+  saveState();closeModal("genModal");renderAll();
+}
+function moveEventTypeMaster(encodedName,delta){
+  if(!can("master"))return; const name=decodeURIComponent(encodedName); const from=EVENT_TYPE_MASTER.findIndex(t=>t.name===name);
+  if(from<0)return; const to=from+Number(delta||0); if(to<0||to>=EVENT_TYPE_MASTER.length)return;
+  const next=EVENT_TYPE_MASTER.map(t=>({...t})); [next[from],next[to]]=[next[to],next[from]]; EVENT_TYPE_MASTER=next.map((t,i)=>({name:t.name,order:i+1}));
+  saveState();renderAll();
+}
+function deleteEventTypeMaster(encodedName){
+  if(!can("master"))return; const name=decodeURIComponent(encodedName); const used=eventTypeUsage(name);
+  if(EVENT_TYPE_MASTER.length<=1){alert("Blocked: at least one Event Type must remain in Master Data.");return;}
+  if(used){alert(`Blocked: “${name}” is used by ${used} plan(s). Change those plans to another Event Type before deleting it.`);return;}
+  if(!confirm(`Delete Event Type “${name}” from Master Data?`))return;
+  EVENT_TYPE_MASTER=normalizeEventTypes(EVENT_TYPE_MASTER.filter(t=>t.name!==name));saveState();renderAll();
+}
+
+/* ---------- 21b. TASK MASTER CRUD ---------- */
 function taskProjectUsage(name){return projects.filter(p=>(p.milestones||[]).some(m=>normalizeTaskName(m.task)===name)).length;}
 function openTaskModal(encodedName=""){
   if(!can("master")){alert("Only Admin can edit master data.");return;}
@@ -3371,9 +3519,9 @@ function openPlanModal(id){
     <div class="modal-body">
       <input type="hidden" id="fId" value="${p?p.id:""}">
       <div class="form-grid">
-        <div class="ff"><label>Project Code <span class="req">*</span></label><input id="fCode" value="${p?esc(p.code):""}" placeholder="${SETTINGS.planYear}WK12-MRC-BEVERAGE" readonly><div class="msg">Auto-generated from Live Week + Type + Department</div></div>
-        <div class="ff"><label>Project Name <span class="req">*</span></label><input id="fName" value="${p?esc(p.name):""}" placeholder="${SETTINGS.planYear}WK12-MRC-BEVERAGE" readonly><div class="msg">Auto-generated</div></div>
-        <div class="ff"><label>Type <span class="req">*</span></label><select id="fType" onchange="updateProjectNameFromFields();updateCapPreview()"><option value="" ${!p?"selected":""}>Select Type</option>${TYPES.map(t=>`<option ${p&&p.type===t?"selected":""}>${t}</option>`).join("")}</select><div class="msg">Required</div></div>
+        <div class="ff"><label>Event Code <span class="req">*</span></label><input id="fCode" value="${p?esc(p.code):""}" placeholder="${SETTINGS.planYear}WK12-MRC-BEVERAGE" readonly><div class="msg">Auto-generated from Live Week + Event Type + Department</div></div>
+        <div class="ff"><label>Event Name <span class="req">*</span></label><input id="fName" value="${p?esc(p.name):""}" placeholder="${SETTINGS.planYear}WK12-MRC-BEVERAGE" readonly><div class="msg">Auto-generated</div></div>
+        <div class="ff"><label>Event Type <span class="req">*</span></label><select id="fType" onchange="updateProjectNameFromFields();updateCapPreview()">${eventTypeOptions(p?.type||"",true)}</select><div class="msg">Required · controlled by Event Type Master</div></div>
         <div class="ff"><label>Division <span class="req">*</span></label><select id="fDivision" onchange="syncDept();updateProjectNameFromFields()"><option value="" ${!p?"selected":""}>Select Division</option>${DIVISIONS.map(dv=>`<option ${p&&p.division===dv?"selected":""}>${dv}</option>`).join("")}</select><div class="msg">Required</div></div>
         <div class="ff"><label>Department</label><select id="fDepartment"></select></div>
         <div class="ff"><label>Owner <span class="req">*</span></label><input id="fOwner" value="${p?esc(p.owner):""}" placeholder="Owner name"><div class="msg">Required</div></div>
@@ -3382,7 +3530,7 @@ function openPlanModal(id){
         <div class="ff"><label>Approval</label><select id="fApproval">${["Draft","Pending Review","Approved","Need Revision","Rejected"].map(a=>`<option ${(!p&&a==="Draft")||(p&&p.approval===a)?"selected":""}>${a}</option>`).join("")}</select></div>
         <div class="ff"><label>Planned Start <span class="req">*</span></label><input id="fStart" type="date" value="${p?p.start:""}"><div class="msg">Required</div></div>
         <div class="ff"><label>Planned End <span class="req">*</span></label><input id="fEnd" type="date" value="${p?p.end:""}"><div class="msg">Must be after start</div></div>
-        <div class="ff"><label>&nbsp;</label><div class="small">${p?'Status is derived from activity dates.':'Define Task → Sub Task / Phase → Key Milestone. The first IMP start date drives the Project Code / Live Week.'}</div></div>
+        <div class="ff"><label>&nbsp;</label><div class="small">${p?'Status is derived from activity dates.':'Define Task → Sub Task / Phase → Key Milestone. The first IMP start date drives the Event Code / Live Week.'}</div></div>
       </div>
       <div style="margin-top:14px"><label style="font-size:11px;font-weight:700;color:var(--muted)">APPLIED STORES <span class="req">*</span> <span class="small" id="storeCount"></span></label><div class="store-select-panel" id="storeSelectPanel"></div><div class="store-pick" id="storePick"></div></div>
       <div style="margin-top:16px"><div class="section-title">Task → Sub Task → Key Milestone Schedule <span class="small">Parallel phases and repeated milestone codes are supported.</span></div><div class="ms-form-toolbar"><span class="small">Task is selected from Task Master. Sub Task / Phase remains free form. PIC / Responsible Units are inherited from Key Milestone Master; responsible person names are maintained in Detail Plan.</span><button type="button" class="btn sm primary" onclick="addPlanActivityRow()">+ Add Activity</button></div><div id="msForm" class="plan-activity-list">${renderPlanActivityRowsMarkup()}</div></div>
@@ -3841,8 +3989,8 @@ function exportCapacityCSV(){
   stores.forEach(s=>{const u=storeUtil(s,wk,yr);rows.push([s.no,s.name,s.format,s.zone,s.capacity,u.load.planned,u.util,u.status,"WK"+String(wk).padStart(2,"0")]);});
   download("one-plan-capacity.csv", rows.map(r=>r.map(c=>`"${c}"`).join(",")).join("\n"),"text/csv");
 }
-function exportJSON(){ download(SETTINGS.dataFileName||"one-plan-data.json", JSON.stringify({settings:SETTINGS,tasks:TASK_MASTER,nwts:NWT_MASTER,milestones:MILESTONES,stores,projects},null,2),"application/json"); }
-function resetData(){ if(confirm("Reset all demo data?")){ localStorage.removeItem(LS); SETTINGS.simulatedToday=null; TASK_MASTER=DEFAULT_TASK_MASTER.map(t=>({...t})); NWT_MASTER=DEFAULT_NWT_MASTER.map(n=>({...n})); MILESTONES=DEFAULT_MILESTONES.map(m=>({...m})); rebuildMSMap(); rebuildSeed(); saveState(); renderAll(); } }
+function exportJSON(){ download(SETTINGS.dataFileName||"one-plan-data.json", JSON.stringify({settings:SETTINGS,eventTypes:EVENT_TYPE_MASTER,tasks:TASK_MASTER,nwts:NWT_MASTER,milestones:MILESTONES,stores,projects},null,2),"application/json"); }
+function resetData(){ if(confirm("Reset all demo data?")){ localStorage.removeItem(LS); SETTINGS.simulatedToday=null; EVENT_TYPE_MASTER=DEFAULT_EVENT_TYPE_MASTER.map(t=>({...t})); TASK_MASTER=DEFAULT_TASK_MASTER.map(t=>({...t})); NWT_MASTER=DEFAULT_NWT_MASTER.map(n=>({...n})); MILESTONES=DEFAULT_MILESTONES.map(m=>({...m})); rebuildMSMap(); rebuildSeed(); saveState(); renderAll(); } }
 
 
 
@@ -3861,12 +4009,16 @@ function onePlanRepairData(){
   let changed=false;
   try{
     if(!SETTINGS || typeof SETTINGS!=="object"){ SETTINGS={simulatedToday:null,planYear:new Date().getFullYear(),capacityWarn:80,capacityBlock:100,storageProvider:"device-folder",dataPath:"device-folder",dataFileName:"oneplan-state.json",syncMode:"auto"}; changed=true; }
+    EVENT_TYPE_MASTER = normalizeEventTypes(EVENT_TYPE_MASTER);
     TASK_MASTER = normalizeTasks(TASK_MASTER);
     NWT_MASTER = normalizeNwts(NWT_MASTER);
     MILESTONES = normalizeMilestones(MILESTONES);
     rebuildMSMap();
     if(!Array.isArray(stores) || !stores.length){ stores=seedStores(); changed=true; }
     if(!Array.isArray(projects) || !projects.length){ projects=seedProjects(stores); changed=true; }
+    const knownEventTypes=new Set(EVENT_TYPE_MASTER.map(t=>t.name.toLowerCase()));
+    projects.forEach(p=>{const legacy=normalizeEventTypeName(p?.type);if(legacy&&!knownEventTypes.has(legacy.toLowerCase())){EVENT_TYPE_MASTER.push({name:legacy,order:EVENT_TYPE_MASTER.length+1});knownEventTypes.add(legacy.toLowerCase());changed=true;}});
+    EVENT_TYPE_MASTER=normalizeEventTypes(EVENT_TYPE_MASTER);
     const knownTasks=new Set(TASK_MASTER.map(t=>t.name.toLowerCase()));
     projects.forEach(p=>(p.milestones||[]).forEach(m=>{const legacy=normalizeTaskName(m?.task);if(legacy&&!knownTasks.has(legacy.toLowerCase())){TASK_MASTER.push({name:legacy,order:TASK_MASTER.length+1});knownTasks.add(legacy.toLowerCase());changed=true;}}));
     TASK_MASTER=normalizeTasks(TASK_MASTER);
@@ -3901,7 +4053,7 @@ function onePlanRepairData(){
     if(changed) saveState();
   }catch(e){
     console.error("Repair failed, rebuilding seed data", e);
-    try{ TASK_MASTER=DEFAULT_TASK_MASTER.map(t=>({...t})); NWT_MASTER=DEFAULT_NWT_MASTER.map(n=>({...n})); MILESTONES=DEFAULT_MILESTONES.map(m=>({...m})); rebuildMSMap(); rebuildSeed(); saveState(); }catch(_e){}
+    try{ EVENT_TYPE_MASTER=DEFAULT_EVENT_TYPE_MASTER.map(t=>({...t})); TASK_MASTER=DEFAULT_TASK_MASTER.map(t=>({...t})); NWT_MASTER=DEFAULT_NWT_MASTER.map(n=>({...n})); MILESTONES=DEFAULT_MILESTONES.map(m=>({...m})); rebuildMSMap(); rebuildSeed(); saveState(); }catch(_e){}
   }
 }
 const onePlanBaseLoadState = loadState;
@@ -3918,7 +4070,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDetailMilesto
 
 const RENDER={dashboard:renderDashboard,gantt:renderGantt,detailplan:renderDetailPlan,plans:renderPlans,approval:renderApproval,
   planload:renderPlanLoad,storecapacity:renderStoreCapacity,calendar:renderCalendar,reports:renderReports,master:renderMaster,settings:renderSettings};
-function renderPage(page){ const fn=RENDER[page]; if(fn)document.getElementById(page).innerHTML=fn(); if(page==="dashboard") scheduleImplementationLoadRender(); }
+function renderPage(page){ const fn=RENDER[page]; if(fn)document.getElementById(page).innerHTML=fn(); if(page==="dashboard") scheduleImplementationLoadRender(); if(page==="master") setTimeout(restoreMasterExpandedCard,0); else if(MASTER_EXPANDED_KEY) closeMasterExpanded(); }
 function activePage(){ return document.querySelector(".page.active").id; }
 function updateBadges(){
   const wk=isoWeek(today()),yr=isoWeekYear(today());
@@ -3938,7 +4090,7 @@ document.getElementById("globalSearch").addEventListener("input",e=>{
   clearTimeout(globalSearchTimer);
   globalSearchTimer=setTimeout(()=>{ F.q=value; plansPage=1; storeCapacityPage=1; renderAll(); },180);
 });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){closeModal("planModal");closeModal("genModal");} });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){closeModal("planModal");closeModal("genModal");closeMasterExpanded();} });
 [ "planModal","genModal" ].forEach(id=>document.getElementById(id).addEventListener("click",e=>{ if(e.target.id===id)closeModal(id); }));
 
 async function onePlanStart(){

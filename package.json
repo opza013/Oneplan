@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.10",
+  "version": "5.4.12",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan v5.4.10 Key Milestone multi-PIC responsibility with NWT Master assignments and free-form responsible names in Detail Plan"
+  "description": "OnePlan v5.4.12 renames plan identity fields to Event Code / Event Name / Event Type and adds an Admin-managed Event Type Master while preserving v5.4.11 Master expand view."
 }

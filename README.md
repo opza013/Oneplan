@@ -1,7 +1,15 @@
-# ONE PLAN v5.4.10 — Key Milestone Multi-PIC Responsibility
+# ONE PLAN v5.4.12 — Event Type Master
 
-This version moves NWT responsibility assignment into **Key Milestone Master**. Each Key Milestone can have one or more PIC / Responsible Units selected from NWT Master, with Add/Remove controls.
+Enterprise Range Operation Platform.
 
-In Detail Plan, the responsible units are inherited from the selected Key Milestone and cannot be redefined at activity level. The individual responsible person name for each PIC unit remains free-form per activity. Existing v5.4.9 data is migrated automatically; no storage reset is required.
+## v5.4.12
+- Create/Edit Plan uses **Event Code / Event Name / Event Type** labels.
+- **Master Data → Event Type Master** controls available Event Types.
+- Admin can add, delete, and reorder Event Types.
+- In-use Event Types cannot be deleted.
+- Existing saved data is migrated automatically; no storage reset is required.
+- Includes all v5.4.11 functionality, including expandable Master Data workspaces.
 
-Upload all files to the GitHub repository root and deploy the existing Render Node Web Service. Verify `/api/health` reports `5.4.10-milestone-multi-pic`.
+## Deploy
+Upload all files to the GitHub repository root and redeploy the Render Web Service.
+After deployment, `/api/health` should report `5.4.12-event-type-master`.
