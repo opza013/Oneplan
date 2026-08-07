@@ -618,6 +618,10 @@ body.detail-gantt-expand-active .topbar,body.detail-gantt-expand-active .sidebar
 #master .card.master-expanded th{position:sticky;top:0;z-index:3;background:#f8fafc}
 #master .card.master-expanded .btn.sm{height:31px;font-size:10.5px}
 body.master-expand-active .topbar,body.master-expand-active .sidebar{filter:saturate(.85)}
+/* v5.4.18 Keep Add/Edit/Delete dialogs usable above expanded Master cards */
+body.master-expand-active .modal-bg{z-index:2300}
+body.master-expand-active .modal{position:relative;z-index:2301}
+
 @media(max-width:760px){
   #master .card.master-expanded{inset:8px!important;padding:12px!important;border-radius:10px!important}
   #master .card.master-expanded table{font-size:11px}

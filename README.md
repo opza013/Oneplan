@@ -19,3 +19,6 @@ Health check version: `5.4.15-detail-gantt-expand-zoom`.
 - Adds **− / 100% / +** zoom controls directly inside the Detail Plan Gantt header.
 - Zoom range remains 50%–250%, preserving horizontal center during zoom.
 - Main Gantt Chart is unchanged.
+
+## v5.4.18 Master Expand Modal Fix
+Master Data Add/Edit/Delete dialogs now stay above the expanded Master card overlay.
