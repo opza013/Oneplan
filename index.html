@@ -867,8 +867,28 @@ tbody tr:hover{background:#f8fbff}
   justify-self:stretch;
 }
 
+
+/* v5.4.10 Key Milestone multi-PIC responsibility */
+.milestone-pic-editor{grid-column:1/-1;border:1px solid var(--line);border-radius:12px;background:var(--bg-2);padding:10px 12px}
+.milestone-pic-editor-head{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
+.milestone-pic-list{display:flex;flex-direction:column;gap:7px}
+.milestone-pic-row{display:grid;grid-template-columns:72px minmax(180px,1fr) auto;gap:8px;align-items:center}
+.milestone-pic-row .pic-label{font-size:12px;font-weight:700;color:var(--muted)}
+.milestone-pic-row select{width:100%}
+.pic-unit-chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.pic-unit-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;background:var(--blue-bg);color:#174f9d;border:1px solid #cfe1ff;font-size:11px;font-weight:700}
+.activity-responsibility-box{grid-column:1/-1;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);padding:9px 10px}
+.activity-responsibility-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:12px;font-weight:700}
+.activity-responsibility-list{display:flex;flex-direction:column;gap:7px}
+.activity-responsibility-row{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(180px,1.4fr);gap:8px;align-items:center}
+.activity-responsibility-unit{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12px;font-weight:700}
+.activity-responsibility-row input{width:100%}
+.responsibility-summary{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.responsibility-summary .resp{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:7px;background:var(--bg-2);border:1px solid var(--line);font-size:11px}
+@media(max-width:760px){.milestone-pic-row{grid-template-columns:56px minmax(0,1fr) auto}.activity-responsibility-row{grid-template-columns:1fr}}
+
 </style>
-  <meta name="oneplan-build" content="v5.4.9-nwt-order-fix">
+  <meta name="oneplan-build" content="v5.4.10-milestone-multi-pic">
 </head>
 <body>
 <div class="app">
@@ -930,7 +950,7 @@ tbody tr:hover{background:#f8fbff}
 <script>
 "use strict";
 /* =====================================================================
-   ONE PLAN v5.4.9 — NWT Master ordering fix: editable display order plus move up/down controls.
+   ONE PLAN v5.4.10 — Key Milestone multi-PIC responsibility: NWT units are assigned in Milestone Master; Detail Plan keeps responsible names free form.
    Vanilla JS, single file, no build. Fixes: relational model, derived
    capacity, rule engine, derived status, real time/year, validation,
    RBAC, pagination, shared filters, real charts, calendar nav, exports.
@@ -999,17 +1019,17 @@ function today(){ return SETTINGS.simulatedToday ? parseDate(SETTINGS.simulatedT
 /* ---------- 3. MASTERS ---------- */
 // Single authoritative milestone master (unique names; dependency + SLA fields)
 let MILESTONES = [
-  {key:"KO",   full:"Kick Off",                  offset:0,  dur:2,  dep:null,  warn:1, color:"#7357ff"},
-  {key:"NWT1", full:"NWT1 Submission",           offset:2,  dur:3,  dep:"KO",  warn:1, color:"#00a3ff"},
-  {key:"SPR",  full:"Space Review & Sign-off",   offset:7,  dur:12, dep:"NWT1",warn:3, color:"#0095da"},
-  {key:"RSO",  full:"Range Review & Sign-off",   offset:21, dur:7,  dep:"SPR", warn:2, color:"#16a76a"},
-  {key:"LSO",  full:"Layout Review & Sign-off",  offset:21, dur:8,  dep:"SPR", warn:2, color:"#0aa3a3"},
-  {key:"NWT3", full:"NWT3 Submission",           offset:28, dur:3,  dep:"RSO", warn:1, color:"#00a3ff"},
-  {key:"POG",  full:"POG Drawing & Sign-off",    offset:30, dur:8,  dep:"LSO", warn:3, color:"#e8930c"},
-  {key:"DD",   full:"Floor Plan DD & Sign-off",  offset:39, dur:13, dep:"POG", warn:3, color:"#e23b3b"},
-  {key:"COMM", full:"Store Communication",       offset:53, dur:9,  dep:"DD",  warn:2, color:"#6d54e6"},
-  {key:"ORD",  full:"Ordering",                  offset:64, dur:10, dep:"COMM",warn:2, color:"#d4459e"},
-  {key:"IMP",  full:"Implementation",            offset:76, dur:9,  dep:"ORD", warn:3, color:"#0c7d4d"}
+  {key:"KO",   full:"Kick Off",                  offset:0,  dur:2,  dep:null,  warn:1, color:"#7357ff", pics:["RCPM"]},
+  {key:"NWT1", full:"NWT1 Submission",           offset:2,  dur:3,  dep:"KO",  warn:1, color:"#00a3ff", pics:["RCPM"]},
+  {key:"SPR",  full:"Space Review & Sign-off",   offset:7,  dur:12, dep:"NWT1",warn:3, color:"#0095da", pics:["Merchandising"]},
+  {key:"RSO",  full:"Range Review & Sign-off",   offset:21, dur:7,  dep:"SPR", warn:2, color:"#16a76a", pics:["RCA"]},
+  {key:"LSO",  full:"Layout Review & Sign-off",  offset:21, dur:8,  dep:"SPR", warn:2, color:"#0aa3a3", pics:["Display"]},
+  {key:"NWT3", full:"NWT3 Submission",           offset:28, dur:3,  dep:"RSO", warn:1, color:"#00a3ff", pics:["RCPM"]},
+  {key:"POG",  full:"POG Drawing & Sign-off",    offset:30, dur:8,  dep:"LSO", warn:3, color:"#e8930c", pics:["Display"]},
+  {key:"DD",   full:"Floor Plan DD & Sign-off",  offset:39, dur:13, dep:"POG", warn:3, color:"#e23b3b", pics:["Display"]},
+  {key:"COMM", full:"Store Communication",       offset:53, dur:9,  dep:"DD",  warn:2, color:"#6d54e6", pics:["Store Operations"]},
+  {key:"ORD",  full:"Ordering",                  offset:64, dur:10, dep:"COMM",warn:2, color:"#d4459e", pics:["Merchandising"]},
+  {key:"IMP",  full:"Implementation",            offset:76, dur:9,  dep:"ORD", warn:3, color:"#0c7d4d", pics:["Store Operations"]}
 ];
 MILESTONES=MILESTONES.map((m,i)=>({...m,order:i+1}));
 const DEFAULT_MILESTONES = MILESTONES.map(m=>({...m}));
@@ -1029,7 +1049,8 @@ function normalizeMilestone(m,fallbackOrder=1){
     dur: Math.max(1, Number(m.dur||m.days||1)),
     dep: m.dep ? normalizeMilestoneKey(m.dep) : null,
     warn: Math.max(0, Number(m.warn||0)),
-    color
+    color,
+    pics: [...new Set((Array.isArray(m.pics)?m.pics:Array.isArray(m.picUnits)?m.picUnits:Array.isArray(m.nwts)?m.nwts:[]).map(x=>normalizeNwtName(typeof x==="string"?x:(x?.nwt||x?.name||""))).filter(Boolean))]
   };
 }
 function normalizeMilestones(list){
@@ -1112,7 +1133,7 @@ function nwtMasterOptions(selected="",blank=false){
   if(sel&&!NWT_MASTER.some(n=>n.name===sel))rows.push(`<option value="${esc(sel)}" selected>${esc(sel)} (legacy)</option>`);
   return rows.join("");
 }
-function defaultNwtForMilestone(key){
+function fallbackNwtForMilestone(key){
   let preferred="";
   if(["KO","NWT1","NWT3"].includes(key))preferred="RCPM";
   else if(["RSO"].includes(key))preferred="RCA";
@@ -1120,6 +1141,32 @@ function defaultNwtForMilestone(key){
   else if(["SPR","ORD"].includes(key))preferred="Merchandising";
   else if(["COMM","IMP"].includes(key))preferred="Store Operations";
   return NWT_MASTER.some(n=>n.name===preferred)?preferred:(NWT_MASTER[0]?.name||"");
+}
+function milestonePicUnits(key){
+  const m=MILESTONES.find(x=>x.key===key);
+  const raw=Array.isArray(m?.pics)?m.pics:[];
+  const valid=[],seen=new Set();
+  raw.forEach(v=>{const name=normalizeNwtName(v);const low=name.toLowerCase();if(name&&NWT_MASTER.some(n=>n.name===name)&&!seen.has(low)){seen.add(low);valid.push(name);}});
+  return valid.length?valid:[fallbackNwtForMilestone(key)].filter(Boolean);
+}
+function defaultNwtForMilestone(key){ return milestonePicUnits(key)[0]||fallbackNwtForMilestone(key); }
+function normalizeActivityResponsibilities(m){
+  const masterUnits=milestonePicUnits(m.key);
+  const raw=Array.isArray(m.responsibilities)?m.responsibilities:[];
+  const legacyNwt=normalizeNwtName(m.nwt||m.responsibleUnit||"");
+  const legacyPic=String(m.pic||m.responsibleName||m.activityPic||"").trim();
+  const existing=raw.map(r=>({nwt:normalizeNwtName(r?.nwt||r?.unit||r?.name||""),pic:String(r?.pic||r?.person||r?.responsibleName||"").trim()})).filter(r=>r.nwt);
+  if(!existing.length&&legacyNwt)existing.push({nwt:legacyNwt,pic:legacyPic});
+  m.responsibilities=masterUnits.map(nwt=>{const hit=existing.find(r=>r.nwt===nwt);return {nwt,pic:hit?.pic||""};});
+  m.nwt=m.responsibilities[0]?.nwt||"";
+  m.pic=m.responsibilities[0]?.pic||"";
+  return m.responsibilities;
+}
+function responsibilitySummaryMarkup(m,showEmpty=true){
+  normalizeActivityResponsibilities(m);
+  const rows=m.responsibilities||[];
+  if(!rows.length)return showEmpty?`<span class="small">No PIC unit assigned in Key Milestone Master</span>`:"";
+  return `<span class="responsibility-summary">${rows.map(r=>`<span class="resp"><b>${esc(r.nwt)}</b>${r.pic?` · ${esc(r.pic)}`:" · TBC"}</span>`).join("")}</span>`;
 }
 function newActivityId(){ return "ACT-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7); }
 function validActivityId(id){ return /^[A-Za-z0-9_-]+$/.test(String(id||""))?String(id):newActivityId(); }
@@ -1136,8 +1183,7 @@ function normalizeProjectActivity(m,index=0){
   m.key=normalizeMilestoneKey(m.key||MILESTONES[0]?.key||"KO");
   m.task=String(m.task||defaultTaskForMilestone(m.key)||"Project Execution").trim()||"Project Execution";
   m.subTask=String(m.subTask||m.subtask||m.phase||"Main").trim()||"Main";
-  m.nwt=normalizeNwtName(m.nwt||m.responsibleUnit||defaultNwtForMilestone(m.key));
-  m.pic=String(m.pic||m.responsibleName||m.activityPic||"").trim();
+  normalizeActivityResponsibilities(m);
   m.owner=String(m.owner||"").trim();
   normalizeMilestoneNextSteps(m);
   return m;
@@ -2943,18 +2989,18 @@ function renderMaster(){
       ${TASK_MASTER.map((t,i)=>{const used=taskProjectUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openTaskModal('${encodeURIComponent(t.name)}')">Edit</button><button class="btn sm danger" onclick="deleteTaskMaster('${encodeURIComponent(t.name)}')" ${used||TASK_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
       </tbody></table></div>
       <div class="small" style="margin-top:8px">Task is controlled by Master Data. Sub Task / Phase remains free-form inside each project. Delete is blocked while the Task is used by any project activity.</div></div>
-    <div class="card master-card-standard"><div class="section-title">NWT Master <span class="small">${NWT_MASTER.length} responsible units · source for activity responsibility</span>
+    <div class="card master-card-standard"><div class="section-title">NWT Master <span class="small">${NWT_MASTER.length} responsible units · assign PIC units inside Key Milestone Master</span>
       ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openNwtModal()">+ Add NWT</button>`:""}</div>
       <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>NWT / Responsible Unit</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${NWT_MASTER.map((n,i)=>{const used=nwtActivityUsage(n.name);return `<tr><td><b>${n.order||i+1}</b></td><td><b>${esc(n.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',1)" ${i===NWT_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm" onclick="openNwtModal('${encodeURIComponent(n.name)}')">Edit</button><button class="btn sm danger" onclick="deleteNwtMaster('${encodeURIComponent(n.name)}')" ${used||NWT_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      ${NWT_MASTER.map((n,i)=>{const usage=nwtActivityUsage(n.name);return `<tr><td><b>${n.order||i+1}</b></td><td><b>${esc(n.name)}</b></td><td class="num" title="${usage.masterUses} Key Milestone(s) · ${usage.activityUses} activity reference(s)">${usage.masterUses} MS${usage.activityUses?` · ${usage.activityUses} act`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',1)" ${i===NWT_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm" onclick="openNwtModal('${encodeURIComponent(n.name)}')">Edit</button><button class="btn sm danger" onclick="deleteNwtMaster('${encodeURIComponent(n.name)}')" ${usage.total||NWT_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
       </tbody></table></div>
-      <div class="small" style="margin-top:8px">NWT defines the responsible unit/team for each activity. Individual PIC / responsible person names remain free-form in Detail Plan. Delete is blocked while the NWT is used by any activity.</div></div>
+      <div class="small" style="margin-top:8px">NWT defines the responsible unit/team list. Assign one or more NWT units as PICs in each Key Milestone Master. Individual responsible person names remain free-form per activity in Detail Plan. Delete is blocked while the NWT is assigned to a Key Milestone or activity.</div></div>
     <div class="card master-card-large"><div class="section-title">Key Milestone Master <span class="small">${MILESTONES.length} stages · order controls default Gantt sorting · color is configurable</span>
       ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openMilestoneModal()">+ Add Milestone</button>`:""}</div>
-      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Code</th><th>Color</th><th>Milestone</th><th>Depends</th><th class="num">Offset</th><th class="num">Days</th><th class="num">Warn</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${MILESTONES.map((m,i)=>{const used=milestoneProjectUsage(m.key); const depUsed=milestoneDependencyUsage(m.key); return `<tr><td><b>${m.order||i+1}</b></td><td><b>${m.key}</b></td><td><span class="milestone-master-code"><span class="milestone-master-swatch" style="background:${milestoneColor(m.key)}"></span><code>${esc(m.color||milestoneColor(m.key))}</code></span></td><td>${esc(m.full)}</td><td>${m.dep||"—"}</td><td class="num">${m.offset}</td><td class="num">${m.dur}</td><td class="num">${m.warn}</td><td class="num" title="${used} project(s), ${depUsed} milestone dependency reference(s)">${used}${depUsed?` +${depUsed} dep`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openMilestoneModal('${m.key}')">Edit</button><button class="btn sm danger" onclick="deleteMilestone('${m.key}')" ${used||depUsed||MILESTONES.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Code</th><th>Color</th><th>Milestone</th><th>PIC / NWT</th><th>Depends</th><th class="num">Offset</th><th class="num">Days</th><th class="num">Warn</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${MILESTONES.map((m,i)=>{const used=milestoneProjectUsage(m.key); const depUsed=milestoneDependencyUsage(m.key); return `<tr><td><b>${m.order||i+1}</b></td><td><b>${m.key}</b></td><td><span class="milestone-master-code"><span class="milestone-master-swatch" style="background:${milestoneColor(m.key)}"></span><code>${esc(m.color||milestoneColor(m.key))}</code></span></td><td>${esc(m.full)}</td><td><div class="pic-unit-chips">${milestonePicUnits(m.key).map((x,j)=>`<span class="pic-unit-chip">PIC ${j+1}: ${esc(x)}</span>`).join("")}</div></td><td>${m.dep||"—"}</td><td class="num">${m.offset}</td><td class="num">${m.dur}</td><td class="num">${m.warn}</td><td class="num" title="${used} project(s), ${depUsed} milestone dependency reference(s)">${used}${depUsed?` +${depUsed} dep`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openMilestoneModal('${m.key}')">Edit</button><button class="btn sm danger" onclick="deleteMilestone('${m.key}')" ${used||depUsed||MILESTONES.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
       </tbody></table></div>
-      <div class="small" style="margin-top:8px">Admin can add, edit, reorder and delete milestones. Display Order is the default sequence used by Gantt sorting. Delete is blocked if the code is used in any project timeline or referenced as another milestone dependency. When a milestone is already used by projects, its code is locked; name, Gantt color, offset, duration, dependency and warning days can still be maintained.</div></div>
+      <div class="small" style="margin-top:8px">Admin can add, edit, reorder and delete milestones. Each Key Milestone can contain multiple PIC / NWT responsible units from NWT Master. Display Order is the default sequence used by Gantt sorting. Delete is blocked if the code is used in any project timeline or referenced as another milestone dependency. When a milestone is already used by projects, its code is locked; name, Gantt color, offset, duration, dependency and warning days can still be maintained.</div></div>
     <div class="card master-card-large"><div class="section-title">Capacity Model</div>
       <div class="tbl-wrap"><table><thead><tr><th>Format</th><th class="num">Capacity / store / week (min)</th></tr></thead><tbody>
         ${FORMATS.map(f=>`<tr><td>${f}</td><td class="num">${CAP_BY_FORMAT[f]}</td></tr>`).join("")}
@@ -2997,18 +3043,28 @@ function deleteTaskMaster(encodedName){
 }
 
 /* ---------- 21b. NWT / RESPONSIBLE UNIT MASTER CRUD ---------- */
-function nwtActivityUsage(name){return projects.reduce((n,p)=>n+(p.milestones||[]).filter(m=>normalizeNwtName(m.nwt)===name).length,0);}
+function nwtActivityUsage(name){
+  const masterUses=MILESTONES.reduce((n,m)=>n+(Array.isArray(m.pics)&&m.pics.includes(name)?1:0),0);
+  const activityUses=projects.reduce((n,p)=>n+(p.milestones||[]).filter(m=>{normalizeProjectActivity(m);return (m.responsibilities||[]).some(r=>r.nwt===name);}).length,0);
+  return {masterUses,activityUses,total:masterUses+activityUses};
+}
 function openNwtModal(encodedName=""){
   if(!can("master")){alert("Only Admin can edit master data.");return;}
-  const original=encodedName?decodeURIComponent(encodedName):""; const n=original?NWT_MASTER.find(x=>x.name===original):null; const used=n?nwtActivityUsage(n.name):0;
-  document.getElementById("genModalInner").innerHTML=`<div class="modal-head"><h2>${n?"Edit NWT / Responsible Unit":"Add NWT / Responsible Unit"}</h2><button class="x" onclick="closeModal('genModal')">✕</button></div><div class="modal-body"><div class="form-grid" style="grid-template-columns:1.6fr 1fr"><div class="ff"><label>NWT / Responsible Unit <span class="req">*</span></label><input id="nwtMasterName" value="${n?esc(n.name):""}" placeholder="e.g. RCPM / RCA / Display"></div><div class="ff"><label>Display Order <span class="req">*</span></label><input id="nwtMasterOrder" type="number" min="1" max="${NWT_MASTER.length+(n?0:1)}" value="${n?(n.order||NWT_MASTER.indexOf(n)+1):NWT_MASTER.length+1}"></div></div><div id="nwtMasterErr" class="small" style="color:var(--red);margin-top:8px"></div>${n?`<div class="banner info" style="margin-top:12px;margin-bottom:0">This NWT is assigned to <b>&nbsp;${used}&nbsp;</b> activity(s). Renaming updates linked activities automatically.</div>`:""}</div><div class="modal-foot"><button class="btn" onclick="closeModal('genModal')">Cancel</button><button class="btn primary" onclick="saveNwtMaster('${encodeURIComponent(original)}')">Save</button></div>`;
+  const original=encodedName?decodeURIComponent(encodedName):""; const n=original?NWT_MASTER.find(x=>x.name===original):null; const usage=n?nwtActivityUsage(n.name):{masterUses:0,activityUses:0,total:0}; const used=usage.total;
+  document.getElementById("genModalInner").innerHTML=`<div class="modal-head"><h2>${n?"Edit NWT / Responsible Unit":"Add NWT / Responsible Unit"}</h2><button class="x" onclick="closeModal('genModal')">✕</button></div><div class="modal-body"><div class="form-grid" style="grid-template-columns:1.6fr 1fr"><div class="ff"><label>NWT / Responsible Unit <span class="req">*</span></label><input id="nwtMasterName" value="${n?esc(n.name):""}" placeholder="e.g. RCPM / RCA / Display"></div><div class="ff"><label>Display Order <span class="req">*</span></label><input id="nwtMasterOrder" type="number" min="1" max="${NWT_MASTER.length+(n?0:1)}" value="${n?(n.order||NWT_MASTER.indexOf(n)+1):NWT_MASTER.length+1}"></div></div><div id="nwtMasterErr" class="small" style="color:var(--red);margin-top:8px"></div>${n?`<div class="banner info" style="margin-top:12px;margin-bottom:0">This NWT is referenced by <b>&nbsp;${usage.masterUses}&nbsp;</b> Key Milestone(s) and <b>&nbsp;${usage.activityUses}&nbsp;</b> activity record(s). Renaming updates all linked responsibility assignments automatically.</div>`:""}</div><div class="modal-foot"><button class="btn" onclick="closeModal('genModal')">Cancel</button><button class="btn primary" onclick="saveNwtMaster('${encodeURIComponent(original)}')">Save</button></div>`;
   document.getElementById("genModal").classList.add("active");
 }
 function saveNwtMaster(originalEnc=""){
   if(!can("master"))return; const original=originalEnc?decodeURIComponent(originalEnc):""; const name=normalizeNwtName(document.getElementById("nwtMasterName")?.value); const order=Math.max(1,Number(document.getElementById("nwtMasterOrder")?.value||NWT_MASTER.length+1)); const err=document.getElementById("nwtMasterErr");
   if(!name){if(err)err.textContent="NWT / Responsible Unit is required.";return;}
   if(NWT_MASTER.some(n=>n.name!==original&&n.name.toLowerCase()===name.toLowerCase())){if(err)err.textContent="NWT / Responsible Unit already exists.";return;}
-  if(original&&original!==name){projects.forEach(p=>(p.milestones||[]).forEach(m=>{if(normalizeNwtName(m.nwt)===original)m.nwt=name;}));}
+  if(original&&original!==name){
+    MILESTONES.forEach(m=>{if(Array.isArray(m.pics))m.pics=m.pics.map(x=>x===original?name:x);});
+    projects.forEach(p=>(p.milestones||[]).forEach(m=>{
+      if(Array.isArray(m.responsibilities))m.responsibilities.forEach(r=>{if(normalizeNwtName(r.nwt)===original)r.nwt=name;});
+      if(normalizeNwtName(m.nwt)===original)m.nwt=name;
+    }));
+  }
   const remaining=NWT_MASTER.filter(n=>n.name!==original).map((n,i)=>({name:n.name,order:i+1}));
   const insertAt=Math.max(0,Math.min(remaining.length,order-1));
   remaining.splice(insertAt,0,{name,order:insertAt+1});
@@ -3028,13 +3084,21 @@ function moveNwtMaster(encodedName,direction){
   saveState();renderAll();
 }
 function deleteNwtMaster(encodedName){
-  if(!can("master"))return; const name=decodeURIComponent(encodedName); const used=nwtActivityUsage(name);
+  if(!can("master"))return; const name=decodeURIComponent(encodedName); const usage=nwtActivityUsage(name); const used=usage.total;
   if(NWT_MASTER.length<=1){alert("Blocked: at least one NWT / Responsible Unit must remain in Master Data.");return;}
-  if(used){alert(`Blocked: “${name}” is used by ${used} activity(s). Change those activities to another NWT before deleting it.`);return;}
+  if(used){alert(`Blocked: “${name}” is assigned to ${usage.masterUses} Key Milestone(s) and ${usage.activityUses} activity record(s). Remove it from Key Milestone PIC assignments before deleting it.`);return;}
   if(!confirm(`Delete NWT / Responsible Unit “${name}” from Master Data?`))return; NWT_MASTER=normalizeNwts(NWT_MASTER.filter(n=>n.name!==name)); saveState();renderAll();
 }
 
 /* ---------- 21c. KEY MILESTONE MASTER CRUD ---------- */
+function renderMilestonePicRows(units=[]){
+  const vals=(Array.isArray(units)&&units.length?units:[NWT_MASTER[0]?.name||""]).filter(Boolean);
+  return vals.map((unit,i)=>`<div class="milestone-pic-row" data-pic-index="${i}"><span class="pic-label">PIC ${i+1}</span><select class="ms-pic-unit">${nwtMasterOptions(unit,true)}</select><button type="button" class="btn sm danger" onclick="removeMilestonePicRow(${i})" ${vals.length<=1?"disabled title='At least one PIC is required'":""}>Remove</button></div>`).join("");
+}
+function currentMilestonePicUnits(){return [...document.querySelectorAll("#milestonePicList .ms-pic-unit")].map(x=>normalizeNwtName(x.value)).filter(Boolean);}
+function rerenderMilestonePicRows(units){const box=document.getElementById("milestonePicList");if(box)box.innerHTML=renderMilestonePicRows(units);}
+function addMilestonePicRow(){const vals=currentMilestonePicUnits();const next=NWT_MASTER.find(n=>!vals.includes(n.name))?.name||"";vals.push(next);rerenderMilestonePicRows(vals);}
+function removeMilestonePicRow(index){const vals=currentMilestonePicUnits();if(vals.length<=1)return;vals.splice(index,1);rerenderMilestonePicRows(vals);}
 function milestoneProjectUsage(key){ return projects.filter(p=>(p.milestones||[]).some(m=>m.key===key)).length; }
 function milestoneDependencyUsage(key){ return MILESTONES.filter(m=>m.dep===key).length; }
 function openMilestoneModal(key=""){
@@ -3053,6 +3117,7 @@ function openMilestoneModal(key=""){
         <div class="ff"><label>Gantt Color <span class="req">*</span></label><div style="display:flex;gap:7px;align-items:center"><input id="msColor" type="color" value="${m?esc(m.color||milestoneColor(m.key)):"#2d7ff9"}" style="width:52px;padding:2px" oninput="document.getElementById('msColorHex').value=this.value"><input id="msColorHex" value="${m?esc(m.color||milestoneColor(m.key)):"#2d7ff9"}" maxlength="7" placeholder="#2d7ff9" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('msColor').value=this.value"></div></div>
         <div class="ff"><label>Display Order <span class="req">*</span></label><input id="msOrder" type="number" min="1" max="${MILESTONES.length+(m?0:1)}" value="${m?(m.order||MILESTONES.indexOf(m)+1):MILESTONES.length+1}"><div class="small">Default Gantt ordering follows this sequence.</div></div>
         <div class="ff"><label>Depends On</label><select id="msDep">${depOptions}</select></div>
+        <div class="milestone-pic-editor"><div class="milestone-pic-editor-head"><div><b>PIC / Responsible Units</b><div class="small">Select one or more NWT units responsible for this Key Milestone. Individual names are entered per activity in Detail Plan.</div></div><button type="button" class="btn sm primary" onclick="addMilestonePicRow()">+ Add PIC</button></div><div id="milestonePicList" class="milestone-pic-list">${renderMilestonePicRows(m?.pics?.length?m.pics:[defaultNwtForMilestone(m?.key||MILESTONES[0]?.key||"KO")])}</div></div>
         <div class="ff"><label>Offset from Kick-off (days)</label><input id="msOffset" type="number" min="0" value="${m?m.offset:0}"></div>
         <div class="ff"><label>Duration (days)</label><input id="msDur" type="number" min="1" value="${m?m.dur:1}"></div>
         <div class="ff"><label>At-risk warning (days)</label><input id="msWarn" type="number" min="0" value="${m?m.warn:2}"></div>
@@ -3074,24 +3139,28 @@ function saveMilestone(originalKey=""){
   const offset=Number(document.getElementById("msOffset").value||0);
   const dur=Number(document.getElementById("msDur").value||0);
   const warn=Number(document.getElementById("msWarn").value||0);
+  const pics=currentMilestonePicUnits();
   if(!key||!/^[A-Z0-9_-]{2,12}$/.test(key)){ err.innerText="Milestone code is required and must use 2-12 characters: A-Z, 0-9, _ or -."; return; }
   if(!full){ err.innerText="Milestone name is required."; return; }
   if(!/^#[0-9a-f]{6}$/i.test(color)){ err.innerText="Gantt color must be a 6-digit HEX value, e.g. #2d7ff9."; return; }
   if(dep===key){ err.innerText="A milestone cannot depend on itself."; return; }
+  if(!pics.length){ err.innerText="Add at least one PIC / Responsible Unit from NWT Master."; return; }
+  if(pics.some(x=>!NWT_MASTER.some(n=>n.name===x))){ err.innerText="Every PIC must be selected from NWT Master."; return; }
+  if(new Set(pics.map(x=>x.toLowerCase())).size!==pics.length){ err.innerText="The same NWT unit cannot be added as PIC more than once."; return; }
   if(offset<0||dur<1||warn<0){ err.innerText="Offset must be 0 or more; duration must be at least 1 day; warning days must be 0 or more."; return; }
   if(MILESTONES.some(m=>m.key!==originalKey&&m.key===key)){ err.innerText="Milestone code already exists."; return; }
   const existing=originalKey?MILESTONES.find(m=>m.key===originalKey):null;
   if(existing && originalKey!==key && (milestoneProjectUsage(originalKey)>0 || milestoneDependencyUsage(originalKey)>0)){
     err.innerText="Milestone code cannot be changed while it is used by project timelines or dependencies."; return;
   }
-  const payload={key,full,dep,offset,dur,warn,color,order};
+  const payload={key,full,dep,offset,dur,warn,color,order,pics};
   if(existing){ MILESTONES.forEach(m=>{ if(m.dep===originalKey) m.dep=key; }); }
   const remaining=MILESTONES.filter(m=>m.key!==originalKey);
   const insertAt=Math.max(0,Math.min(remaining.length,order-1));
   remaining.splice(insertAt,0,payload);
   MILESTONES=remaining.map((m,i)=>({...m,order:i+1}));
   MILESTONES=normalizeMilestones(MILESTONES);
-  rebuildMSMap(); saveState(); closeModal("genModal"); renderAll();
+  rebuildMSMap(); projects.forEach(p=>(p.milestones||[]).forEach(m=>{if(m.key===key)normalizeProjectActivity(m);})); saveState(); closeModal("genModal"); renderAll();
 }
 function deleteMilestone(key){
   if(!can("master")){ alert("Only Admin can edit master data."); return; }
@@ -3293,7 +3362,7 @@ function openPlanModal(id){
   if(!can("create")&&!id){ alert("Your role cannot create plans."); return; }
   const p=id?projects.find(x=>x.id===id):null;
   modalStores=p?[...p.storeIds]:[];
-  const source=p&&Array.isArray(p.milestones)&&p.milestones.length?p.milestones:MILESTONES.map(m=>({id:newActivityId(),key:m.key,task:defaultTaskForMilestone(m.key),subTask:"Main",nwt:defaultNwtForMilestone(m.key),pic:"",plannedStart:"",plannedEnd:"",status:"Upcoming",owner:p?.owner||"",nextSteps:[]}));
+  const source=p&&Array.isArray(p.milestones)&&p.milestones.length?p.milestones:MILESTONES.map(m=>({id:newActivityId(),key:m.key,task:defaultTaskForMilestone(m.key),subTask:"Main",responsibilities:milestonePicUnits(m.key).map(nwt=>({nwt,pic:""})),plannedStart:"",plannedEnd:"",status:"Upcoming",owner:p?.owner||"",nextSteps:[]}));
   planActivityDraft=source.map((a,i)=>{const x=(typeof structuredClone==="function")?structuredClone(a):JSON.parse(JSON.stringify(a));normalizeProjectActivity(x,i);return x;});
   const fmt=p?p.format:"";
   modalStoreFilter={format:fmt||"All",zone:"All",q:""};
@@ -3316,7 +3385,7 @@ function openPlanModal(id){
         <div class="ff"><label>&nbsp;</label><div class="small">${p?'Status is derived from activity dates.':'Define Task → Sub Task / Phase → Key Milestone. The first IMP start date drives the Project Code / Live Week.'}</div></div>
       </div>
       <div style="margin-top:14px"><label style="font-size:11px;font-weight:700;color:var(--muted)">APPLIED STORES <span class="req">*</span> <span class="small" id="storeCount"></span></label><div class="store-select-panel" id="storeSelectPanel"></div><div class="store-pick" id="storePick"></div></div>
-      <div style="margin-top:16px"><div class="section-title">Task → Sub Task → Key Milestone Schedule <span class="small">Parallel phases and repeated milestone codes are supported.</span></div><div class="ms-form-toolbar"><span class="small">Task is selected from Task Master. Sub Task / Phase and PIC name remain free form; NWT / Responsible Unit is selected from NWT Master.</span><button type="button" class="btn sm primary" onclick="addPlanActivityRow()">+ Add Activity</button></div><div id="msForm" class="plan-activity-list">${renderPlanActivityRowsMarkup()}</div></div>
+      <div style="margin-top:16px"><div class="section-title">Task → Sub Task → Key Milestone Schedule <span class="small">Parallel phases and repeated milestone codes are supported.</span></div><div class="ms-form-toolbar"><span class="small">Task is selected from Task Master. Sub Task / Phase remains free form. PIC / Responsible Units are inherited from Key Milestone Master; responsible person names are maintained in Detail Plan.</span><button type="button" class="btn sm primary" onclick="addPlanActivityRow()">+ Add Activity</button></div><div id="msForm" class="plan-activity-list">${renderPlanActivityRowsMarkup()}</div></div>
       <div id="capPreview"></div>
     </div>
     <div class="modal-foot"><span class="left" id="formErr"></span><button class="btn" onclick="closeModal('planModal')">Cancel</button><button class="btn ghost" onclick="savePlan(true)">Save Draft</button><button class="btn primary" onclick="savePlan(false)">Submit Plan</button></div>`;
@@ -3333,9 +3402,8 @@ function renderPlanActivityRowsMarkup(){
     return `<div class="plan-activity-row" data-activity-id="${esc(a.id)}">
       <div class="ff"><label><span class="plan-activity-index">${i+1}</span>Task <span class="req">*</span></label><select class="act-task" onchange="syncPlanActivityDraftFromDom()">${taskMasterOptions(a.task||"",true)}</select></div>
       <div class="ff"><label>Sub Task / Phase <span class="req">*</span></label><input class="act-subtask" value="${esc(a.subTask||"")}" placeholder="e.g. Phase 1" oninput="syncPlanActivityDraftFromDom()"></div>
-      <div class="ff"><label>Key Milestone <span class="req">*</span></label><select class="act-key ms-k" onchange="syncPlanActivityDraftFromDom();updateCapPreview();updateProjectNameFromFields()">${masterOptions}</select></div>
-      <div class="ff"><label>NWT / Responsible Unit <span class="req">*</span></label><select class="act-nwt" onchange="syncPlanActivityDraftFromDom()">${nwtMasterOptions(a.nwt||defaultNwtForMilestone(a.key),true)}</select></div>
-      <div class="ff"><label>PIC Name</label><input class="act-pic" value="${esc(a.pic||"")}" placeholder="Free-form name" oninput="syncPlanActivityDraftFromDom()"></div>
+      <div class="ff"><label>Key Milestone <span class="req">*</span></label><select class="act-key ms-k" onchange="syncPlanActivityDraftFromDom();rerenderPlanActivityRows();updateCapPreview();updateProjectNameFromFields()">${masterOptions}</select></div>
+      <div class="activity-responsibility-box"><div class="activity-responsibility-title"><span>PIC / Responsible Units</span><span class="small">from Key Milestone Master</span></div><div class="pic-unit-chips">${milestonePicUnits(a.key).map((x,j)=>`<span class="pic-unit-chip">PIC ${j+1}: ${esc(x)}</span>`).join("")}</div></div>
       <div class="ff"><label>Planned Start <span class="req">*</span></label><input type="date" class="act-start ms-s" value="${a.plannedStart||""}" onchange="syncPlanActivityDraftFromDom();updateCapPreview();updateProjectNameFromFields()"></div>
       <div class="ff"><label>Planned End <span class="req">*</span></label><input type="date" class="act-end ms-e" value="${a.plannedEnd||""}" onchange="syncPlanActivityDraftFromDom();updateCapPreview();updateProjectNameFromFields()"></div>
       <div class="ff"><label>Status</label><select class="act-status ms-st" onchange="syncPlanActivityDraftFromDom()">${states.map(x=>`<option value="${x}" ${a.status===x?"selected":""}>${x}</option>`).join("")}</select></div>
@@ -3345,12 +3413,12 @@ function renderPlanActivityRowsMarkup(){
 }
 function syncPlanActivityDraftFromDom(){
   const rows=[...document.querySelectorAll("#msForm .plan-activity-row")];if(!rows.length)return;
-  planActivityDraft=rows.map(row=>{const id=row.dataset.activityId,old=(planActivityDraft||[]).find(x=>x.id===id)||{};return {...old,id:validActivityId(id),task:row.querySelector(".act-task")?.value.trim()||"",subTask:row.querySelector(".act-subtask")?.value.trim()||"",key:row.querySelector(".act-key")?.value||"",nwt:row.querySelector(".act-nwt")?.value||"",pic:row.querySelector(".act-pic")?.value.trim()||"",plannedStart:row.querySelector(".act-start")?.value||"",plannedEnd:row.querySelector(".act-end")?.value||"",status:row.querySelector(".act-status")?.value||"Upcoming"};});
+  planActivityDraft=rows.map(row=>{const id=row.dataset.activityId,old=(planActivityDraft||[]).find(x=>x.id===id)||{};const key=row.querySelector(".act-key")?.value||"";const next={...old,id:validActivityId(id),task:row.querySelector(".act-task")?.value.trim()||"",subTask:row.querySelector(".act-subtask")?.value.trim()||"",key,plannedStart:row.querySelector(".act-start")?.value||"",plannedEnd:row.querySelector(".act-end")?.value||"",status:row.querySelector(".act-status")?.value||"Upcoming"};normalizeProjectActivity(next);return next;});
 }
 function rerenderPlanActivityRows(){const box=document.getElementById("msForm");if(box)box.innerHTML=renderPlanActivityRowsMarkup();updateCapPreview();updateProjectNameFromFields();}
-function addPlanActivityRow(){syncPlanActivityDraftFromDom();const last=planActivityDraft[planActivityDraft.length-1],key=last?.key||MILESTONES[0]?.key||"KO";planActivityDraft.push({id:newActivityId(),task:last?.task||defaultTaskForMilestone(key),subTask:"",key,nwt:last?.nwt||defaultNwtForMilestone(key),pic:"",plannedStart:last?.plannedEnd||"",plannedEnd:last?.plannedEnd||"",status:"Upcoming",owner:document.getElementById("fOwner")?.value||"",nextSteps:[]});rerenderPlanActivityRows();requestAnimationFrame(()=>document.querySelector("#msForm .plan-activity-row:last-child .act-subtask")?.focus());}
+function addPlanActivityRow(){syncPlanActivityDraftFromDom();const last=planActivityDraft[planActivityDraft.length-1],key=last?.key||MILESTONES[0]?.key||"KO";planActivityDraft.push({id:newActivityId(),task:last?.task||defaultTaskForMilestone(key),subTask:"",key,responsibilities:milestonePicUnits(key).map(nwt=>({nwt,pic:""})),plannedStart:last?.plannedEnd||"",plannedEnd:last?.plannedEnd||"",status:"Upcoming",owner:document.getElementById("fOwner")?.value||"",nextSteps:[]});rerenderPlanActivityRows();requestAnimationFrame(()=>document.querySelector("#msForm .plan-activity-row:last-child .act-subtask")?.focus());}
 function nextPhaseName(name){const m=String(name||"").match(/^(.*?phase\s*)(\d+)$/i);if(m)return m[1]+(Number(m[2])+1);return /^phase/i.test(String(name||""))?"Phase 2":"Phase 2";}
-function duplicatePlanActivityRow(id){syncPlanActivityDraftFromDom();const i=planActivityDraft.findIndex(x=>x.id===id);if(i<0)return;const src=planActivityDraft[i],copy={...src,id:newActivityId(),subTask:nextPhaseName(src.subTask),pic:"",nextSteps:[],nextStep:"",nextStepDue:"",nextStepStatus:"Not Started"};planActivityDraft.splice(i+1,0,copy);rerenderPlanActivityRows();}
+function duplicatePlanActivityRow(id){syncPlanActivityDraftFromDom();const i=planActivityDraft.findIndex(x=>x.id===id);if(i<0)return;const src=planActivityDraft[i],copy={...src,id:newActivityId(),subTask:nextPhaseName(src.subTask),responsibilities:(src.responsibilities||[]).map(r=>({nwt:r.nwt,pic:""})),pic:"",nextSteps:[],nextStep:"",nextStepDue:"",nextStepStatus:"Not Started"};planActivityDraft.splice(i+1,0,copy);rerenderPlanActivityRows();}
 function removePlanActivityRow(id){syncPlanActivityDraftFromDom();if(planActivityDraft.length<=1){alert("A project must contain at least one Task / Sub Task / Key Milestone activity.");return;}planActivityDraft=planActivityDraft.filter(x=>x.id!==id);rerenderPlanActivityRows();}
 function syncDept(){
   const dv=document.getElementById("fDivision").value;
@@ -3475,7 +3543,7 @@ function collectModal(){
   const milestones=(planActivityDraft||[]).map((draft,i)=>{
     const old=existingProject?.milestones?.find(x=>x.id===draft.id)||{};normalizeMilestoneNextSteps(old);
     const preservedSteps=(old.nextSteps||draft.nextSteps||[]).map(step=>({...step})),firstStep=preservedSteps[0]||null;
-    return {id:validActivityId(draft.id),task:String(draft.task||"").trim(),subTask:String(draft.subTask||"").trim(),key:normalizeMilestoneKey(draft.key),nwt:normalizeNwtName(draft.nwt||defaultNwtForMilestone(draft.key)),pic:String(draft.pic||"").trim(),plannedStart:draft.plannedStart||"",plannedEnd:draft.plannedEnd||"",actualStart:old.actualStart||draft.actualStart||null,actualEnd:old.actualEnd||draft.actualEnd||null,status:draft.status||"Upcoming",owner:document.getElementById("fOwner").value||"TBC",nextSteps:preservedSteps,nextStep:firstStep?.text||"",nextStepDue:firstStep?.dueDate||"",nextStepStatus:firstStep?.status||((draft.status||"Upcoming")==="Completed"?"Completed":"Not Started")};
+    const activity={id:validActivityId(draft.id),task:String(draft.task||"").trim(),subTask:String(draft.subTask||"").trim(),key:normalizeMilestoneKey(draft.key),responsibilities:(old.responsibilities||draft.responsibilities||[]).map(r=>({...r})),plannedStart:draft.plannedStart||"",plannedEnd:draft.plannedEnd||"",actualStart:old.actualStart||draft.actualStart||null,actualEnd:old.actualEnd||draft.actualEnd||null,status:draft.status||"Upcoming",owner:document.getElementById("fOwner").value||"TBC",nextSteps:preservedSteps,nextStep:firstStep?.text||"",nextStepDue:firstStep?.dueDate||"",nextStepStatus:firstStep?.status||((draft.status||"Upcoming")==="Completed"?"Completed":"Not Started")};normalizeProjectActivity(activity);return activity;
   });
   const autoCode=buildProjectCodeFromForm(id);document.getElementById("fCode").value=autoCode;document.getElementById("fName").value=autoCode;
   return {id,code:autoCode,name:autoCode,type:document.getElementById("fType").value,division:document.getElementById("fDivision").value,department:document.getElementById("fDepartment").value,owner:document.getElementById("fOwner").value.trim(),format:document.getElementById("fFormat").value,storeFormatScope:[...new Set(modalStores.map(id=>{const s=stores.find(x=>x.id===id);return s?s.format:null;}).filter(Boolean))],minutesPerStore:Number(document.getElementById("fMin").value||0),storeIds:[...modalStores],start:document.getElementById("fStart").value,end:document.getElementById("fEnd").value,approval:document.getElementById("fApproval").value,statusOverride:null,milestones};
@@ -3486,7 +3554,7 @@ function validate(p){
   if(!p.code)errs.fCode=1;else if(projects.some(x=>x.id!==p.id&&x.code===p.code))errs.fCode=1;
   if(!p.name)errs.fName=1;if(!p.type)errs.fType=1;if(!p.division)errs.fDivision=1;if(!p.department)errs.fDepartment=1;if(!p.format)errs.fFormat=1;if(!p.owner)errs.fOwner=1;if(!p.minutesPerStore||p.minutesPerStore<=0)errs.fMin=1;if(!p.start)errs.fStart=1;if(!p.end||!p.start||parseDate(p.end)<=parseDate(p.start))errs.fEnd=1;
   const badMs=[];
-  p.milestones.forEach(m=>{const ref=activityRef(m);if(!m.task||!m.subTask||!m.key||!m.nwt||!m.plannedStart||!m.plannedEnd){badMs.push(ref);return;}if(!TASK_MASTER.some(t=>t.name===m.task)||!NWT_MASTER.some(n=>n.name===m.nwt)){badMs.push(ref);return;}if(parseDate(m.plannedEnd)<parseDate(m.plannedStart))badMs.push(ref);if(p.start&&p.end&&(parseDate(m.plannedStart)<parseDate(p.start)||parseDate(m.plannedEnd)>addDays(parseDate(p.end),1)))badMs.push(ref);});
+  p.milestones.forEach(m=>{const ref=activityRef(m);normalizeProjectActivity(m);if(!m.task||!m.subTask||!m.key||!m.plannedStart||!m.plannedEnd){badMs.push(ref);return;}if(!TASK_MASTER.some(t=>t.name===m.task)||!MILESTONES.some(x=>x.key===m.key)||!(m.responsibilities||[]).length){badMs.push(ref);return;}if(parseDate(m.plannedEnd)<parseDate(m.plannedStart))badMs.push(ref);if(p.start&&p.end&&(parseDate(m.plannedStart)<parseDate(p.start)||parseDate(m.plannedEnd)>addDays(parseDate(p.end),1)))badMs.push(ref);});
   return {errs,badMs,storeErr:p.storeIds.length===0};
 }
 function updateCapPreview(){
@@ -3507,7 +3575,7 @@ function savePlan(draft){
   const v=validate(p);
   // paint errors
   ["fCode","fName","fType","fDivision","fDepartment","fFormat","fMin","fOwner","fStart","fEnd"].forEach(idd=>{const el=document.getElementById(idd)?.closest(".ff");if(el)el.classList.toggle("err",!!v.errs[idd]);});
-  document.querySelectorAll("#msForm .plan-activity-row").forEach(row=>{const bad=v.badMs.includes(row.dataset.activityId);row.querySelectorAll(".ms-s,.ms-e,.act-task,.act-subtask,.act-key,.act-nwt").forEach(el=>el.classList.toggle("bad",bad));});
+  document.querySelectorAll("#msForm .plan-activity-row").forEach(row=>{const bad=v.badMs.includes(row.dataset.activityId);row.querySelectorAll(".ms-s,.ms-e,.act-task,.act-subtask,.act-key").forEach(el=>el.classList.toggle("bad",bad));});
   const errCount=Object.keys(v.errs).length+(v.storeErr?1:0)+(v.badMs.length?1:0);
   if(errCount){ document.getElementById("formErr").innerHTML=`<span style="color:var(--red)">Fix ${errCount} issue(s): ${[Object.keys(v.errs).length?"fields":"",v.storeErr?"no stores selected":"",v.badMs.length?"Task / Sub Task / Milestone hierarchy or activity dates":""].filter(Boolean).join(" · ")}</span>`; return; }
   // rule engine: block overload approval unless override
@@ -3638,7 +3706,7 @@ function saveMilestoneSchedule(projectId,ref){
 function openDetailMilestone(projectId,ref){
   const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const master=MSMAP[m.key]||{},state=msState(m),duration=daysBetween(parseDate(m.plannedStart),parseDate(m.plannedEnd))+1,panel=document.getElementById("detailMilestonePanel"),shade=document.getElementById("detailMilestoneShade");if(!panel||!shade)return;const aref=activityRef(m);
   const scheduleBlock=can("edit")?`<div class="milestone-date-editor"><div class="date-editor-title"><span>Edit Planned Schedule</span><span>${duration} day${duration===1?"":"s"}</span></div><div class="milestone-date-fields"><div class="milestone-date-field"><label for="milestone-start-${p.id}-${aref}">Planned Start</label><input id="milestone-start-${p.id}-${aref}" type="date" value="${m.plannedStart||""}"></div><div class="milestone-date-field"><label for="milestone-end-${p.id}-${aref}">Planned End</label><input id="milestone-end-${p.id}-${aref}" type="date" value="${m.plannedEnd||""}"></div></div><div class="milestone-date-save"><span class="small">Saving updates the Project Gantt and overall project period.</span><button class="btn sm primary" onclick="saveMilestoneSchedule('${p.id}','${aref}')">Save Dates</button></div></div>`:`<div class="milestone-info"><span>Planned Start</span><b>${fmtDisp(parseDate(m.plannedStart))}</b></div><div class="milestone-info"><span>Planned End</span><b>${fmtDisp(parseDate(m.plannedEnd))}</b></div>`;
-  panel.innerHTML=`<div class="milestone-panel-head"><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><div class="milestone-panel-title"><h3>${esc(master.full||m.key)}</h3><div class="small">${esc(p.name)}</div></div><button class="milestone-panel-close" onclick="closeDetailMilestone()" aria-label="Close milestone details">✕</button></div><div class="milestone-panel-body"><div class="milestone-panel-path"><b>${esc(m.task||"Project Execution")}</b><span>→</span><b>${esc(m.subTask||"Main")}</b><span>→</span><span>${esc(m.key)}</span></div><div class="milestone-panel-status"><span class="pill st-${state==="InProgress"?"OnTrack":state}">${statusText(state)}</span><span class="small">${duration} day${duration===1?"":"s"}</span></div><div class="milestone-info-grid"><div class="milestone-info"><span>Owner</span><b>${esc(m.owner||p.owner||"TBC")}</b></div><div class="milestone-info"><span>Dependency</span><b>${master.dep?`${esc(master.dep)} — ${esc(MSMAP[master.dep]?.full||master.dep)}`:"None"}</b></div>${scheduleBlock}<div class="milestone-info"><span>Actual Start</span><b>${m.actualStart?fmtDisp(parseDate(m.actualStart)):"—"}</b></div><div class="milestone-info"><span>Actual End</span><b>${m.actualEnd?fmtDisp(parseDate(m.actualEnd)):"—"}</b></div></div><div class="milestone-panel-section">Next Steps <span class="nextstep-count">${m.nextSteps.length}</span></div>${milestonePanelNextSteps(m)}<div class="milestone-panel-actions"><button class="btn sm" onclick="focusActivityNextSteps('${p.id}','${aref}')">Open Activity Details</button>${can("edit")?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${aref}')">+ Add Next Step</button>`:""}</div></div>`;panel.classList.add("active");shade.classList.add("active");panel.setAttribute("aria-hidden","false");
+  panel.innerHTML=`<div class="milestone-panel-head"><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><div class="milestone-panel-title"><h3>${esc(master.full||m.key)}</h3><div class="small">${esc(p.name)}</div></div><button class="milestone-panel-close" onclick="closeDetailMilestone()" aria-label="Close milestone details">✕</button></div><div class="milestone-panel-body"><div class="milestone-panel-path"><b>${esc(m.task||"Project Execution")}</b><span>→</span><b>${esc(m.subTask||"Main")}</b><span>→</span><span>${esc(m.key)}</span></div><div class="milestone-panel-status"><span class="pill st-${state==="InProgress"?"OnTrack":state}">${statusText(state)}</span><span class="small">${duration} day${duration===1?"":"s"}</span></div><div class="milestone-info-grid"><div class="milestone-info"><span>Owner</span><b>${esc(m.owner||p.owner||"TBC")}</b></div><div class="milestone-info"><span>PIC / Responsible</span><div>${responsibilitySummaryMarkup(m)}</div></div><div class="milestone-info"><span>Dependency</span><b>${master.dep?`${esc(master.dep)} — ${esc(MSMAP[master.dep]?.full||master.dep)}`:"None"}</b></div>${scheduleBlock}<div class="milestone-info"><span>Actual Start</span><b>${m.actualStart?fmtDisp(parseDate(m.actualStart)):"—"}</b></div><div class="milestone-info"><span>Actual End</span><b>${m.actualEnd?fmtDisp(parseDate(m.actualEnd)):"—"}</b></div></div><div class="milestone-panel-section">Next Steps <span class="nextstep-count">${m.nextSteps.length}</span></div>${milestonePanelNextSteps(m)}<div class="milestone-panel-actions"><button class="btn sm" onclick="focusActivityNextSteps('${p.id}','${aref}')">Open Activity Details</button>${can("edit")?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${aref}')">+ Add Next Step</button>`:""}</div></div>`;panel.classList.add("active");shade.classList.add("active");panel.setAttribute("aria-hidden","false");
 }
 function closeDetailMilestone(){document.getElementById("detailMilestonePanel")?.classList.remove("active");document.getElementById("detailMilestoneShade")?.classList.remove("active");document.getElementById("detailMilestonePanel")?.setAttribute("aria-hidden","true");}
 function focusActivityNextSteps(projectId,ref){closeDetailMilestone();const card=document.getElementById(`activity-card-${projectId}-${ref}`);if(!card)return;card.scrollIntoView({behavior:"smooth",block:"center"});card.classList.add("activity-focus");setTimeout(()=>card.classList.remove("activity-focus"),1600);}
@@ -3673,8 +3741,8 @@ function projectStructureGroups(p){
 function structureEncoded(v){return encodeURIComponent(String(v||""));}
 function renderDetailStructure(p,editable){
   const groups=projectStructureGroups(p);
-  const body=groups.map((g,ti)=>`<div class="structure-task"><div class="structure-task-head"><span class="plan-activity-index">T${ti+1}</span><div class="task-name">${esc(g.task)}</div><span class="task-count">${g.subs.length} Sub Task${g.subs.length===1?"":"s"} · ${g.subs.reduce((n,x)=>n+x.items.length,0)} Milestone${g.subs.reduce((n,x)=>n+x.items.length,0)===1?"":"s"}</span>${editable?`<div class="structure-task-actions"><button class="btn sm primary" onclick="openDetailStructureActivityModal('${p.id}','subtask','${structureEncoded(g.task)}','')">+ Sub Task</button><button class="btn sm danger" onclick="deleteDetailTask('${p.id}','${structureEncoded(g.task)}')">Delete Task</button></div>`:""}</div><div class="structure-subtasks">${g.subs.map((sg,si)=>`<div class="structure-subtask"><div class="structure-subtask-head"><span class="plan-activity-index">S${si+1}</span><div class="structure-subtask-name">${esc(sg.subTask)}</div><span class="task-count">${sg.items.length} Key Milestone${sg.items.length===1?"":"s"}</span>${editable?`<div class="structure-subtask-actions"><button class="btn sm primary" onclick="openDetailStructureActivityModal('${p.id}','milestone','${structureEncoded(g.task)}','${structureEncoded(sg.subTask)}')">+ Milestone</button><button class="btn sm danger" onclick="deleteDetailSubTask('${p.id}','${structureEncoded(g.task)}','${structureEncoded(sg.subTask)}')">Delete Sub Task</button></div>`:""}</div><div class="structure-ms-list">${sg.items.map(m=>{const ref=activityRef(m),state=msState(m);return `<div class="structure-ms-row"><div class="structure-ms-main"><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><span class="ms-name">${esc(MSMAP[m.key]?.full||m.key)}</span></div><div class="small"><b>${esc(m.nwt||"—")}</b>${m.pic?` · ${esc(m.pic)}`:""}</div><div class="structure-ms-date">${esc(m.plannedStart||"—")}</div><div class="structure-ms-date">${esc(m.plannedEnd||"—")}</div><div class="structure-ms-status">${pill(state)}</div>${editable?`<div class="structure-ms-actions"><button class="btn sm" onclick="openDetailStructureActivityModal('${p.id}','edit','','','${ref}')">Edit</button><button class="btn sm danger" onclick="deleteDetailMilestoneActivity('${p.id}','${ref}')">Delete</button></div>`:"<div></div>"}</div>`;}).join("")||`<div class="structure-empty">No Key Milestone.</div>`}</div></div>`).join("")}</div></div>`).join("");
-  return `<div class="card detail-structure-card"><div class="structure-toolbar"><div><div class="section-title" style="margin:0">Task → Sub Task → Key Milestone Structure</div><div class="small">Task comes from Task Master; Sub Task / Phase and PIC name are free form; NWT comes from NWT Master; Key Milestone comes from Milestone Master. Gantt updates immediately after save.</div></div>${editable?`<button class="btn sm primary" onclick="openDetailStructureActivityModal('${p.id}','task','','')">+ Add Task</button>`:""}</div><div class="structure-stack">${body||`<div class="empty">No activity structure.</div>`}</div></div>`;
+  const body=groups.map((g,ti)=>`<div class="structure-task"><div class="structure-task-head"><span class="plan-activity-index">T${ti+1}</span><div class="task-name">${esc(g.task)}</div><span class="task-count">${g.subs.length} Sub Task${g.subs.length===1?"":"s"} · ${g.subs.reduce((n,x)=>n+x.items.length,0)} Milestone${g.subs.reduce((n,x)=>n+x.items.length,0)===1?"":"s"}</span>${editable?`<div class="structure-task-actions"><button class="btn sm primary" onclick="openDetailStructureActivityModal('${p.id}','subtask','${structureEncoded(g.task)}','')">+ Sub Task</button><button class="btn sm danger" onclick="deleteDetailTask('${p.id}','${structureEncoded(g.task)}')">Delete Task</button></div>`:""}</div><div class="structure-subtasks">${g.subs.map((sg,si)=>`<div class="structure-subtask"><div class="structure-subtask-head"><span class="plan-activity-index">S${si+1}</span><div class="structure-subtask-name">${esc(sg.subTask)}</div><span class="task-count">${sg.items.length} Key Milestone${sg.items.length===1?"":"s"}</span>${editable?`<div class="structure-subtask-actions"><button class="btn sm primary" onclick="openDetailStructureActivityModal('${p.id}','milestone','${structureEncoded(g.task)}','${structureEncoded(sg.subTask)}')">+ Milestone</button><button class="btn sm danger" onclick="deleteDetailSubTask('${p.id}','${structureEncoded(g.task)}','${structureEncoded(sg.subTask)}')">Delete Sub Task</button></div>`:""}</div><div class="structure-ms-list">${sg.items.map(m=>{const ref=activityRef(m),state=msState(m);return `<div class="structure-ms-row"><div class="structure-ms-main"><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><span class="ms-name">${esc(MSMAP[m.key]?.full||m.key)}</span></div><div class="small">${responsibilitySummaryMarkup(m)}</div><div class="structure-ms-date">${esc(m.plannedStart||"—")}</div><div class="structure-ms-date">${esc(m.plannedEnd||"—")}</div><div class="structure-ms-status">${pill(state)}</div>${editable?`<div class="structure-ms-actions"><button class="btn sm" onclick="openDetailStructureActivityModal('${p.id}','edit','','','${ref}')">Edit</button><button class="btn sm danger" onclick="deleteDetailMilestoneActivity('${p.id}','${ref}')">Delete</button></div>`:"<div></div>"}</div>`;}).join("")||`<div class="structure-empty">No Key Milestone.</div>`}</div></div>`).join("")}</div></div>`).join("");
+  return `<div class="card detail-structure-card"><div class="structure-toolbar"><div><div class="section-title" style="margin:0">Task → Sub Task → Key Milestone Structure</div><div class="small">Task comes from Task Master; Sub Task / Phase is free form; Key Milestone comes from Milestone Master. PIC / NWT units are inherited from Key Milestone Master and responsible person names remain free form per activity. Gantt updates immediately after save.</div></div>${editable?`<button class="btn sm primary" onclick="openDetailStructureActivityModal('${p.id}','task','','')">+ Add Task</button>`:""}</div><div class="structure-stack">${body||`<div class="empty">No activity structure.</div>`}</div></div>`;
 }
 function detailStructureDefaults(p,mode,task,subTask){
   const sameTask=(p.milestones||[]).filter(m=>(m.task||"Project Execution")===task);
@@ -3687,6 +3755,11 @@ function detailStructureDefaults(p,mode,task,subTask){
   return {key,start,end:localISO(addDays(parseDate(start),Math.max(1,Number(master.dur||1))-1))};
 }
 function nextSubTaskName(p,task){const names=(p.milestones||[]).filter(m=>(m.task||"Project Execution")===task).map(m=>m.subTask||"Main");let n=1;while(names.includes(`Phase ${n}`))n++;return `Phase ${n}`;}
+function renderDetailResponsibilityInputs(key,activity=null){
+  const temp=activity?JSON.parse(JSON.stringify(activity)):{key,responsibilities:[]};temp.key=key;normalizeProjectActivity(temp);
+  return (temp.responsibilities||[]).map((r,i)=>`<div class="activity-responsibility-row" data-nwt="${esc(r.nwt)}"><div class="activity-responsibility-unit">PIC ${i+1} · ${esc(r.nwt)}</div><input class="ds-pic-name" data-nwt="${esc(r.nwt)}" value="${esc(r.pic||"")}" placeholder="Responsible person name (free form)"></div>`).join("")||`<div class="small">No PIC unit assigned in Key Milestone Master.</div>`;
+}
+function collectDetailResponsibilities(){return [...document.querySelectorAll("#dsResponsibilityList .ds-pic-name")].map(el=>({nwt:normalizeNwtName(el.dataset.nwt),pic:el.value.trim()})).filter(r=>r.nwt);}
 function openDetailStructureActivityModal(projectId,mode="task",taskEnc="",subEnc="",ref=""){
   if(!can("edit")){alert("Your role cannot edit project structure.");return;}
   const p=projects.find(x=>x.id===projectId);if(!p)return;
@@ -3696,24 +3769,24 @@ function openDetailStructureActivityModal(projectId,mode="task",taskEnc="",subEn
   if(mode==="subtask"&&!subTask)subTask=nextSubTaskName(p,task);
   const d=detailStructureDefaults(p,mode,task,subTask),key=existing?.key||d.key,start=existing?.plannedStart||d.start,end=existing?.plannedEnd||d.end,status=existing?.status||"Upcoming";
   const lockTask=mode==="subtask"||mode==="milestone"; const lockSub=mode==="milestone";
-  document.getElementById("genModalInner").innerHTML=`<div class="modal-head"><h2>${existing?"Edit Activity":mode==="task"?"Add Task":mode==="subtask"?"Add Sub Task":"Add Key Milestone"}</h2><button class="x" onclick="closeModal('genModal')">✕</button></div><div class="modal-body"><div class="form-grid" style="grid-template-columns:1fr 1fr"><div class="ff"><label>Task <span class="req">*</span></label><select id="dsTask" ${lockTask&&!existing?"disabled":""}>${taskMasterOptions(task,true)}</select><div class="small">Select from Task Master.</div></div><div class="ff"><label>Sub Task / Phase <span class="req">*</span></label><input id="dsSubTask" value="${esc(subTask)}" placeholder="e.g. Phase 1" ${lockSub&&!existing?"readonly":""}></div><div class="ff"><label>Key Milestone <span class="req">*</span></label><select id="dsKey" onchange="detailStructureKeyChanged()">${MILESTONES.map(m=>`<option value="${m.key}" ${m.key===key?"selected":""}>${m.order}. ${esc(m.key)} — ${esc(m.full)}</option>`).join("")}</select></div><div class="ff"><label>NWT / Responsible Unit <span class="req">*</span></label><select id="dsNwt">${nwtMasterOptions(existing?.nwt||defaultNwtForMilestone(key),true)}</select><div class="small">Select from NWT Master.</div></div><div class="ff"><label>PIC / Responsible Person</label><input id="dsPic" value="${esc(existing?.pic||"")}" placeholder="Free-form name"></div><div class="ff"><label>Status</label><select id="dsStatus">${["Upcoming","InProgress","Completed","AtRisk","Delayed"].map(x=>`<option value="${x}" ${x===status?"selected":""}>${x}</option>`).join("")}</select></div><div class="ff"><label>Planned Start <span class="req">*</span></label><input id="dsStart" type="date" value="${start||""}"></div><div class="ff"><label>Planned End <span class="req">*</span></label><input id="dsEnd" type="date" value="${end||""}"></div></div><div id="dsErr" class="small" style="color:var(--red);margin-top:8px"></div></div><div class="modal-foot"><button class="btn" onclick="closeModal('genModal')">Cancel</button><button class="btn primary" onclick="saveDetailStructureActivity('${p.id}','${ref}')">${existing?"Save Changes":"Add Activity"}</button></div>`;
+  document.getElementById("genModalInner").innerHTML=`<div class="modal-head"><h2>${existing?"Edit Activity":mode==="task"?"Add Task":mode==="subtask"?"Add Sub Task":"Add Key Milestone"}</h2><button class="x" onclick="closeModal('genModal')">✕</button></div><div class="modal-body"><div class="form-grid" style="grid-template-columns:1fr 1fr"><div class="ff"><label>Task <span class="req">*</span></label><select id="dsTask" ${lockTask&&!existing?"disabled":""}>${taskMasterOptions(task,true)}</select><div class="small">Select from Task Master.</div></div><div class="ff"><label>Sub Task / Phase <span class="req">*</span></label><input id="dsSubTask" value="${esc(subTask)}" placeholder="e.g. Phase 1" ${lockSub&&!existing?"readonly":""}></div><div class="ff"><label>Key Milestone <span class="req">*</span></label><select id="dsKey" onchange="detailStructureKeyChanged()">${MILESTONES.map(m=>`<option value="${m.key}" ${m.key===key?"selected":""}>${m.order}. ${esc(m.key)} — ${esc(m.full)}</option>`).join("")}</select></div><div class="activity-responsibility-box"><div class="activity-responsibility-title"><span>PIC / Responsible Persons</span><span class="small">Units are controlled by Key Milestone Master</span></div><div id="dsResponsibilityList" class="activity-responsibility-list">${renderDetailResponsibilityInputs(key,existing)}</div></div><div class="ff"><label>Status</label><select id="dsStatus">${["Upcoming","InProgress","Completed","AtRisk","Delayed"].map(x=>`<option value="${x}" ${x===status?"selected":""}>${x}</option>`).join("")}</select></div><div class="ff"><label>Planned Start <span class="req">*</span></label><input id="dsStart" type="date" value="${start||""}"></div><div class="ff"><label>Planned End <span class="req">*</span></label><input id="dsEnd" type="date" value="${end||""}"></div></div><div id="dsErr" class="small" style="color:var(--red);margin-top:8px"></div></div><div class="modal-foot"><button class="btn" onclick="closeModal('genModal')">Cancel</button><button class="btn primary" onclick="saveDetailStructureActivity('${p.id}','${ref}')">${existing?"Save Changes":"Add Activity"}</button></div>`;
   document.getElementById("genModal").classList.add("active");
 }
-function detailStructureKeyChanged(){const key=document.getElementById("dsKey")?.value,st=document.getElementById("dsStart")?.value;if(key){const nwt=document.getElementById("dsNwt");if(nwt&&!nwt.value)nwt.value=defaultNwtForMilestone(key);}if(!key||!st)return;const dur=Math.max(1,Number(MSMAP[key]?.dur||1));document.getElementById("dsEnd").value=localISO(addDays(parseDate(st),dur-1));}
+function detailStructureKeyChanged(){const key=document.getElementById("dsKey")?.value,st=document.getElementById("dsStart")?.value;if(key){const box=document.getElementById("dsResponsibilityList");if(box)box.innerHTML=renderDetailResponsibilityInputs(key,null);}if(!key||!st)return;const dur=Math.max(1,Number(MSMAP[key]?.dur||1));document.getElementById("dsEnd").value=localISO(addDays(parseDate(st),dur-1));}
 function saveDetailStructureActivity(projectId,ref=""){
   if(!can("edit"))return;const p=projects.find(x=>x.id===projectId);if(!p)return;
-  const task=document.getElementById("dsTask")?.value.trim()||"",subTask=document.getElementById("dsSubTask")?.value.trim()||"",key=document.getElementById("dsKey")?.value||"",nwt=document.getElementById("dsNwt")?.value||"",pic=document.getElementById("dsPic")?.value.trim()||"",start=document.getElementById("dsStart")?.value||"",end=document.getElementById("dsEnd")?.value||"",status=document.getElementById("dsStatus")?.value||"Upcoming",err=document.getElementById("dsErr");
-  if(!task||!subTask||!key||!nwt||!start||!end){if(err)err.textContent="Task, Sub Task, Key Milestone, NWT, Start and End are required.";return;}if(!TASK_MASTER.some(t=>t.name===task)){if(err)err.textContent="Select a Task from Master Data.";return;}if(!NWT_MASTER.some(n=>n.name===nwt)){if(err)err.textContent="Select an NWT / Responsible Unit from Master Data.";return;}if(parseDate(end)<parseDate(start)){if(err)err.textContent="Planned End cannot be earlier than Planned Start.";return;}
+  const task=document.getElementById("dsTask")?.value.trim()||"",subTask=document.getElementById("dsSubTask")?.value.trim()||"",key=document.getElementById("dsKey")?.value||"",responsibilities=collectDetailResponsibilities(),start=document.getElementById("dsStart")?.value||"",end=document.getElementById("dsEnd")?.value||"",status=document.getElementById("dsStatus")?.value||"Upcoming",err=document.getElementById("dsErr");
+  if(!task||!subTask||!key||!start||!end){if(err)err.textContent="Task, Sub Task, Key Milestone, Start and End are required.";return;}if(!TASK_MASTER.some(t=>t.name===task)){if(err)err.textContent="Select a Task from Master Data.";return;}if(!responsibilities.length){if(err)err.textContent="This Key Milestone must have at least one PIC / NWT unit in Master Data.";return;}if(parseDate(end)<parseDate(start)){if(err)err.textContent="Planned End cannot be earlier than Planned Start.";return;}
   let m=ref?(p.milestones||[]).find(x=>activityRef(x)===ref):null;
-  if(m){const before=activityLabel(m);Object.assign(m,{task,subTask,key,nwt,pic,plannedStart:start,plannedEnd:end,status,owner:m.owner||p.owner});normalizeProjectActivity(m);logHist(p,"Updated activity structure",`${before} → ${activityLabel(m)}`);}
-  else {m={id:newActivityId(),task,subTask,key,nwt,pic,plannedStart:start,plannedEnd:end,status,owner:p.owner,nextSteps:[]};normalizeProjectActivity(m);p.milestones=p.milestones||[];p.milestones.push(m);logHist(p,"Added activity structure",activityLabel(m));}
+  if(m){const before=activityLabel(m);Object.assign(m,{task,subTask,key,responsibilities,plannedStart:start,plannedEnd:end,status,owner:m.owner||p.owner});normalizeProjectActivity(m);logHist(p,"Updated activity structure",`${before} → ${activityLabel(m)}`);}
+  else {m={id:newActivityId(),task,subTask,key,responsibilities,plannedStart:start,plannedEnd:end,status,owner:p.owner,nextSteps:[]};normalizeProjectActivity(m);p.milestones=p.milestones||[];p.milestones.push(m);logHist(p,"Added activity structure",activityLabel(m));}
   syncProjectPlannedRange(p);saveState();closeModal("genModal");renderPage("detailplan");updateBadges();
 }
 function canDeleteStructureCount(p,count){if((p.milestones||[]).length-count<1){alert("A project must keep at least one Task → Sub Task → Key Milestone activity.");return false;}return true;}
 function deleteDetailMilestoneActivity(projectId,ref){if(!can("edit"))return;const p=projects.find(x=>x.id===projectId);if(!p)return;const m=(p.milestones||[]).find(x=>activityRef(x)===ref);if(!m)return;if(!canDeleteStructureCount(p,1))return;if(!confirm(`Delete ${activityLabel(m)}?\n\nIts Next Steps will also be removed.`))return;p.milestones=p.milestones.filter(x=>activityRef(x)!==ref);syncProjectPlannedRange(p);logHist(p,"Deleted key milestone activity",activityLabel(m));saveState();renderPage("detailplan");updateBadges();}
 function deleteDetailSubTask(projectId,taskEnc,subEnc){if(!can("edit"))return;const p=projects.find(x=>x.id===projectId);if(!p)return;const task=decodeURIComponent(taskEnc),sub=decodeURIComponent(subEnc),items=(p.milestones||[]).filter(m=>(m.task||"Project Execution")===task&&(m.subTask||"Main")===sub);if(!items.length)return;if(!canDeleteStructureCount(p,items.length))return;if(!confirm(`Delete Sub Task "${sub}" under "${task}"?\n\n${items.length} Key Milestone activit${items.length===1?"y":"ies"} and their Next Steps will be removed.`))return;const refs=new Set(items.map(activityRef));p.milestones=p.milestones.filter(m=>!refs.has(activityRef(m)));syncProjectPlannedRange(p);logHist(p,"Deleted sub task",`${task} → ${sub} · ${items.length} milestone(s)`);saveState();renderPage("detailplan");updateBadges();}
 function deleteDetailTask(projectId,taskEnc){if(!can("edit"))return;const p=projects.find(x=>x.id===projectId);if(!p)return;const task=decodeURIComponent(taskEnc),items=(p.milestones||[]).filter(m=>(m.task||"Project Execution")===task);if(!items.length)return;if(!canDeleteStructureCount(p,items.length))return;if(!confirm(`Delete Task "${task}"?\n\n${items.length} Key Milestone activit${items.length===1?"y":"ies"}, all Sub Tasks and Next Steps will be removed.`))return;const refs=new Set(items.map(activityRef));p.milestones=p.milestones.filter(m=>!refs.has(activityRef(m)));syncProjectPlannedRange(p);logHist(p,"Deleted task",`${task} · ${items.length} milestone(s)`);saveState();renderPage("detailplan");updateBadges();}
-function renderActivityNextStepCard(p,m,editable){normalizeProjectActivity(m);const activityState=msState(m),steps=m.nextSteps||[],ref=activityRef(m),stack=steps.length?steps.map((step,i)=>renderNextStepItem(p,m,step,i,editable)).join(""):`<div class="nextstep-empty">No next step recorded.${editable?' Click <b>+ Add Next Step</b> to create the first action.':''}</div>`;return `<div class="activity-nextstep-card" id="activity-card-${p.id}-${ref}"><div class="activity-nextstep-head"><div class="activity-main"><div><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><b>${esc(MSMAP[m.key]?.full||m.key)}</b> <span class="nextstep-count">${steps.length}</span></div><div class="task-path"><b>${esc(m.task||"Project Execution")}</b><span>→</span><b>${esc(m.subTask||"Main")}</b></div><div class="small">NWT: <b>${esc(m.nwt||"—")}</b> · PIC: <b>${esc(m.pic||"—")}</b> · Project Owner: ${esc(m.owner||p.owner)} · Planned ${m.plannedStart} → ${m.plannedEnd}</div></div><div class="activity-meta"><span class="pill st-${activityState==="InProgress"?"OnTrack":activityState}">${statusText(activityState)}</span>${editable?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${ref}')">+ Add Next Step</button>`:""}</div></div><div class="nextstep-stack">${stack}</div></div>`;}
+function renderActivityNextStepCard(p,m,editable){normalizeProjectActivity(m);const activityState=msState(m),steps=m.nextSteps||[],ref=activityRef(m),stack=steps.length?steps.map((step,i)=>renderNextStepItem(p,m,step,i,editable)).join(""):`<div class="nextstep-empty">No next step recorded.${editable?' Click <b>+ Add Next Step</b> to create the first action.':''}</div>`;return `<div class="activity-nextstep-card" id="activity-card-${p.id}-${ref}"><div class="activity-nextstep-head"><div class="activity-main"><div><span class="activity-code" style="background:${milestoneColor(m.key)}">${esc(m.key)}</span><b>${esc(MSMAP[m.key]?.full||m.key)}</b> <span class="nextstep-count">${steps.length}</span></div><div class="task-path"><b>${esc(m.task||"Project Execution")}</b><span>→</span><b>${esc(m.subTask||"Main")}</b></div><div class="small">PIC: ${responsibilitySummaryMarkup(m)} · Project Owner: ${esc(m.owner||p.owner)} · Planned ${m.plannedStart} → ${m.plannedEnd}</div></div><div class="activity-meta"><span class="pill st-${activityState==="InProgress"?"OnTrack":activityState}">${statusText(activityState)}</span>${editable?`<button class="btn sm primary" onclick="addActivityNextStep('${p.id}','${ref}')">+ Add Next Step</button>`:""}</div></div><div class="nextstep-stack">${stack}</div></div>`;}
 function renderDetailPlan(){
   const list=detailProjectList();
   if(!list.length) return `<div class="empty">No projects available.</div>`;
@@ -3798,8 +3871,16 @@ function onePlanRepairData(){
     projects.forEach(p=>(p.milestones||[]).forEach(m=>{const legacy=normalizeTaskName(m?.task);if(legacy&&!knownTasks.has(legacy.toLowerCase())){TASK_MASTER.push({name:legacy,order:TASK_MASTER.length+1});knownTasks.add(legacy.toLowerCase());changed=true;}}));
     TASK_MASTER=normalizeTasks(TASK_MASTER);
     const knownNwts=new Set(NWT_MASTER.map(n=>n.name.toLowerCase()));
-    projects.forEach(p=>(p.milestones||[]).forEach(m=>{const legacy=normalizeNwtName(m?.nwt||m?.responsibleUnit);if(legacy&&!knownNwts.has(legacy.toLowerCase())){NWT_MASTER.push({name:legacy,order:NWT_MASTER.length+1});knownNwts.add(legacy.toLowerCase());changed=true;}}));
+    projects.forEach(p=>(p.milestones||[]).forEach(m=>{const vals=[normalizeNwtName(m?.nwt||m?.responsibleUnit),...(Array.isArray(m?.responsibilities)?m.responsibilities.map(r=>normalizeNwtName(r?.nwt)):[])].filter(Boolean);vals.forEach(legacy=>{if(!knownNwts.has(legacy.toLowerCase())){NWT_MASTER.push({name:legacy,order:NWT_MASTER.length+1});knownNwts.add(legacy.toLowerCase());changed=true;}});}));
     NWT_MASTER=normalizeNwts(NWT_MASTER);
+    MILESTONES.forEach(ms=>{
+      let units=(Array.isArray(ms.pics)?ms.pics:[]).map(normalizeNwtName).filter(x=>NWT_MASTER.some(n=>n.name===x));
+      if(!units.length){
+        const legacy=[];projects.forEach(p=>(p.milestones||[]).forEach(a=>{if(a?.key===ms.key){const n=normalizeNwtName(a.nwt||a.responsibleUnit);if(n&&!legacy.includes(n))legacy.push(n);}}));
+        units=legacy.length?legacy:[fallbackNwtForMilestone(ms.key)].filter(Boolean);ms.pics=units;changed=true;
+      }
+    });
+    MILESTONES=normalizeMilestones(MILESTONES);rebuildMSMap();
     projects.forEach(p=>{
       if(!Array.isArray(p.storeIds)) { p.storeIds=[]; changed=true; }
       if(!Array.isArray(p.milestones) || !p.milestones.length){
@@ -3809,9 +3890,9 @@ function onePlanRepairData(){
       }
       p.milestones=p.milestones.filter(m=>m&&m.key);
       p.milestones.forEach((m,mi)=>{
-        const before=JSON.stringify({id:m.id,task:m.task,subTask:m.subTask,nwt:m.nwt,pic:m.pic,nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
+        const before=JSON.stringify({id:m.id,task:m.task,subTask:m.subTask,responsibilities:m.responsibilities,nwt:m.nwt,pic:m.pic,nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
         normalizeProjectActivity(m,mi);if(!m.owner)m.owner=p.owner||"TBC";
-        const after=JSON.stringify({id:m.id,task:m.task,subTask:m.subTask,nwt:m.nwt,pic:m.pic,nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
+        const after=JSON.stringify({id:m.id,task:m.task,subTask:m.subTask,responsibilities:m.responsibilities,nwt:m.nwt,pic:m.pic,nextSteps:m.nextSteps,nextStep:m.nextStep,nextStepDue:m.nextStepDue,nextStepStatus:m.nextStepStatus});
         if(before!==after)changed=true;
       });
       if(!p.minutesPerStore) p.minutesPerStore=LOAD_BY_TYPE[p.type]||120;
