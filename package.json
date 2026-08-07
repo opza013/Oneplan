@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.6",
+  "version": "5.4.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan v5.4.6 Task Master with dropdown Task selection; Sub Task remains free form"
+  "description": "OnePlan v5.4.7 NWT Master for responsible units; PIC name remains free form per activity"
 }

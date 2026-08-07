@@ -345,7 +345,7 @@ async function handler(req, res) {
     return sendJson(res, 200, {
       ok: true,
       service: "oneplan-range-operation-platform",
-      version: "5.4.6-task-master-dropdown",
+      version: "5.4.7-nwt-master-responsibility",
       indexFile: "index.html",
       storageMode: STORAGE.mode,
       time: new Date().toISOString()
@@ -353,7 +353,7 @@ async function handler(req, res) {
   }
 
   if (url.pathname === "/api/version" && req.method === "GET") {
-    return sendJson(res, 200, { version: "5.4.6-task-master-dropdown" });
+    return sendJson(res, 200, { version: "5.4.7-nwt-master-responsibility" });
   }
 
   if (url.pathname.startsWith("/api/")) {
@@ -469,7 +469,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`OnePlan v5.4.6-task-master-dropdown running on 0.0.0.0:${PORT}`);
+  console.log(`OnePlan v5.4.7-nwt-master-responsibility running on 0.0.0.0:${PORT}`);
   console.log(`Serving ${INDEX_FILE}`);
   console.log(`Storage mode: ${STORAGE.mode}`);
   console.log(`Storage directory: ${STORAGE.directory}`);

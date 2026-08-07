@@ -1,13 +1,12 @@
-# ONE PLAN v5.4.6 — Task Master Dropdown
+# ONE PLAN v5.4.7 — NWT Master & Activity Responsibility
 
-Enterprise Range Operation Platform.
+This build extends v5.4.6 with an NWT / Responsible Unit master.
 
-## Update
-- **Master Data → Task Master**: Admin can add, edit, reorder and delete Task values.
-- **Task** is now selected from a Master Data dropdown in Project Schedule and Detail Plan.
-- **Sub Task / Phase remains free form** for project-specific phases such as Phase 1 / 2 / 3.
-- Task deletion is blocked while in use; renaming updates linked project activities.
-- Existing Task values are preserved and auto-migrated into Task Master.
-- Key Milestone colors/order, Gantt sorting and Task → Sub Task → Key Milestone structure remain available.
+## New
+- Master Data → NWT Master: Admin can add/edit/reorder/delete responsible units.
+- Detail Plan activity: select NWT from Master and type PIC / Responsible Person as free-form text.
+- Project activity editor uses the same model.
+- Existing activity data is migrated automatically.
 
-Deploy to the existing Render Node Web Service and verify `/api/health` reports `5.4.6-task-master-dropdown`.
+## Deploy
+Upload all files to the GitHub repository root and deploy the existing Render Node Web Service. Verify `/api/health` reports `5.4.7-nwt-master-responsibility`.

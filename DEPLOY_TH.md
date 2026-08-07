@@ -1,4 +1,6 @@
-# วิธี Deploy ONE PLAN v5.4.4 บน Render
+# ONE PLAN v5.4.7 — Deploy
+
+เวอร์ชันนี้เพิ่ม NWT Master และ PIC แบบ Free form ต่อ Activity
 
 1. สำรอง `oneplan-state.json` หรือ Export JSON ก่อน Deploy หากมีข้อมูลใช้งานจริง
 2. แตก ZIP และอัปโหลดไฟล์ทั้งหมดไว้ที่ GitHub Repository Root โดยตรง
