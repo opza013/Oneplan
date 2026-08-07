@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.15",
+  "version": "5.4.16",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan v5.4.15 adds an expandable Detail Plan Gantt view and in-chart zoom controls while preserving the v5.4.14 milestone readability improvements."
+  "description": "OnePlan v5.4.16 extends Detail Plan Gantt zoom down to 25% and adds gray diagonal weekend hatching in Day view."
 }
