@@ -601,20 +601,6 @@ body.detail-gantt-expand-active .topbar,body.detail-gantt-expand-active .sidebar
   .detail-gantt-actions{width:100%;justify-content:flex-start}
   .detail-gantt-expand-btn{min-width:42px}
 }
-/* v5.4.16 Detail Plan Gantt 25% zoom + weekend hatch in Day view */
-.detail-gantt-day .gcol.wknd{
-  background:repeating-linear-gradient(135deg,#f8fafc 0 6px,#cbd5e1 6px 7px,#f8fafc 7px 12px);
-  color:#64748b;
-}
-.detail-gantt .gtl{overflow:hidden}
-.detail-weekend-grid{position:absolute;inset:0;pointer-events:none;z-index:0}
-.detail-weekend-band{
-  position:absolute;top:0;bottom:0;
-  background:repeating-linear-gradient(135deg,rgba(148,163,184,.11) 0 6px,rgba(100,116,139,.28) 6px 7px,rgba(148,163,184,.11) 7px 12px);
-  border-left:1px solid rgba(148,163,184,.24);
-  border-right:1px solid rgba(148,163,184,.18);
-}
-.detail-gantt .gbarwrap{position:relative;z-index:1}
 /* v5.4.13 Event identity + Master ordered layout + X close */
 .master-expand-btn{margin-left:6px;flex:none}
 .master-expand-btn .expand-ico{font-size:13px;line-height:1}
@@ -2151,9 +2137,6 @@ let F={ division:[], department:[], type:[], status:[], owner:[],
         format:[], zone:[], storeNo:[], capacityStatus:[], q:"" };
 let viewMode=localStorage.getItem("onePlanV2View")||"week";
 let ganttZoom=Number(localStorage.getItem("onePlanV2Zoom"))||1;     // timeline zoom multiplier
-let detailGanttZoom=Number(localStorage.getItem("onePlanDetailGanttZoom"))||1; // Detail Plan Gantt only
-if(!Number.isFinite(detailGanttZoom)) detailGanttZoom=1;
-detailGanttZoom=Math.max(0.25,Math.min(2.5,detailGanttZoom));
 let trendSpan=Number(localStorage.getItem("onePlanV2Trend"))||10;   // capacity-trend visible weeks
 let workloadPeriod=localStorage.getItem("onePlanWorkloadPeriod")||"next";
 if(!["previous","current","next"].includes(workloadPeriod)) workloadPeriod="next";
@@ -2303,7 +2286,7 @@ const NAV=[
   ["dashboard","⌂","Dashboard","Plan Control"],
   ["gantt","▦","Gantt Chart","Plan Control"],
   ["detailplan","▤","Detail Plan","Plan Control"],
-  ["plans","▤","Project Plan","Plan Control"],
+  ["plans","▤","Project List","Plan Control"],
   ["approval","✓","Approval","Plan Control"],
   ["planload","◴","Plan Load","Execution"],
   ["storecapacity","▥","Store Capacity","Execution"],
@@ -2470,21 +2453,6 @@ function zoomGantt(d){
   renderPage(page); updateBadges();
   requestAnimationFrame(()=>{
     const sc=document.querySelector(".page.active .gantt-scroll");
-    if(sc) sc.scrollLeft=Math.max(0,centerRatio*sc.scrollWidth-sc.clientWidth/2);
-  });
-}
-function detailColW(){ return Math.max(12,Math.round((viewMode==="day"?46:viewMode==="week"?120:200)*detailGanttZoom)); }
-function detailPxPerDay(){ const w=detailColW(); return viewMode==="day"?w:viewMode==="week"?w/7:w/30.4; }
-function detailOffX(date,min){ return (startOfDay(date)-startOfDay(min))/86400000*detailPxPerDay(); }
-function zoomDetailGantt(d){
-  const oldSc=document.querySelector("#detailGanttShell .gantt-scroll");
-  const centerRatio=oldSc&&oldSc.scrollWidth?((oldSc.scrollLeft+oldSc.clientWidth/2)/oldSc.scrollWidth):0.5;
-  if(d===0) detailGanttZoom=1;
-  else detailGanttZoom=Math.max(0.25,Math.min(2.5,Math.round((detailGanttZoom+d)*100)/100));
-  localStorage.setItem("onePlanDetailGanttZoom",detailGanttZoom);
-  renderPage("detailplan"); updateBadges();
-  requestAnimationFrame(()=>{
-    const sc=document.querySelector("#detailGanttShell .gantt-scroll");
     if(sc) sc.scrollLeft=Math.max(0,centerRatio*sc.scrollWidth-sc.clientWidth/2);
   });
 }
@@ -2780,7 +2748,7 @@ function kpiCard(label,num,icon,color,page,statusFilter,sub="Live data"){
     <div><div class="label">${label}</div><div class="num">${num}</div><div class="sub">${esc(sub)}</div></div></div>`;
 }
 
-/* ---------- 15. PROJECT PLAN LIST (sort + paginate) ---------- */
+/* ---------- 15. PROJECT LIST (sort + paginate) ---------- */
 function renderPlans(){
   let list=filteredProjects();
   const cols=[["code","Project"],["type","Type"],["division","Division"],["owner","Owner"],["format","Format"],["stores","Stores"],["progress","Progress"],["status","Status"],["approval","Approval"]];
@@ -2791,7 +2759,7 @@ function renderPlans(){
   const slice=list.slice((plansPage-1)*per, plansPage*per);
   const th=cols.map(c=>`<th class="sortable" onclick="sortPlans('${c[0]}')">${c[1]}${plansSort.col===c[0]?(plansSort.dir>0?" ▲":" ▼"):""}</th>`).join("");
   return `${toolbar({view:false})}
-  <div class="card"><div class="section-title">Project Plan List <span class="small">${list.length} result(s)</span>
+  <div class="card"><div class="section-title">Project List <span class="small">${list.length} result(s)</span>
     <div style="margin-left:auto;display:flex;gap:8px">
       <button class="btn sm" onclick="exportCSV()">Export CSV</button>
       ${can("create")?`<button class="btn sm primary" onclick="openPlanModal()">+ New Plan</button>`:""}</div></div>
@@ -3940,12 +3908,11 @@ function toggleDetailGanttExpand(force){
   });
 }
 function renderProjectGantt(p){
-  const {min,max}=detailGanttRange(p),cols=ganttCols(min,max),cw=detailColW(),totalW=cols.length*cw,todayRaw=detailOffX(today(),min),showToday=todayRaw>=0&&todayRaw<=totalW,monthSpans=[];cols.forEach(c=>{const last=monthSpans[monthSpans.length-1];if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
-  const weekendBands=viewMode==="day"?cols.map((c,i)=>c.wknd?`<span class="detail-weekend-band" style="left:${i*cw}px;width:${cw}px" aria-hidden="true"></span>`:"").join(""):"";
+  const {min,max}=detailGanttRange(p),cols=ganttCols(min,max),cw=colW(),totalW=cols.length*cw,todayRaw=offX(today(),min),showToday=todayRaw>=0&&todayRaw<=totalW,monthSpans=[];cols.forEach(c=>{const last=monthSpans[monthSpans.length-1];if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
   const head=`<div class="grow head"><div class="gcell-left">Task / Sub Task / Key Milestone</div><div class="gtime"><div class="gmonths">${monthSpans.map(x=>`<div class="gmonth" style="width:${x.n*cw}px">${x.m}</div>`).join("")}</div><div class="gcols">${cols.map(c=>`<div class="gcol ${c.wknd?"wknd":""}" style="width:${cw}px">${c.label}<span class="wd">${c.sub}</span></div>`).join("")}</div>${showToday?`<div class="today-pin" id="detailGanttTodayPin" data-timeline-x="${todayRaw}" style="left:${todayRaw}px" title="Today · ${fmtDisp(today())}"><span>TODAY</span></div>`:""}</div></div>`;
   const activities=(p.milestones||[]).filter(m=>m.plannedStart&&m.plannedEnd).map((m,i)=>normalizeProjectActivity(m,i)).sort(activityGanttCompare);
-  const rows=activities.map(m=>{const l=Math.max(0,Math.min(detailOffX(parseDate(m.plannedStart),min),totalW)),r=Math.max(0,Math.min(detailOffX(addDays(parseDate(m.plannedEnd),1),min),totalW)),w=Math.max(24,r-l),st=msState(m),summary=activityNextStepSummary(m),ref=activityRef(m),cls=[st==="Completed"?"done":"",st==="Delayed"?"delay":st==="AtRisk"?"risk":""].join(" "),title=`${activityLabel(m)}\n${MSMAP[m.key]?.full||m.key}\n${m.plannedStart} → ${m.plannedEnd}\nActivity: ${statusText(st)}\n${summary.title}`;return `<div class="grow gantt-activity-row"><div class="gcell-left"><div class="gantt-task-label">${esc(m.task||"Project Execution")}</div><div class="gantt-subtask-label">${esc(m.subTask||"Main")}</div><div class="gantt-milestone-meta"><button class="activity-code milestone-open-btn" style="background:${milestoneColor(m.key)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button><span class="small">${esc(MSMAP[m.key]?.full||m.key)}</span></div><div class="nextstep-summary" title="${esc(summary.title)}">${esc(summary.label)}</div></div><div class="gtl">${weekendBands?`<div class="detail-weekend-grid">${weekendBands}</div>`:""}<div class="gbarwrap"><button class="ms ${cls}" style="left:${l}px;width:${w}px;background:${milestoneColor(m.key)}" title="${esc(title)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button></div></div></div>`;}).join("");
-  const taskCount=new Set(activities.map(m=>m.task)).size,subCount=new Set(activities.map(m=>m.task+"|"+m.subTask)).size;return `<div class="gantt-shell detail-gantt${viewMode==="day"?" detail-gantt-day":""}${detailGanttExpanded?" detail-gantt-expanded":""}" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">${taskCount} Task${taskCount===1?"":"s"} · ${subCount} Sub Task${subCount===1?"":"s"} · ${activities.length} milestone activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div class="detail-gantt-actions">${ganttSortControl(true)}<button class="btn ghost" onclick="goDetailGanttToday()">Today</button><div class="detail-gantt-zoom"><div class="segmented" aria-label="Detail Gantt zoom"><button onclick="zoomDetailGantt(-0.2)" title="Zoom out" ${detailGanttZoom<=0.25?"disabled":""}>−</button><button class="zoom-value" onclick="zoomDetailGantt(0)" title="Reset zoom to 100%">${Math.round(detailGanttZoom*100)}%</button><button onclick="zoomDetailGantt(0.2)" title="Zoom in" ${detailGanttZoom>=2.5?"disabled":""}>+</button></div></div><button class="btn ghost detail-gantt-expand-btn" id="detailGanttExpandBtn" onclick="toggleDetailGanttExpand()" title="${detailGanttExpanded?"Close expanded Gantt":"Expand Detail Plan Gantt"}">${detailGanttExpanded?"✕":"⛶ Expand"}</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
+  const rows=activities.map(m=>{const l=Math.max(0,Math.min(offX(parseDate(m.plannedStart),min),totalW)),r=Math.max(0,Math.min(offX(addDays(parseDate(m.plannedEnd),1),min),totalW)),w=Math.max(24,r-l),st=msState(m),summary=activityNextStepSummary(m),ref=activityRef(m),cls=[st==="Completed"?"done":"",st==="Delayed"?"delay":st==="AtRisk"?"risk":""].join(" "),title=`${activityLabel(m)}\n${MSMAP[m.key]?.full||m.key}\n${m.plannedStart} → ${m.plannedEnd}\nActivity: ${statusText(st)}\n${summary.title}`;return `<div class="grow gantt-activity-row"><div class="gcell-left"><div class="gantt-task-label">${esc(m.task||"Project Execution")}</div><div class="gantt-subtask-label">${esc(m.subTask||"Main")}</div><div class="gantt-milestone-meta"><button class="activity-code milestone-open-btn" style="background:${milestoneColor(m.key)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button><span class="small">${esc(MSMAP[m.key]?.full||m.key)}</span></div><div class="nextstep-summary" title="${esc(summary.title)}">${esc(summary.label)}</div></div><div class="gtl"><div class="gbarwrap"><button class="ms ${cls}" style="left:${l}px;width:${w}px;background:${milestoneColor(m.key)}" title="${esc(title)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button></div></div></div>`;}).join("");
+  const taskCount=new Set(activities.map(m=>m.task)).size,subCount=new Set(activities.map(m=>m.task+"|"+m.subTask)).size;return `<div class="gantt-shell detail-gantt${detailGanttExpanded?" detail-gantt-expanded":""}" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">${taskCount} Task${taskCount===1?"":"s"} · ${subCount} Sub Task${subCount===1?"":"s"} · ${activities.length} milestone activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div class="detail-gantt-actions">${ganttSortControl(true)}<button class="btn ghost" onclick="goDetailGanttToday()">Today</button><div class="detail-gantt-zoom"><div class="segmented" aria-label="Detail Gantt zoom"><button onclick="zoomGantt(-0.2)" title="Zoom out" ${ganttZoom<=0.5?"disabled":""}>−</button><button class="zoom-value" onclick="zoomGantt(0)" title="Reset zoom to 100%">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" title="Zoom in" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div><button class="btn ghost detail-gantt-expand-btn" id="detailGanttExpandBtn" onclick="toggleDetailGanttExpand()" title="${detailGanttExpanded?"Close expanded Gantt":"Expand Detail Plan Gantt"}">${detailGanttExpanded?"✕":"⛶ Expand"}</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
 }
 function filterDetailProjectSelect(query){const select=document.getElementById("detailProjectSelect");if(!select)return;const q=String(query||"").trim().toLowerCase();Array.from(select.options).forEach(o=>{o.hidden=!!q&&!o.text.toLowerCase().includes(q)&&!o.selected;});}
 function detailToolbar(p,list){return `<div class="toolbar detail-filter"><div class="fld detail-project-search"><label>Search Project</label><input type="search" placeholder="Name / owner / week" oninput="filterDetailProjectSelect(this.value)"></div><div class="fld project-select"><label>Project</label><select id="detailProjectSelect" onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div></div>`;}

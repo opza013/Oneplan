@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.16",
+  "version": "5.4.17",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan v5.4.16 extends Detail Plan Gantt zoom down to 25% and adds gray diagonal weekend hatching in Day view."
+  "description": "OnePlan v5.4.17 renames the Project Plan navigation/page label to Project List while preserving all v5.4.16 functionality."
 }
