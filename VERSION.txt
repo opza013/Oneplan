@@ -1,1 +1,1 @@
-5.4.14-detail-gantt-milestone-scale
+5.4.15-detail-gantt-expand-zoom

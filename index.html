@@ -578,6 +578,29 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
   top:calc(9px * var(--gantt-scale))!important;
   line-height:1;
 }
+/* v5.4.15 Detail Plan Gantt expand + in-chart zoom controls */
+.detail-gantt-actions{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end}
+.detail-gantt-zoom{display:flex;align-items:flex-end;gap:0}
+.detail-gantt-zoom .segmented button{min-width:34px}
+.detail-gantt-zoom .segmented button.zoom-value{min-width:58px;font-weight:800}
+.detail-gantt-expand-btn{min-width:92px}
+.detail-gantt.detail-gantt-expanded{
+  position:fixed!important;inset:12px!important;z-index:2100!important;width:auto!important;height:auto!important;max-width:none!important;
+  margin:0!important;border-radius:14px!important;box-shadow:0 28px 90px rgba(4,22,46,.34),0 0 0 100vmax rgba(3,18,35,.48)!important;
+  display:flex!important;flex-direction:column!important;overflow:hidden!important;background:#fff!important;
+}
+.detail-gantt.detail-gantt-expanded .gantt-top{flex:0 0 auto}
+.detail-gantt.detail-gantt-expanded .gantt-scroll{flex:1 1 auto;min-height:0;max-height:none!important}
+.detail-gantt.detail-gantt-expanded .gantt{min-height:100%}
+.detail-gantt.detail-gantt-expanded .detail-milestone-panel{z-index:2125}
+.detail-gantt.detail-gantt-expanded .detail-milestone-shade{z-index:2124}
+body.detail-gantt-expand-active{overflow:hidden}
+body.detail-gantt-expand-active .topbar,body.detail-gantt-expand-active .sidebar{filter:saturate(.85)}
+@media(max-width:760px){
+  .detail-gantt.detail-gantt-expanded{inset:6px!important;border-radius:10px!important}
+  .detail-gantt-actions{width:100%;justify-content:flex-start}
+  .detail-gantt-expand-btn{min-width:42px}
+}
 /* v5.4.13 Event identity + Master ordered layout + X close */
 .master-expand-btn{margin-left:6px;flex:none}
 .master-expand-btn .expand-ico{font-size:13px;line-height:1}
@@ -2120,6 +2143,7 @@ if(!["previous","current","next"].includes(workloadPeriod)) workloadPeriod="next
 let ganttSortMode=localStorage.getItem("onePlanGanttSort")||"milestone";
 if(!["milestone","task","start","live","name","owner"].includes(ganttSortMode)) ganttSortMode="milestone";
 let ganttTodayFocus=false;
+let detailGanttExpanded=false;
 let plansPage=1, plansSort={col:"code",dir:1}, storeCapacityPage=1, storeCapacityPageSize=50;
 
 function filterValues(field){
@@ -2298,6 +2322,7 @@ function buildMenu(){
   });
 }
 function navigate(page){
+  if(page!=="detailplan" && detailGanttExpanded){ detailGanttExpanded=false; document.body.classList.remove("detail-gantt-expand-active"); }
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(page).classList.add("active");
   document.querySelectorAll(".menu button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
@@ -3865,15 +3890,32 @@ function openDetailMilestone(projectId,ref){
 }
 function closeDetailMilestone(){document.getElementById("detailMilestonePanel")?.classList.remove("active");document.getElementById("detailMilestoneShade")?.classList.remove("active");document.getElementById("detailMilestonePanel")?.setAttribute("aria-hidden","true");}
 function focusActivityNextSteps(projectId,ref){closeDetailMilestone();const card=document.getElementById(`activity-card-${projectId}-${ref}`);if(!card)return;card.scrollIntoView({behavior:"smooth",block:"center"});card.classList.add("activity-focus");setTimeout(()=>card.classList.remove("activity-focus"),1600);}
+function toggleDetailGanttExpand(force){
+  const shell=document.getElementById("detailGanttShell");
+  const next=typeof force==="boolean"?force:!detailGanttExpanded;
+  detailGanttExpanded=next;
+  document.body.classList.toggle("detail-gantt-expand-active",next);
+  if(shell) shell.classList.toggle("detail-gantt-expanded",next);
+  const btn=document.getElementById("detailGanttExpandBtn");
+  if(btn){
+    btn.innerHTML=next?"✕":"⛶ Expand";
+    btn.title=next?"Close expanded Gantt":"Expand Detail Plan Gantt";
+    btn.setAttribute("aria-label",btn.title);
+  }
+  requestAnimationFrame(()=>{
+    const sc=document.querySelector("#detailGanttShell .gantt-scroll");
+    if(sc && next){ const pin=document.getElementById("detailGanttTodayPin"); if(pin){ const x=parseFloat(pin.style.left)||0; if(x>0) sc.scrollLeft=Math.max(0,x-sc.clientWidth/2); } }
+  });
+}
 function renderProjectGantt(p){
   const {min,max}=detailGanttRange(p),cols=ganttCols(min,max),cw=colW(),totalW=cols.length*cw,todayRaw=offX(today(),min),showToday=todayRaw>=0&&todayRaw<=totalW,monthSpans=[];cols.forEach(c=>{const last=monthSpans[monthSpans.length-1];if(last&&last.m===c.month)last.n++;else monthSpans.push({m:c.month,n:1});});
   const head=`<div class="grow head"><div class="gcell-left">Task / Sub Task / Key Milestone</div><div class="gtime"><div class="gmonths">${monthSpans.map(x=>`<div class="gmonth" style="width:${x.n*cw}px">${x.m}</div>`).join("")}</div><div class="gcols">${cols.map(c=>`<div class="gcol ${c.wknd?"wknd":""}" style="width:${cw}px">${c.label}<span class="wd">${c.sub}</span></div>`).join("")}</div>${showToday?`<div class="today-pin" id="detailGanttTodayPin" data-timeline-x="${todayRaw}" style="left:${todayRaw}px" title="Today · ${fmtDisp(today())}"><span>TODAY</span></div>`:""}</div></div>`;
   const activities=(p.milestones||[]).filter(m=>m.plannedStart&&m.plannedEnd).map((m,i)=>normalizeProjectActivity(m,i)).sort(activityGanttCompare);
   const rows=activities.map(m=>{const l=Math.max(0,Math.min(offX(parseDate(m.plannedStart),min),totalW)),r=Math.max(0,Math.min(offX(addDays(parseDate(m.plannedEnd),1),min),totalW)),w=Math.max(24,r-l),st=msState(m),summary=activityNextStepSummary(m),ref=activityRef(m),cls=[st==="Completed"?"done":"",st==="Delayed"?"delay":st==="AtRisk"?"risk":""].join(" "),title=`${activityLabel(m)}\n${MSMAP[m.key]?.full||m.key}\n${m.plannedStart} → ${m.plannedEnd}\nActivity: ${statusText(st)}\n${summary.title}`;return `<div class="grow gantt-activity-row"><div class="gcell-left"><div class="gantt-task-label">${esc(m.task||"Project Execution")}</div><div class="gantt-subtask-label">${esc(m.subTask||"Main")}</div><div class="gantt-milestone-meta"><button class="activity-code milestone-open-btn" style="background:${milestoneColor(m.key)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button><span class="small">${esc(MSMAP[m.key]?.full||m.key)}</span></div><div class="nextstep-summary" title="${esc(summary.title)}">${esc(summary.label)}</div></div><div class="gtl"><div class="gbarwrap"><button class="ms ${cls}" style="left:${l}px;width:${w}px;background:${milestoneColor(m.key)}" title="${esc(title)}" onclick="openDetailMilestone('${p.id}','${ref}')">${esc(m.key)}</button></div></div></div>`;}).join("");
-  const taskCount=new Set(activities.map(m=>m.task)).size,subCount=new Set(activities.map(m=>m.task+"|"+m.subTask)).size;return `<div class="gantt-shell detail-gantt" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">${taskCount} Task${taskCount===1?"":"s"} · ${subCount} Sub Task${subCount===1?"":"s"} · ${activities.length} milestone activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">${ganttSortControl(true)}<button class="btn ghost" onclick="goDetailGanttToday()">Today</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
+  const taskCount=new Set(activities.map(m=>m.task)).size,subCount=new Set(activities.map(m=>m.task+"|"+m.subTask)).size;return `<div class="gantt-shell detail-gantt${detailGanttExpanded?" detail-gantt-expanded":""}" id="detailGanttShell"><div class="gantt-top"><div><h3>${esc(p.name)} — Project Gantt</h3><div class="small">${taskCount} Task${taskCount===1?"":"s"} · ${subCount} Sub Task${subCount===1?"":"s"} · ${activities.length} milestone activities · ${fmtDisp(parseDate(p.start))} to ${fmtDisp(parseDate(p.end))}</div></div><div class="detail-gantt-actions">${ganttSortControl(true)}<button class="btn ghost" onclick="goDetailGanttToday()">Today</button><div class="detail-gantt-zoom"><div class="segmented" aria-label="Detail Gantt zoom"><button onclick="zoomGantt(-0.2)" title="Zoom out" ${ganttZoom<=0.5?"disabled":""}>−</button><button class="zoom-value" onclick="zoomGantt(0)" title="Reset zoom to 100%">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" title="Zoom in" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div><button class="btn ghost detail-gantt-expand-btn" id="detailGanttExpandBtn" onclick="toggleDetailGanttExpand()" title="${detailGanttExpanded?"Close expanded Gantt":"Expand Detail Plan Gantt"}">${detailGanttExpanded?"✕":"⛶ Expand"}</button><button class="btn" onclick="navigate('gantt')">All Projects Gantt →</button></div></div><div class="gantt-scroll"><div class="gantt" style="width:${300+totalW}px">${head}${rows||'<div class="empty">No activity dates available.</div>'}</div></div><div class="detail-milestone-shade" id="detailMilestoneShade" onclick="closeDetailMilestone()"></div><aside class="detail-milestone-panel" id="detailMilestonePanel" aria-hidden="true" aria-label="Milestone details"></aside></div>`;
 }
 function filterDetailProjectSelect(query){const select=document.getElementById("detailProjectSelect");if(!select)return;const q=String(query||"").trim().toLowerCase();Array.from(select.options).forEach(o=>{o.hidden=!!q&&!o.text.toLowerCase().includes(q)&&!o.selected;});}
-function detailToolbar(p,list){return `<div class="toolbar detail-filter"><div class="fld detail-project-search"><label>Search Project</label><input type="search" placeholder="Name / owner / week" oninput="filterDetailProjectSelect(this.value)"></div><div class="fld project-select"><label>Project</label><select id="detailProjectSelect" onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div><div class="fld"><label>Zoom</label><div class="segmented"><button onclick="zoomGantt(-0.2)" ${ganttZoom<=0.5?"disabled":""}>−</button><button onclick="zoomGantt(0)" style="min-width:54px">${Math.round(ganttZoom*100)}%</button><button onclick="zoomGantt(0.2)" ${ganttZoom>=2.5?"disabled":""}>+</button></div></div></div>`;}
+function detailToolbar(p,list){return `<div class="toolbar detail-filter"><div class="fld detail-project-search"><label>Search Project</label><input type="search" placeholder="Name / owner / week" oninput="filterDetailProjectSelect(this.value)"></div><div class="fld project-select"><label>Project</label><select id="detailProjectSelect" onchange="selectDetailProject(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===p.id?"selected":""}>${esc(x.name)} · ${esc(x.owner)} · ${liveWeekLabel(x)}</option>`).join("")}</select></div><div class="fld"><label>Navigate</label><div class="segmented"><button onclick="stepDetailProject(-1)" ${list.length<2?"disabled":""}>‹ Previous</button><button onclick="stepDetailProject(1)" ${list.length<2?"disabled":""}>Next ›</button></div></div><div class="spacer"></div><div class="fld"><label>View</label><div class="segmented"><button class="${viewMode==="month"?"active":""}" onclick="setView('month')">Month</button><button class="${viewMode==="week"?"active":""}" onclick="setView('week')">Week</button><button class="${viewMode==="day"?"active":""}" onclick="setView('day')">Day</button></div></div></div>`;}
 function getActivity(projectId,ref){const p=projects.find(x=>x.id===projectId),m=p?.milestones?.find(x=>activityRef(x)===ref)||p?.milestones?.find(x=>x.key===ref);if(m)normalizeProjectActivity(m);return {p,m};}
 function addActivityNextStep(projectId,ref){if(!can("edit")){alert("Your role cannot add activity next steps.");return;}const {p,m}=getActivity(projectId,ref);if(!p||!m)return;const id=newNextStepId(),stamp=new Date().toISOString();m.nextSteps.push({id,text:"",dueDate:m.plannedEnd||"",status:"Not Started",createdAt:stamp,updatedAt:stamp});syncLegacyNextStepFields(m);logHist(p,"Added next step",`${activityLabel(m)}: New next step`);saveState();renderPage("detailplan");setTimeout(()=>document.getElementById(`ns-text-${projectId}-${activityRef(m)}-${id}`)?.focus(),30);}
 function updateNextStepSaveState(projectId,ref,stepId){const {m}=getActivity(projectId,ref);if(!m)return;const step=m.nextSteps.find(x=>x.id===stepId);if(!step)return;const textEl=document.getElementById(`ns-text-${projectId}-${ref}-${stepId}`),dueEl=document.getElementById(`ns-due-${projectId}-${ref}-${stepId}`),statusEl=document.getElementById(`ns-status-${projectId}-${ref}-${stepId}`),saveBtn=document.getElementById(`ns-save-${projectId}-${ref}-${stepId}`);if(!textEl||!dueEl||!statusEl||!saveBtn)return;const text=textEl.value.trim(),dueDate=dueEl.value||"",status=statusEl.value||"Not Started",dirty=text!==(step.text||"").trim()||dueDate!==(step.dueDate||"")||status!==(step.status||"Not Started"),enabled=Boolean(text)&&dirty;saveBtn.disabled=!enabled;saveBtn.title=enabled?"Save changes":"No new data or changes to save";saveBtn.setAttribute("aria-disabled",String(!enabled));}
