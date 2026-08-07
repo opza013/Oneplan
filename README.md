@@ -1,15 +1,13 @@
-# ONE PLAN v5.4.12 — Event Type Master
+# ONE PLAN v5.4.14 — Master Data Layout Order
 
-Enterprise Range Operation Platform.
-
-## v5.4.12
-- Create/Edit Plan uses **Event Code / Event Name / Event Type** labels.
-- **Master Data → Event Type Master** controls available Event Types.
-- Admin can add, delete, and reorder Event Types.
-- In-use Event Types cannot be deleted.
-- Existing saved data is migrated automatically; no storage reset is required.
-- Includes all v5.4.11 functionality, including expandable Master Data workspaces.
+Enterprise Master Data workspace update. Key Milestone Master is prioritized at the top, governance masters are grouped together, operational masters share a row, and Role Permissions remains at the bottom. Expanded cards close with an X-only control.
 
 ## Deploy
-Upload all files to the GitHub repository root and redeploy the Render Web Service.
-After deployment, `/api/health` should report `5.4.12-event-type-master`.
+Upload all files to the GitHub repository root and deploy the existing Render Node Web Service.
+
+Health check version: `5.4.14-detail-gantt-milestone-scale`.
+
+## Detail Plan Gantt readability
+- Key Milestone bars: +100% height in Detail Plan Gantt only.
+- Key Milestone text: +50% in Detail Plan Gantt only.
+- Main Gantt sizing is unchanged.

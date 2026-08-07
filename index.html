@@ -554,26 +554,31 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 @media(max-width:700px){.structure-ms-row{grid-template-columns:1fr}.structure-ms-actions{justify-content:flex-start}.structure-task-head,.structure-subtask-head{align-items:flex-start;flex-wrap:wrap}.structure-task-actions,.structure-subtask-actions{margin-left:0;width:100%}}
 
 
-/* v5.4.9 NWT Master ordering fix */
-.master-data-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px;align-items:stretch}
+/* v5.4.13 Master Data ordered row layout */
+.master-data-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-top:14px;align-items:stretch}
 .master-data-grid>.card{margin-top:0!important;height:100%;min-width:0;display:flex;flex-direction:column}
-.master-data-grid>.card .section-title{flex:none;min-height:32px;align-items:center}
-.master-data-grid>.card .tbl-wrap{min-height:0}
-.master-data-grid>.master-card-standard{height:292px}
-.master-data-grid>.master-card-standard .tbl-wrap{flex:1;overflow:auto}
-.master-data-grid>.master-card-large{height:470px}
-.master-data-grid>.master-card-large .tbl-wrap{flex:1;overflow:auto}
-.master-data-grid>.master-card-wide{grid-column:1/-1;height:auto;min-height:0}
-.master-data-grid>.master-card-wide .tbl-wrap{flex:0 1 auto}
+.master-data-grid>.card .section-title{flex:none;min-height:34px;align-items:center}
+.master-data-grid>.card .tbl-wrap{min-height:0;flex:1 1 auto;overflow:auto}
 .master-data-grid>.card>.small:last-child{flex:none;margin-top:8px!important;min-height:31px}
-@media(max-width:1100px){
+.master-data-grid>.master-card-top{grid-column:1/-1;height:500px}
+.master-data-grid>.master-card-third{grid-column:span 2;height:320px}
+.master-data-grid>.master-card-half{grid-column:span 3;height:440px}
+.master-data-grid>.master-card-bottom{grid-column:1/-1;height:auto;min-height:230px}
+.master-data-grid>.master-card-bottom .tbl-wrap{flex:0 1 auto;overflow:auto}
+@media(max-width:900px){
   .master-data-grid{grid-template-columns:1fr}
-  .master-data-grid>.master-card-wide{grid-column:auto}
-  .master-data-grid>.master-card-standard,.master-data-grid>.master-card-large{height:auto;min-height:260px}
-  .master-data-grid>.master-card-standard .tbl-wrap,.master-data-grid>.master-card-large .tbl-wrap{max-height:360px}
+  .master-data-grid>.master-card-top,.master-data-grid>.master-card-third,.master-data-grid>.master-card-half,.master-data-grid>.master-card-bottom{grid-column:1;height:auto;min-height:280px}
+  .master-data-grid>.card .tbl-wrap{max-height:420px}
 }
 
-/* v5.4.12 Event identity labels + Event Type Master */
+/* v5.4.14 Detail Plan Gantt milestone readability */
+.detail-gantt .ms{
+  height:calc(36px * var(--gantt-scale))!important;
+  font-size:calc(13.5px * var(--gantt-scale))!important;
+  top:calc(9px * var(--gantt-scale))!important;
+  line-height:1;
+}
+/* v5.4.13 Event identity + Master ordered layout + X close */
 .master-expand-btn{margin-left:6px;flex:none}
 .master-expand-btn .expand-ico{font-size:13px;line-height:1}
 .master-expand-backdrop{position:fixed;inset:0;background:rgba(3,18,35,.50);backdrop-filter:blur(2px);z-index:1998;display:none}
@@ -3052,8 +3057,9 @@ function decorateMasterExpandButtons(){
       btn.addEventListener("click",()=>toggleMasterCardExpand(btn));title.appendChild(btn);
     }
     const expanded=card.classList.contains("master-expanded");
-    btn.innerHTML=`<span class="expand-ico">${expanded?"↙":"⛶"}</span>${expanded?"Restore":"Expand"}`;
-    btn.title=expanded?"Restore normal Master Data layout":"Temporarily expand this Master Data section";
+    btn.innerHTML=expanded?`<span class="expand-ico" aria-hidden="true">✕</span>`:`<span class="expand-ico" aria-hidden="true">⛶</span>Expand`;
+    btn.title=expanded?"Close expanded Master Data view":"Temporarily expand this Master Data section";
+    btn.setAttribute("aria-label",expanded?"Close expanded Master Data view":`Expand ${key}`);
   });
 }
 function restoreMasterExpandedCard(){
@@ -3074,13 +3080,38 @@ function renderMaster(){
   const usage=id=>projects.filter(p=>p.storeIds.includes(id)).length;
   return `
   ${!admin?`<div class="banner info">You are acting as <b>&nbsp;${role}&nbsp;</b> — adding, editing, deleting and importing master data is limited to <b>&nbsp;Admin</b>. Switch role in the sidebar to edit.</div>`:""}
-  <div class="card"><div class="section-title">Store Master <span class="small">${stores.length} stores${q?` · ${sList.length} match`:""} · uploaded master embedded</span>
+  <div class="master-data-grid">
+    <div class="card master-card-top"><div class="section-title">Key Milestone Master <span class="small">${MILESTONES.length} stages · order controls default Gantt sorting · color is configurable</span>
+      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openMilestoneModal()">+ Add Milestone</button>`:""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Code</th><th>Color</th><th>Milestone</th><th>PIC / NWT</th><th>Depends</th><th class="num">Offset</th><th class="num">Days</th><th class="num">Warn</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${MILESTONES.map((m,i)=>{const used=milestoneProjectUsage(m.key); const depUsed=milestoneDependencyUsage(m.key); return `<tr><td><b>${m.order||i+1}</b></td><td><b>${m.key}</b></td><td><span class="milestone-master-code"><span class="milestone-master-swatch" style="background:${milestoneColor(m.key)}"></span><code>${esc(m.color||milestoneColor(m.key))}</code></span></td><td>${esc(m.full)}</td><td><div class="pic-unit-chips">${milestonePicUnits(m.key).map((x,j)=>`<span class="pic-unit-chip">PIC ${j+1}: ${esc(x)}</span>`).join("")}</div></td><td>${m.dep||"—"}</td><td class="num">${m.offset}</td><td class="num">${m.dur}</td><td class="num">${m.warn}</td><td class="num" title="${used} project(s), ${depUsed} milestone dependency reference(s)">${used}${depUsed?` +${depUsed} dep`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openMilestoneModal('${m.key}')">Edit</button><button class="btn sm danger" onclick="deleteMilestone('${m.key}')" ${used||depUsed||MILESTONES.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      </tbody></table></div>
+      <div class="small" style="margin-top:8px">Admin can add, edit, reorder and delete milestones. Each Key Milestone can contain multiple PIC / NWT responsible units from NWT Master. Display Order is the default sequence used by Gantt sorting. Delete is blocked if the code is used in any project timeline or referenced as another milestone dependency. When a milestone is already used by projects, its code is locked; name, Gantt color, offset, duration, dependency and warning days can still be maintained.</div></div>
+    <div class="card master-card-third"><div class="section-title">Event Type Master <span class="small">${EVENT_TYPE_MASTER.length} types · source for Event Type dropdown in Create / Edit Plan</span>
+      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openEventTypeModal()">+ Add Event Type</button>`:""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Event Type</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${EVENT_TYPE_MASTER.map((t,i)=>{const used=eventTypeUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveEventTypeMaster('${encodeURIComponent(t.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveEventTypeMaster('${encodeURIComponent(t.name)}',1)" ${i===EVENT_TYPE_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm danger" onclick="deleteEventTypeMaster('${encodeURIComponent(t.name)}')" ${used||EVENT_TYPE_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      </tbody></table></div>
+      <div class="small" style="margin-top:8px">Event Type is controlled by Master Data and feeds the Event Type dropdown. Add or reorder types here. Delete is blocked while an Event Type is used by any existing plan.</div></div>
+    <div class="card master-card-third"><div class="section-title">Task Master <span class="small">${TASK_MASTER.length} tasks · source for Task dropdown in Project / Detail Plan</span>
+      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openTaskModal()">+ Add Task</button>`:""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Task</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${TASK_MASTER.map((t,i)=>{const used=taskProjectUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openTaskModal('${encodeURIComponent(t.name)}')">Edit</button><button class="btn sm danger" onclick="deleteTaskMaster('${encodeURIComponent(t.name)}')" ${used||TASK_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      </tbody></table></div>
+      <div class="small" style="margin-top:8px">Task is controlled by Master Data. Sub Task / Phase remains free-form inside each project. Delete is blocked while the Task is used by any project activity.</div></div>
+    <div class="card master-card-third"><div class="section-title">NWT Master <span class="small">${NWT_MASTER.length} responsible units · assign PIC units inside Key Milestone Master</span>
+      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openNwtModal()">+ Add NWT</button>`:""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>NWT / Responsible Unit</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+      ${NWT_MASTER.map((n,i)=>{const usage=nwtActivityUsage(n.name);return `<tr><td><b>${n.order||i+1}</b></td><td><b>${esc(n.name)}</b></td><td class="num" title="${usage.masterUses} Key Milestone(s) · ${usage.activityUses} activity reference(s)">${usage.masterUses} MS${usage.activityUses?` · ${usage.activityUses} act`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',1)" ${i===NWT_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm" onclick="openNwtModal('${encodeURIComponent(n.name)}')">Edit</button><button class="btn sm danger" onclick="deleteNwtMaster('${encodeURIComponent(n.name)}')" ${usage.total||NWT_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
+      </tbody></table></div>
+      <div class="small" style="margin-top:8px">NWT defines the responsible unit/team list. Assign one or more NWT units as PICs in each Key Milestone Master. Individual responsible person names remain free-form per activity in Detail Plan. Delete is blocked while the NWT is assigned to a Key Milestone or activity.</div></div>
+    <div class="card master-card-half"><div class="section-title">Store Master <span class="small">${stores.length} stores${q?` · ${sList.length} match`:""} · uploaded master embedded</span>
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
       ${admin?`<button class="btn sm primary" onclick="openStoreModal()">+ Add Store</button>
       <button class="btn sm" onclick="triggerStoreImport()">Import Excel / CSV</button>
       <button class="btn sm" onclick="downloadStoreTemplate()">Template</button>`:""}
       <button class="btn sm" onclick="exportStoresCSV()">Export CSV</button></div></div>
-    <div class="tbl-wrap" style="max-height:420px"><table class="resp-cards"><thead><tr><th>No</th><th>Name</th><th>Format</th><th>Zone</th><th class="num">Cap/wk</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
+    <div class="tbl-wrap"><table class="resp-cards"><thead><tr><th>No</th><th>Name</th><th>Format</th><th>Zone</th><th class="num">Cap/wk</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
     ${sList.map(s=>`<tr>
       <td data-l="No"><b>${esc(s.no)}</b></td><td data-l="Name">${esc(s.name)}</td>
       <td data-l="Format">${s.format}</td><td data-l="Zone">${s.zone}</td>
@@ -3091,37 +3122,13 @@ function renderMaster(){
     <div class="small" style="margin-top:8px">Import columns: <b>No, Name, Format</b> (required) · <b>Zone, Capacity</b> (optional). Format must match the Store Master format list. Existing Store No is updated; new ones are added. Use the global search box to filter this list. Uploaded Capacity = 43 hours/week was converted to 2,580 minutes for the capacity engine.</div>
   </div>
 
-  <div class="master-data-grid">
-    <div class="card master-card-wide"><div class="section-title">Event Type Master <span class="small">${EVENT_TYPE_MASTER.length} types · source for Event Type dropdown in Create / Edit Plan</span>
-      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openEventTypeModal()">+ Add Event Type</button>`:""}</div>
-      <div class="tbl-wrap" style="max-height:260px"><table><thead><tr><th>Order</th><th>Event Type</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${EVENT_TYPE_MASTER.map((t,i)=>{const used=eventTypeUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveEventTypeMaster('${encodeURIComponent(t.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveEventTypeMaster('${encodeURIComponent(t.name)}',1)" ${i===EVENT_TYPE_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm danger" onclick="deleteEventTypeMaster('${encodeURIComponent(t.name)}')" ${used||EVENT_TYPE_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
-      </tbody></table></div>
-      <div class="small" style="margin-top:8px">Event Type is controlled by Master Data and feeds the Event Type dropdown. Add or reorder types here. Delete is blocked while an Event Type is used by any existing plan.</div></div>
-    <div class="card master-card-standard"><div class="section-title">Task Master <span class="small">${TASK_MASTER.length} tasks · source for Task dropdown in Project / Detail Plan</span>
-      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openTaskModal()">+ Add Task</button>`:""}</div>
-      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Task</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${TASK_MASTER.map((t,i)=>{const used=taskProjectUsage(t.name);return `<tr><td><b>${t.order||i+1}</b></td><td><b>${esc(t.name)}</b></td><td class="num">${used}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openTaskModal('${encodeURIComponent(t.name)}')">Edit</button><button class="btn sm danger" onclick="deleteTaskMaster('${encodeURIComponent(t.name)}')" ${used||TASK_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
-      </tbody></table></div>
-      <div class="small" style="margin-top:8px">Task is controlled by Master Data. Sub Task / Phase remains free-form inside each project. Delete is blocked while the Task is used by any project activity.</div></div>
-    <div class="card master-card-standard"><div class="section-title">NWT Master <span class="small">${NWT_MASTER.length} responsible units · assign PIC units inside Key Milestone Master</span>
-      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openNwtModal()">+ Add NWT</button>`:""}</div>
-      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>NWT / Responsible Unit</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${NWT_MASTER.map((n,i)=>{const usage=nwtActivityUsage(n.name);return `<tr><td><b>${n.order||i+1}</b></td><td><b>${esc(n.name)}</b></td><td class="num" title="${usage.masterUses} Key Milestone(s) · ${usage.activityUses} activity reference(s)">${usage.masterUses} MS${usage.activityUses?` · ${usage.activityUses} act`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" title="Move up" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',-1)" ${i===0?"disabled":""}>↑</button><button class="btn sm" title="Move down" onclick="moveNwtMaster('${encodeURIComponent(n.name)}',1)" ${i===NWT_MASTER.length-1?"disabled":""}>↓</button><button class="btn sm" onclick="openNwtModal('${encodeURIComponent(n.name)}')">Edit</button><button class="btn sm danger" onclick="deleteNwtMaster('${encodeURIComponent(n.name)}')" ${usage.total||NWT_MASTER.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
-      </tbody></table></div>
-      <div class="small" style="margin-top:8px">NWT defines the responsible unit/team list. Assign one or more NWT units as PICs in each Key Milestone Master. Individual responsible person names remain free-form per activity in Detail Plan. Delete is blocked while the NWT is assigned to a Key Milestone or activity.</div></div>
-    <div class="card master-card-large"><div class="section-title">Key Milestone Master <span class="small">${MILESTONES.length} stages · order controls default Gantt sorting · color is configurable</span>
-      ${admin?`<button class="btn sm primary" style="margin-left:auto" onclick="openMilestoneModal()">+ Add Milestone</button>`:""}</div>
-      <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Code</th><th>Color</th><th>Milestone</th><th>PIC / NWT</th><th>Depends</th><th class="num">Offset</th><th class="num">Days</th><th class="num">Warn</th><th class="num">Used by</th>${admin?"<th>Action</th>":""}</tr></thead><tbody>
-      ${MILESTONES.map((m,i)=>{const used=milestoneProjectUsage(m.key); const depUsed=milestoneDependencyUsage(m.key); return `<tr><td><b>${m.order||i+1}</b></td><td><b>${m.key}</b></td><td><span class="milestone-master-code"><span class="milestone-master-swatch" style="background:${milestoneColor(m.key)}"></span><code>${esc(m.color||milestoneColor(m.key))}</code></span></td><td>${esc(m.full)}</td><td><div class="pic-unit-chips">${milestonePicUnits(m.key).map((x,j)=>`<span class="pic-unit-chip">PIC ${j+1}: ${esc(x)}</span>`).join("")}</div></td><td>${m.dep||"—"}</td><td class="num">${m.offset}</td><td class="num">${m.dur}</td><td class="num">${m.warn}</td><td class="num" title="${used} project(s), ${depUsed} milestone dependency reference(s)">${used}${depUsed?` +${depUsed} dep`:""}</td>${admin?`<td><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn sm" onclick="openMilestoneModal('${m.key}')">Edit</button><button class="btn sm danger" onclick="deleteMilestone('${m.key}')" ${used||depUsed||MILESTONES.length<=1?"disabled title='Cannot delete while in use'":""}>Delete</button></div></td>`:""}</tr>`;}).join("")}
-      </tbody></table></div>
-      <div class="small" style="margin-top:8px">Admin can add, edit, reorder and delete milestones. Each Key Milestone can contain multiple PIC / NWT responsible units from NWT Master. Display Order is the default sequence used by Gantt sorting. Delete is blocked if the code is used in any project timeline or referenced as another milestone dependency. When a milestone is already used by projects, its code is locked; name, Gantt color, offset, duration, dependency and warning days can still be maintained.</div></div>
-    <div class="card master-card-large"><div class="section-title">Capacity Model</div>
+
+    <div class="card master-card-half"><div class="section-title">Capacity Model</div>
       <div class="tbl-wrap"><table><thead><tr><th>Format</th><th class="num">Capacity / store / week (min)</th></tr></thead><tbody>
         ${FORMATS.map(f=>`<tr><td>${f}</td><td class="num">${CAP_BY_FORMAT[f]}</td></tr>`).join("")}
       </tbody></table></div>
       <div class="small" style="margin-top:8px">Default capacity applied to new/imported stores by format. Load per store by type: ${Object.entries(LOAD_BY_TYPE).map(([k,v])=>k+" "+v+"m").join(" · ")}</div></div>
-    <div class="card master-card-wide"><div class="section-title">Role Permissions</div>
+    <div class="card master-card-bottom"><div class="section-title">Role Permissions</div>
       <div class="tbl-wrap"><table><thead><tr><th>Role</th><th>Permissions</th></tr></thead><tbody>
         <tr><td>Admin</td><td>Full access · master data add/edit/delete/import · all actions</td></tr>
         <tr><td>Project Owner</td><td>Create / edit / cancel own plans</td></tr>

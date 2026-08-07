@@ -1,6 +1,6 @@
 {
   "name": "oneplan-range-operation-platform",
-  "version": "5.4.12",
+  "version": "5.4.14",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20 <25"
   },
-  "description": "OnePlan v5.4.12 renames plan identity fields to Event Code / Event Name / Event Type and adds an Admin-managed Event Type Master while preserving v5.4.11 Master expand view."
+  "description": "OnePlan v5.4.14 enlarges Key Milestone bars by 100% and their text by 50% in the Detail Plan Gantt only, preserving all v5.4.13 functionality."
 }
